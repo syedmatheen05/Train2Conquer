@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <title>{% block title %} {% endblock %}</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-light py-3 shadow-sm">
+    <div class="container-fluid px-4">
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold fs-2" href="#">
+            Train2Conquer
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbar">
+
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar Content -->
+        <div class="collapse navbar-collapse" id="navbar">
+
+            <!-- Center Links -->
+            <ul class="navbar-nav mx-auto gap-4">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Workouts</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Nutrition</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Community</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Challenges</a>
+                </li>
+
+            </ul>
+
+            <!-- Right Side -->
+            <div class="d-flex align-items-center gap-4">
+
+                <a href="{{url_for('login')}}" class="login-link">
+                    Log In
+                </a>
+
+                <a href="#" class="btn signup-btn">
+                    Sign Up
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+</nav>
+    {% block content%}
+    {% endblock %}
+    {{ bootstrap.load_js() }}
+    <script src="{{url_for('static',filename='js/script.js')}}"></script>
+</body>
+</html>

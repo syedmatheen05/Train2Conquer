@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}Header{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-10">
+            {{ render_form(form) }}
+            <br>
+            <p id="timer">Resend OTP in <span id="countdown">30</span> seconds</p>
+            <a id="resend-btn" class="btn btn-secondary" href="{{url_for('resend_otp')}}" style="display:none;">Resend Code</a>
+        </div>
+    </div>
+</div>
+<script>
+    let seconds=30;
+    const timer=document.getElementById("timer")
+    const countdown=document.getElementById("countdown")
+    const button=document.getElementById("resend-btn")
+    // Repeat every 1 second
+    let mytimer = setInterval(start_timer,1000)
+    // Start the timer
+    function start_timer(){
+        seconds=seconds-1;
+        countdown.innerHTML=seconds;
+        if(seconds==0){
+            //Stop the timer
+            clearInterval(mytimer);
+            // hide the text
+            timer.style.display="none";
+            // Show the button
+            button.style.display="block";
+        }
+    }
+
+</script>
+
+{% endblock %}

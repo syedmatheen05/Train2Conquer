@@ -4,14 +4,19 @@ from flask_bootstrap import Bootstrap5
 import random, smtplib, os, time
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, login_manager, login_user, logout_user
+from flask_login import UserMixin, LoginManager, login_user, logout_user
 from sqlalchemy import Integer, String, Text
+from functools import wraps
 
 # Creating flak object
 app=Flask(__name__)
 #that Flask-WTF needs a secret key to generate and verify the CSRF token.
 app.config["SECRET_KEY"]="train2conquerbysyedmatheenandteam"
 bootstrap=Bootstrap5(app)
+
+login_manager=LoginManager()
+login_manager.init_app(app)
+
 
 class Base(DeclarativeBase):# Create a base class for all database models.A database model is a Python class that defines the structure of a database table. Each attribute in the class becomes a column in the table.
     pass
@@ -39,6 +44,19 @@ with app.app_context():
     # If the tables already exist, nothing happens.
     db.create_all()
 
+@login_manager.user_loader #Tells Flask-Login: Use the function below whenever you need to load a logged-in user.
+def load_user(user_id): #Flask-Login automatically passes the logged-in user's ID to this function
+    return db.get_or_404(User,user_id) #Looks for the user with that ID in the User table. If found returns the User object else 404 error.
+
+def logged_in_users_only(function):
+    @wraps(function)
+    def decorator_function(*args,**kwargs):
+        if "email" not in session or "otp" not in session:
+           flash("Please login or register first.", "warning")
+           return render_template("header.html")
+        return function(*args,**kwargs)
+    return decorator_function
+
 
 my_email=os.environ.get("EMAIL")
 password=os.environ.get("PASSWORD")
@@ -49,7 +67,7 @@ def send_verification_code(receiver_email,verification_code):
         connection.starttls()
         connection.login(user=my_email, password=password)
         connection.sendmail(from_addr=my_email,to_addrs=receiver_email,
-                            msg=f"Subject:Train2Conquer Verification Code\n\n Hello Your Train2Conquer verification code is:{verification_code}\nThis OTP is valid for 5 minutes.\nDo not share this code with anyone.\nRegards,\nTrain2Conquer Team")
+                            msg=f"Subject:Train2Conquer Verification Code\n\nHello Your Train2Conquer verification code is:{verification_code}\nThis OTP is valid for 5 minutes.\nDo not share this code with anyone.\nRegards,\nTrain2Conquer Team")
 
 def generate_otp(email):
         otp=random.randint(100000,999999)
@@ -58,13 +76,16 @@ def generate_otp(email):
         send_verification_code(email,otp)
         session["otp_created"]=time.time()
 
+def check_existing_user(email):
+    return db.session.execute(db.select(User).where(User.email==email)).scalar()
+
+
 @app.route("/login", methods = ["GET", "POST"])
 def login():
     login_form = Loginform()
     if login_form.validate_on_submit():
         email = login_form.email.data
-        existing_user=db.session.execute(db.select(User).where(User.email==email)).scalar()
-        if not existing_user:
+        if not check_existing_user(email):
             flash("You don't have an account. Please register first.", "warning")
             return redirect(url_for('register'))
         generate_otp(email)
@@ -73,21 +94,30 @@ def login():
 
 
 @app.route("/verify-otp",methods=["GET","POST"])
+@logged_in_users_only
 def verify_otp():
     verify_otp_form=OTPform()
-    remaining=max(0,60-int(time.time()-session["otp_created"]))
+    remaining=max(0,30-int(time.time()-session["otp_created"]))
     if verify_otp_form.validate_on_submit():
         if verify_otp_form.verification_code.data==session.get("otp"):
             flash("OTP verified successfully!", "success")
+            if not check_existing_user(session.get("email")):
+                new_user=User(name=session.get("name"),email=session.get("email"))
+                db.session.add(new_user)
+                db.session.commit()
+            login_user(new_user)
             session.pop("otp",None) # if otp does not exist it will return None, else KeyError.
             session.pop("otp_created", None)
-            return redirect(url_for('home'))
+            session.pop("name",None)
+            session.pop("email",None)
+            return render_template("index.html")
         else:
            flash("Invalid OTP. Please try again.", "danger")
     return render_template("verify_otp.html",form=verify_otp_form,remaining=remaining)
 
 
 @app.route("/resend-otp")
+@logged_in_users_only
 def resend_otp():
     email=session.get("email")
     generate_otp(email)
@@ -99,23 +129,19 @@ def register():
     register_form=Registerform()
     if register_form.validate_on_submit():
         email=register_form.email.data
-        existing_user=db.session.execute(db.select(User).where(User.email==email)).scalar()
-        if existing_user:
+        session["name"]=register_form.name.data
+        if check_existing_user(email):
             flash("You Already have an account","warning")
-            return redirect(url_for('login'))
-        new_user=User(name=register_form.name.data,email=email)
-        db.session.add(new_user)
-        db.session.commit()
+            generate_otp(email)
+            return redirect(url_for('verify_otp'))
         generate_otp(email)
         return redirect(url_for('verify_otp'))
     return render_template("register.html",form=register_form)
 
 
-
 @app.route("/")
 def home():
     return render_template("header.html")
-
 
 if __name__=="__main__":
     app.run(debug=True)

@@ -6,7 +6,6 @@
     <br>
     <p id="timer">Resend OTP in <span id="countdown">30</span> seconds</p>
     <a id="resend-btn" class="btn btn-secondary" href="{{url_for('resend_otp')}}" style="display:none;">Resend Code</a>
-{% endblock %}
 <script>
     let seconds={{ remaining | tojson }};
     const timer=document.getElementById("timer")
@@ -27,11 +26,6 @@
             button.style.display="block";
         }
     }
-    setTimeout(function(){ let flash=document.getElementById("flash-messages");
-                if(flash){
-                    flash.remove();
-                }},2000);
-
 </script>
 
 {% endblock %}

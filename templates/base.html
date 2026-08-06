@@ -77,12 +77,18 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-            {% block content%}
+            {% block content %}
             {% endblock %}
         </div>
     </div>
 </div>
     {{ bootstrap.load_js() }}
     <script src="{{url_for('static',filename='js/script.js')}}"></script>
+    <script>
+        setTimeout(function(){let flash=document.getElementById("flash-messages");
+                if(flash){
+                    flash.remove();
+                }} ,2000);
+    </script>
 </body>
 </html>

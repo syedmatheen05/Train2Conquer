@@ -55,7 +55,7 @@
                     Log In
                 </a>
 
-                <a href="#" class="btn signup-btn">
+                <a href="{{url_for('register')}}" class="btn signup-btn">
                     Sign Up
                 </a>
 
@@ -65,8 +65,23 @@
 
     </div>
 </nav>
-    {% block content%}
-    {% endblock %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-10">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category,message in messages %}
+                        <div id="flash-messages" class="alert alert-{{category}}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content%}
+            {% endblock %}
+        </div>
+    </div>
+</div>
     {{ bootstrap.load_js() }}
     <script src="{{url_for('static',filename='js/script.js')}}"></script>
 </body>

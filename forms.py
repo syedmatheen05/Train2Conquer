@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired, Email, Length
 
 class Loginform(FlaskForm):
     email=EmailField("E-mail",validators=[DataRequired(),Email()])
-    submit=SubmitField("verify via E-mail")
+    submit=SubmitField("verify")
 
 class OTPform(FlaskForm):
     verification_code=StringField("Verification code",
@@ -13,4 +13,8 @@ class OTPform(FlaskForm):
                                                          message="Verification code must be exactly 6 digits.")])
     submit=SubmitField("Login")
 
+class Registerform(FlaskForm):
+    name=StringField("Full Name",validators=[DataRequired()])
+    email=EmailField("E-mail",validators=[DataRequired(),Email()])
+    submit=SubmitField("verify")
 

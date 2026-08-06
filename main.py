@@ -15,9 +15,6 @@ bootstrap=Bootstrap5(app)
 my_email=os.environ.get("EMAIL")
 password=os.environ.get("PASSWORD")
 
-print(my_email)
-print(password)
-
 def send_verification_code(reciever_email,verification_code):
     with smtplib.SMTP("smtp.gmail.com",port=587) as connection:
         connection.starttls()
@@ -69,12 +66,9 @@ def register():
     return render_template("register.html")
 
 
-
-
 @app.route("/")
 def home():
     return render_template("header.html")
-
 
 
 if __name__=="__main__":

@@ -4,7 +4,7 @@ from flask_bootstrap import Bootstrap5
 import random, smtplib, os, time
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, LoginManager, login_user, logout_user
+from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
 from sqlalchemy import Integer, String, Text
 from functools import wraps
 
@@ -51,9 +51,9 @@ def load_user(user_id): #Flask-Login automatically passes the logged-in user's I
 def logged_in_users_only(function):
     @wraps(function)
     def decorator_function(*args,**kwargs):
-        if "email" not in session or "otp" not in session:
+        if not current_user.is_authenticated:
            flash("Please login or register first.", "warning")
-           return render_template("header.html")
+           return redirect(url_for('login'))
         return function(*args,**kwargs)
     return decorator_function
 
@@ -94,18 +94,18 @@ def login():
 
 
 @app.route("/verify-otp",methods=["GET","POST"])
-@logged_in_users_only
 def verify_otp():
     verify_otp_form=OTPform()
     remaining=max(0,30-int(time.time()-session["otp_created"]))
     if verify_otp_form.validate_on_submit():
         if verify_otp_form.verification_code.data==session.get("otp"):
             flash("OTP verified successfully!", "success")
-            if not check_existing_user(session.get("email")):
-                new_user=User(name=session.get("name"),email=session.get("email"))
-                db.session.add(new_user)
+            user=check_existing_user(session.get("email"))
+            if not user:
+                user=User(name=session.get("name"),email=session.get("email"))
+                db.session.add(user)
                 db.session.commit()
-            login_user(new_user)
+            login_user(user)
             session.pop("otp",None) # if otp does not exist it will return None, else KeyError.
             session.pop("otp_created", None)
             session.pop("name",None)
@@ -117,7 +117,6 @@ def verify_otp():
 
 
 @app.route("/resend-otp")
-@logged_in_users_only
 def resend_otp():
     email=session.get("email")
     generate_otp(email)
@@ -139,9 +138,16 @@ def register():
     return render_template("register.html",form=register_form)
 
 
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
+
 @app.route("/")
 def home():
-    return render_template("header.html")
+    return render_template("dashboard.html")
 
 if __name__=="__main__":
     app.run(debug=True)

@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField,widgets
+from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, NumberRange
-
+from wtforms.widgets import ListWidget, CheckboxInput
 class Loginform(FlaskForm):
     email=EmailField("E-mail",validators=[DataRequired(),Email()])
     submit=SubmitField("verify")
@@ -49,7 +49,9 @@ class FitnessProfileform(FlaskForm):
                                                                    ("pullup", "Pull-up bar"),
                                                                    ("bench", "Bench"),
                                                                    ("kettlebell", "Kettlebell"),
-                                                                   ("barbell", "Barbell")])
+                                                                   ("barbell", "Barbell")],
+                                                        option_widget=CheckboxInput(),
+                                                        widget=ListWidget(prefix_label=False))
     submit = SubmitField("Save Profile")
 
     

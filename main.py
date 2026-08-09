@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, session, flash
-from forms import Loginform, OTPform, Registerform
+from forms import Loginform, OTPform, Registerform,FitnessProfileform
 from flask_bootstrap import Bootstrap5
 import random, smtplib, os, time
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
@@ -79,6 +79,13 @@ def generate_otp(email):
 def check_existing_user(email):
     return db.session.execute(db.select(User).where(User.email==email)).scalar()
 
+def pop_session():
+    session.pop("otp",None) # if otp does not exist it will return None, else KeyError.
+    session.pop("otp_created", None)
+    session.pop("name",None)
+    session.pop("email",None)
+
+
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
@@ -105,12 +112,11 @@ def verify_otp():
                 user=User(name=session.get("name"),email=session.get("email"))
                 db.session.add(user)
                 db.session.commit()
+                login_user(user)
+                return redirect(url_for('fitness_form'))
             login_user(user)
-            session.pop("otp",None) # if otp does not exist it will return None, else KeyError.
-            session.pop("otp_created", None)
-            session.pop("name",None)
-            session.pop("email",None)
-            return render_template("index.html")
+            pop_session()
+            return render_template("home.html")
         else:
            flash("Invalid OTP. Please try again.", "danger")
     return render_template("verify_otp.html",form=verify_otp_form,remaining=remaining)
@@ -137,6 +143,10 @@ def register():
         return redirect(url_for('verify_otp'))
     return render_template("register.html",form=register_form)
 
+@app.route("/fitness-profile",methods=["GET","POST"])
+def fitness_form():
+    fitness_form=FitnessProfileform()
+    return render_template("fitness-profile.html",form=fitness_form)
 
 @app.route("/logout")
 @login_required

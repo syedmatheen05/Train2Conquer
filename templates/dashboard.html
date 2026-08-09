@@ -1,5 +1,22 @@
-{% extends 'base.html' %}
-{% block title%}Dashboard{% endblock %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <title>Dashboard</title>
+</head>
+<body>
+    {% include 'navbar.html'%}
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Train2Conquer</h1>
+            <p>Your Home Workout & Fitness Companion</p>
+            <a href="#" class="btn btn-primary">Start Training</a>
+        </div>
+    </section>
+    {% include 'footer.html' %} 
+</body>
+</html>
 
-{% endblock%}

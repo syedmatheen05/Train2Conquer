@@ -1,0 +1,42 @@
+    <nav class="navbar navbar-expand-lg bg-light py-3 shadow-sm">
+        <div class="container-fluid px-4">
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold fs-2" href="#">Train2Conquer</a>
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Navbar Content -->
+        <div class="collapse navbar-collapse" id="navbar">
+            <!-- Center Links -->
+            <ul class="navbar-nav mx-auto gap-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Nutrition</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+            <!-- Right Side -->
+            <div class="d-flex align-items-center gap-4">
+                {% if current_user.is_authenticated %}
+                    <a href="{{url_for('logout')}}" class="btn btn-secondary">Log Out</a>
+                {% else %}
+                    <a href="{{url_for('login')}}" class="btn btn-primary">Log In</a>
+                    <a href="{{url_for('register')}}" class="btn btn-secondary">Sign Up</a>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+</nav>

@@ -5,4 +5,6 @@ WTForms==3.2.1
 Flask==3.1.3
 Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.1.0b1
-gunicorn==25.1.0
+gunicorn==25.1.0    
+email-validator==2.3.0
+psycopg[binary]

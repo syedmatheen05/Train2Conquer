@@ -27,8 +27,8 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
-#app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
-app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
+app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
+# app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
 db=SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
@@ -66,7 +66,7 @@ password=os.environ.get("PASSWORD")
 
 
 def send_verification_code(receiver_email,verification_code):
-    with smtplib.SMTP("smtp.gmail.com",port=587) as connection:
+    with smtplib.SMTP_SSL("smtp.gmail.com",port=465, timeout=20) as connection:
         connection.starttls()
         connection.login(user=my_email, password=password)
         connection.sendmail(from_addr=my_email,to_addrs=receiver_email,

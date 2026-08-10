@@ -67,10 +67,9 @@ password=os.environ.get("PASSWORD")
 
 def send_verification_code(receiver_email,verification_code):
     with smtplib.SMTP_SSL("smtp.gmail.com",port=465, timeout=20) as connection:
-        connection.starttls()
         connection.login(user=my_email, password=password)
         connection.sendmail(from_addr=my_email,to_addrs=receiver_email,
-                            msg=f"Subject:Train2Conquer Verification Code\n\nHello Your Train2Conquer verification code is:{verification_code}\nThis OTP is valid for 5 minutes.\nDo not share this code with anyone.\nRegards,\nTrain2Conquer Team")
+                            msg=f"Subject:Train2Conquer Verification Code\n\nHello Your Train2Conquer verification code is: {verification_code}\nThis OTP is valid for 5 minutes.\nDo not share this code with anyone.\nRegards,\nTrain2Conquer Team")
 
 def generate_otp(email):
         otp=random.randint(100000,999999)

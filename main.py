@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, flash
 from forms import Loginform, OTPform, Registerform,FitnessProfileform
 from flask_bootstrap import Bootstrap5
-import random, smtplib, os, time
+import random, os, time, resend
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
@@ -19,6 +19,7 @@ login_manager=LoginManager()
 login_manager.init_app(app)
 
 load_dotenv()
+resend.api_key=os.environ.get("API_KEY")
 
 class Base(DeclarativeBase):# Create a base class for all database models.A database model is a Python class that defines the structure of a database table. Each attribute in the class becomes a column in the table.
     pass
@@ -28,10 +29,11 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
 # "sqlite:///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
 app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
-# app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
+#app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
 db=SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
+
 
 #Create a User class that is a database table and has login features
 #This class is called a model because it models (describes) the structure of the table. 
@@ -41,15 +43,18 @@ class User(UserMixin,db.Model): # UserMixin Adds ready-made login features for F
     name:Mapped[str]=mapped_column(String(100),nullable=False)
     email:Mapped[str]=mapped_column(String(200),unique=True,nullable=False)
 
+
 # Tell Flask that the following code belongs to this application.
 with app.app_context():
     # Create all the tables in the database.
     # If the tables already exist, nothing happens.
     db.create_all()
 
+
 @login_manager.user_loader #Tells Flask-Login: Use the function below whenever you need to load a logged-in user.
 def load_user(user_id): #Flask-Login automatically passes the logged-in user's ID to this function
     return db.get_or_404(User,user_id) #Looks for the user with that ID in the User table. If found returns the User object else 404 error.
+
 
 def logged_in_users_only(function):
     @wraps(function)
@@ -61,15 +66,22 @@ def logged_in_users_only(function):
     return decorator_function
 
 
-my_email=os.environ.get("EMAIL")
-password=os.environ.get("PASSWORD")
+def send_verification_code(receiver_email, verification_code):
+    params = {
+        "from": "onboarding@resend.dev",
+        "to": [receiver_email],
+        "subject": "Train2Conquer Verification Code",
+        "html": f"""
+        <h2>Train2Conquer</h2>
+        <p>Hello,</p>
+        <p>Your Train2Conquer verification code is:</p>
+        <h1>{verification_code}</h1>
+        <p>This OTP is valid for 5 minutes.</p>
+        <p>Do not share this code with anyone.</p>
+        <p>Regards,<br>
+        Train2Conquer Team</p>"""}
+    resend.Emails.send(params)
 
-
-def send_verification_code(receiver_email,verification_code):
-    with smtplib.SMTP_SSL("smtp.gmail.com",port=465, timeout=20) as connection:
-        connection.login(user=my_email, password=password)
-        connection.sendmail(from_addr=my_email,to_addrs=receiver_email,
-                            msg=f"Subject:Train2Conquer Verification Code\n\nHello Your Train2Conquer verification code is: {verification_code}\nThis OTP is valid for 5 minutes.\nDo not share this code with anyone.\nRegards,\nTrain2Conquer Team")
 
 def generate_otp(email):
         otp=random.randint(100000,999999)

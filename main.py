@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
 from sqlalchemy import Integer, String, Text
 from functools import wraps
+from dotenv import load_dotenv
 
 # Creating flak object
 app=Flask(__name__)
@@ -17,6 +18,7 @@ bootstrap=Bootstrap5(app)
 login_manager=LoginManager()
 login_manager.init_app(app)
 
+load_dotenv()
 
 class Base(DeclarativeBase):# Create a base class for all database models.A database model is a Python class that defines the structure of a database table. Each attribute in the class becomes a column in the table.
     pass
@@ -26,6 +28,7 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
 # "sqlite:///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
 app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
+#app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
 db=SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.

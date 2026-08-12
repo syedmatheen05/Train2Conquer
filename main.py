@@ -5,9 +5,11 @@ import random, os, time, resend
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Integer, String, Text, Date, ForeignKey
 from functools import wraps
 from dotenv import load_dotenv
+from datetime import date, datetime
+from ai import generate_fitness_plan
 
 # Creating flak object
 app=Flask(__name__)
@@ -42,7 +44,26 @@ class User(UserMixin,db.Model): # UserMixin Adds ready-made login features for F
     id:Mapped[int]=mapped_column(Integer,primary_key=True)
     name:Mapped[str]=mapped_column(String(100),nullable=False)
     email:Mapped[str]=mapped_column(String(200),unique=True,nullable=False)
+class FitnessProfile(db.Model):
+    __tablename__ = "profiles"
+    id: Mapped[int] = mapped_column(Integer,primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),nullable=False,unique=True)
+    dob: Mapped[date] = mapped_column(Date,nullable=False)
+    height: Mapped[int] = mapped_column(Integer,nullable=False)
+    weight: Mapped[int] = mapped_column(Integer,nullable=False)
+    gender: Mapped[str] = mapped_column(String(20),nullable=False)
+    goal: Mapped[str] = mapped_column(String(50),nullable=False)
+    experience: Mapped[str] = mapped_column(String(30),nullable=False)
+    workout_days: Mapped[int] = mapped_column(Integer,nullable=False)
+    equipment: Mapped[str] = mapped_column(Text,nullable=False)
 
+class WorkoutPlan(db.Model):
+
+    __tablename__ = "workout_plans"
+    id: Mapped[int] = mapped_column(Integer,primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),nullable=False)
+    created_at = db.Column(db.DateTime,default=datetime.utcnow)
+    plan: Mapped[str] = mapped_column(Text,nullable=False)
 
 # Tell Flask that the following code belongs to this application.
 with app.app_context():
@@ -127,10 +148,10 @@ def verify_otp():
                 db.session.add(user)
                 db.session.commit()
                 login_user(user)
-                return redirect(url_for('fitness_form'))
+                return redirect(url_for('fitness_profile'))
             login_user(user)
             pop_session()
-            return render_template("home.html")
+            return redirect(url_for('home'))
         else:
            flash("Invalid OTP. Please try again.", "danger")
     return render_template("verify_otp.html",form=verify_otp_form,remaining=remaining)
@@ -158,20 +179,69 @@ def register():
     return render_template("register.html",form=register_form)
 
 @app.route("/fitness-profile",methods=["GET","POST"])
-def fitness_form():
+@login_required
+def fitness_profile():
     fitness_form=FitnessProfileform()
+    profile=db.session.execute(db.select(FitnessProfile).where(FitnessProfile.user_id==current_user.id)).scalar_one_or_none()
+    if fitness_form.validate_on_submit():
+        if profile:
+            # Update existing profile
+            profile.dob = fitness_form.dob.data
+            profile.height = fitness_form.height.data
+            profile.weight = fitness_form.weight.data
+            profile.gender = fitness_form.gender.data
+            profile.goal = fitness_form.goal.data
+            profile.experience = fitness_form.experience.data
+            profile.workout_days = int(fitness_form.workout_days.data)
+            profile.equipment = ",".join(fitness_form.equipment.data)
+        else:
+            #create new profile
+            profile=FitnessProfile(user_id=current_user.id,
+                                       dob=fitness_form.dob.data,
+                                       height=fitness_form.height.data,
+                                       weight=fitness_form.weight.data, 
+                                       gender=fitness_form.gender.data, 
+                                       goal=fitness_form.goal.data, 
+                                       experience=fitness_form.experience.data,
+                                       workout_days=int(fitness_form.workout_days.data),
+                                       equipment=",".join(fitness_form.equipment.data) )
+            db.session.add(profile)
+        db.session.commit()
+        flash("Fitness profile saved successfully!", "success")
+        profile_data = { "dob": profile.dob.strftime("%d-%m-%Y"), 
+                    "height": profile.height, 
+                    "weight": profile.weight, 
+                    "gender": profile.gender,
+                    "goal": profile.goal,
+                    "experience": profile.experience, 
+                    "workout_days": profile.workout_days,
+                    "equipment": profile.equipment.split(",") }
+        ai_result=generate_fitness_plan(profile=profile_data)
+        workout_plan = WorkoutPlan(user_id=current_user.id,plan=ai_result)
+        db.session.add(workout_plan)
+        db.session.commit()
+        return redirect(url_for('home'))
     return render_template("fitness-profile.html",form=fitness_form)
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('home'))
+    return redirect(url_for('dashboard'))
 
+@app.route("/home")
+@login_required
+def home():
+    workout_plans = db.session.execute(
+                                        db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id
+                                        ).order_by(WorkoutPlan.created_at.desc())
+                                      ).scalars().all()
+    print(workout_plans)
+    return render_template("home.html",workout_plans=workout_plans)
 
 @app.route("/")
-def home():
+def dashboard():
     return render_template("dashboard.html")
 
 if __name__=="__main__":
-    app.run(debug=False)
+    app.run(debug=True)

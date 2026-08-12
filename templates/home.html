@@ -9,13 +9,12 @@
 </head>
 <body>
     {% include 'navbar.html'%}
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Train2Conquer</h1>
-            <p>Welcome you are logged in</p>
-            <a href="#" class="btn btn-primary">Start Training</a>
-        </div>
-    </section>
+        {% for workout in workout_plans %}
+            <div class="workout-plan">
+                <h5>{{ workout.created_at.strftime("%d-%m-%Y") }}</h5>
+                <p>{{ workout.plan }}</p>
+            </div>
+        {% endfor %}
     {% include 'footer.html' %} 
 </body>
 </html>

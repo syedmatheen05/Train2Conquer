@@ -19,7 +19,7 @@ class Registerform(FlaskForm):
     submit=SubmitField("verify")
 
 class FitnessProfileform(FlaskForm):
-    dob=DateField("Date of Birth",format="%d-%m-%Y",validators=[DataRequired()])
+    dob=DateField("Date of Birth",format="%Y-%m-%d",validators=[DataRequired()])
     height=IntegerField("Height (cm)", validators=[DataRequired(),NumberRange(min=100,max=250)])
     weight=IntegerField("Weight (kg)",validators=[DataRequired(),NumberRange(20,200)])
     gender=SelectField("Gender",choices=[("male","Male"),("female","Female"),("other","Other")],validators=[DataRequired()])

@@ -28,7 +28,7 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
 
 # Configure the database connection for SQLAlchemy.
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
-# "sqlite:///" means use an SQLite database stored as a local file.
+# "sqlite:  ///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
 app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
 #app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
@@ -232,12 +232,37 @@ def logout():
 @app.route("/home")
 @login_required
 def home():
-    workout_plans = db.session.execute(
-                                        db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id
-                                        ).order_by(WorkoutPlan.created_at.desc())
-                                      ).scalars().all()
+    workout_plans = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().all()
     print(workout_plans)
     return render_template("home.html",workout_plans=workout_plans)
+
+@app.route("delete-account",methods=["GET","POST"])
+@login_required
+def delete_account():
+    user_id=current_user.id
+    # Delete fitness profile
+    fitness_profile=db.session.execute(db.select(FitnessProfile).where(FitnessProfile.user_id==user_id))
+    if fitness_profile:
+        db.session.delete(fitness_profile)
+
+    # Delete all workout plans
+    workout_plans=db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id==user_id)).all()
+    for plan in workout_plans:
+        db.session.delete(plan)
+
+    # Delete the user
+    user = db.session.get(User, user_id)
+    if user:
+        db.session.delete(user)
+
+    db.session.commit()
+     # Log the user out
+    logout_user()
+
+    flash("Your account and all related data have been deleted.", "success")
+    return redirect(url_for('dashboard'))
+
+ 
 
 @app.route("/")
 def dashboard():

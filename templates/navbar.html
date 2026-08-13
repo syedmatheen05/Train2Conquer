@@ -15,11 +15,7 @@
             <!-- Center Links -->
             <ul class="navbar-nav mx-auto gap-4">
                 <li class="nav-item">
-                    {% if current_user.is_authenticated %}
-                        <a id="home" class="nav-link" href="{{url_for('home')}}">Home</a>
-                    {% else %}
-                        <a id="dashboard" class="nav-link" href="{{url_for('dashboard')}}">Home</a>
-                    {% endif %}
+                    <a id="home" class="nav-link" href="{{url_for('home')}}">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Nutrition</a>

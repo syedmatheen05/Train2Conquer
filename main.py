@@ -30,12 +30,11 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:  ///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
-app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
-#app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
+#app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
+app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
 db=SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
-
 
 #Create a User class that is a database table and has login features
 #This class is called a model because it models (describes) the structure of the table. 
@@ -58,7 +57,6 @@ class FitnessProfile(db.Model):
     equipment: Mapped[str] = mapped_column(Text,nullable=False)
 
 class WorkoutPlan(db.Model):
-
     __tablename__ = "workout_plans"
     id: Mapped[int] = mapped_column(Integer,primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),nullable=False)
@@ -71,11 +69,9 @@ with app.app_context():
     # If the tables already exist, nothing happens.
     db.create_all()
 
-
 @login_manager.user_loader #Tells Flask-Login: Use the function below whenever you need to load a logged-in user.
 def load_user(user_id): #Flask-Login automatically passes the logged-in user's ID to this function
     return db.get_or_404(User,user_id) #Looks for the user with that ID in the User table. If found returns the User object else 404 error.
-
 
 def logged_in_users_only(function):
     @wraps(function)
@@ -85,7 +81,6 @@ def logged_in_users_only(function):
            return redirect(url_for('login'))
         return function(*args,**kwargs)
     return decorator_function
-
 
 def send_verification_code(receiver_email, verification_code):
     params = {
@@ -103,7 +98,6 @@ def send_verification_code(receiver_email, verification_code):
         Train2Conquer Team</p>"""}
     resend.Emails.send(params)
 
-
 def generate_otp(email):
         otp=random.randint(100000,999999)
         session["email"]=email
@@ -120,8 +114,6 @@ def pop_session():
     session.pop("name",None)
     session.pop("email",None)
 
-
-
 @app.route("/login", methods = ["GET", "POST"])
 def login():
     login_form = Loginform()
@@ -133,7 +125,6 @@ def login():
         generate_otp(email)
         return redirect(url_for('verify_otp'))
     return render_template("login.html",form=login_form)
-
 
 @app.route("/verify-otp",methods=["GET","POST"])
 def verify_otp():
@@ -156,13 +147,11 @@ def verify_otp():
            flash("Invalid OTP. Please try again.", "danger")
     return render_template("verify_otp.html",form=verify_otp_form,remaining=remaining)
 
-
 @app.route("/resend-otp")
 def resend_otp():
     email=session.get("email")
     generate_otp(email)
     return redirect(url_for('verify_otp'))
-
 
 @app.route("/register",methods=["GET","POST"])
 def register():
@@ -227,43 +216,31 @@ def fitness_profile():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('home'))
 
-@app.route("/home")
-@login_required
-def home():
-    workout_plans = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().all()
-    print(workout_plans)
-    return render_template("home.html",workout_plans=workout_plans)
 
 @app.route("/delete-account",methods=["POST"])
 @login_required
 def delete_account():
     user_id = current_user.id
-    print("USER ID:", user_id)
     fitness_profile = FitnessProfile.query.filter_by(user_id=user_id).first()
-    print("FITNESS PROFILE FOUND:", fitness_profile)
     if fitness_profile:
-        print("PROFILE USER ID:", fitness_profile.user_id)
         db.session.delete(fitness_profile)
-   
-
     workout_plans = WorkoutPlan.query.filter_by(user_id=user_id).all()
     for plan in workout_plans:
         db.session.delete(plan)
-
     user = db.session.get(User, user_id)
-    print("USER FOUND:", user)
-    print("DELETE COMMITTED")
     if user:
         db.session.delete(user)
     db.session.commit()
     logout_user()
-    return redirect(url_for('dashboard'))
-
+    return redirect(url_for('home'))
 
 @app.route("/")
-def dashboard():
+def home():
+    if current_user.is_authenticated:
+        workout_plans = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().all()
+        return render_template("home.html",workout_plans=workout_plans)
     return render_template("dashboard.html")
 
 if __name__=="__main__":

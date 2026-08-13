@@ -2,7 +2,9 @@
 {% from 'bootstrap5/form.html' import render_form %}
 {% block title %}Log-in{% endblock %}
 {% block content %}
+<div class="card shadow-sm border-0 p-4">
+    <h2 class="text-center mb-4">Login</h2>
     {{ render_form(form) }}
-    <br>
-    <p>Don't have an account ? <a href="{{url_for('register')}}">create new</a></p>
+    <p class="text-center mt-3 mb-0">Don't have an account ? <a href="{{url_for('register')}}">create new</a></p>
+</div>
 {% endblock %}

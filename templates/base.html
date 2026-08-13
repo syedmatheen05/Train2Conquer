@@ -6,10 +6,11 @@
     {{ bootstrap.load_css() }}
     <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
     <title>{% block title %} {% endblock %}</title>
-</head>
-<body>
+</head> 
+<body class="d-flex flex-column min-vh-100">
 {% include 'navbar.html' %}
-<div class="container mt-5">
+<main class="flex-grow-1 d-flex align-items-center">
+<div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-5 col-md-7 col-sm-10">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -26,6 +27,7 @@
         </div>
     </div>
 </div>
+</main>
 {% include "footer.html" %}
     {{ bootstrap.load_js() }}
     <script src="{{url_for('static',filename='js/script.js')}}"></script>

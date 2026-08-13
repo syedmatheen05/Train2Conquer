@@ -2,7 +2,7 @@
     max-width: 50%;
 }
 .hero {
-    min-height: 700px;
+    min-height: 1200px;
     background-image: url("../assets/img/download.jpg");
     background-size: cover;
     background-position: center;
@@ -17,4 +17,10 @@
 ul {
     list-style: none;
     padding-left: 0;
+}
+nav{
+    min-height: 40px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }

@@ -170,8 +170,13 @@ def register():
 @app.route("/fitness-profile",methods=["GET","POST"])
 @login_required
 def fitness_profile():
-    fitness_form=FitnessProfileform()
     profile=db.session.execute(db.select(FitnessProfile).where(FitnessProfile.user_id==current_user.id)).scalar_one_or_none()
+    if profile:
+        fitness_form=FitnessProfileform(obj=profile)
+        if profile.equipment:
+            fitness_form.equipment.data = profile.equipment.split(",")
+    else:
+        fitness_form = FitnessProfileform()
     if fitness_form.validate_on_submit():
         if profile:
             # Update existing profile
@@ -185,6 +190,7 @@ def fitness_profile():
             profile.equipment = ",".join(fitness_form.equipment.data)
         else:
             #create new profile
+            fitness_form=FitnessProfileform()
             profile=FitnessProfile(user_id=current_user.id,
                                        dob=fitness_form.dob.data,
                                        height=fitness_form.height.data,
@@ -242,6 +248,10 @@ def home():
         workout_plans = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().all()
         return render_template("home.html",workout_plans=workout_plans)
     return render_template("dashboard.html")
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 if __name__=="__main__":
     app.run(debug=False, port=5002)

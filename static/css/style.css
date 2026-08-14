@@ -21,3 +21,13 @@ ul {
 nav{
     min-height: 40px;
 }
+@media (min-width: 992px) {
+    .navbar .dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 0;
+    }
+}
+.profile-dropdown {
+    left: auto !important;
+    right: 0 !important;
+}

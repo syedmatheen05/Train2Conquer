@@ -1,23 +1,16 @@
 <footer class="border-top py-1 mt-2">
     <div class="container">
-    <div class="text-center">
-
-        <h5 class="mb-1">Train2Conquer</h5>
-
-        <p class="text-muted mb-1 small">
-            Your Home Workout & Fitness Companion
-        </p>
-
-        <div class="mb-1">
-            <a href="{{url_for('home')}}" class="text-decoration-none mx-2 small">Home</a>
-            <a href="#" class="text-decoration-none mx-2 small">Workouts</a>
-            <a href="#" class="text-decoration-none mx-2 small">About</a>
-            <a href="#" class="text-decoration-none mx-2 small">Contact</a>
+        <div class="text-center">
+            <h5 class="mb-1">Train2Conquer</h5>
+            <p class="text-muted mb-1 small">Your Home Workout & Fitness Companion</p>
+            <div class="mb-1">
+                <a href="{{url_for('home')}}" class="text-decoration-none mx-2 small">Home</a>
+                <a href="#" class="text-decoration-none mx-2 small">Workouts</a>
+                <a href="{{url_for('about')}}" class="text-decoration-none mx-2 small">About</a>
+                <a href="#" class="text-decoration-none mx-2 small">Contact</a>
+            </div>
+            <p class="text-muted mb-0 small"> © 2025 Train2Conquer. All Rights Reserved.</p>
         </div>
-        <p class="text-muted mb-0 small">
-            © 2025 Train2Conquer. All Rights Reserved.
-        </p>
-    </div>
     </div>
 </footer>
 {{ bootstrap.load_js() }}

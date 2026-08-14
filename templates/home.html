@@ -6,15 +6,41 @@
     {{ bootstrap.load_css() }}
     <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
     <title>Home</title>
-</head>
-<body>
-    {% include 'navbar.html'%}
-        {% for workout in workout_plans %}
+</head> 
+<body class="d-flex flex-column min-vh-100">
+{% include 'navbar.html' %}
+{% for workout in workout_plans %}
             <div class="workout-plan">
                 <h5>{{ workout.created_at.strftime("%d-%m-%Y") }}</h5>
                 <p>{{ workout.plan }}</p>
             </div>
-        {% endfor %}
-    {% include 'footer.html' %} 
+{% endfor %}
+<main class="flex-grow-1 d-flex align-items-center">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-10">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category,message in messages %}
+                        <div id="flash-messages" class="alert alert-{{category}}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+</main>
+{% include "footer.html" %}
+    {{ bootstrap.load_js() }}
+    <script src="{{url_for('static',filename='js/script.js')}}"></script>
+    <script>
+        setTimeout(function(){let flash=document.getElementById("flash-messages");
+                if(flash){
+                    flash.remove();
+                }} ,2000);
+    </script>
 </body>
 </html>
+       

@@ -1,6 +1,5 @@
-
-<nav class="navbar navbar-expand-lg bg-light shadow-sm sticky-top">
-        <div class="container-fluid px-4">
+<nav class="navbar navbar-expand-lg bg-light shadow-sm rounded-bottom sticky-top">
+    <div class="container-fluid px-4">
         <!-- Logo -->
         <a class="navbar-brand fw-bold fs-4" href="#">Train2Conquer</a>
         <!-- Mobile Toggle -->
@@ -21,27 +20,74 @@
                     <a class="nav-link" href="#">Nutrition</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
+                    <a class="nav-link" href="{{url_for('about')}}">About</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Contact</a>
                 </li>
             </ul>
             <!-- Right Side -->
-            <div class="d-flex align-items-center gap-4">
-                {% if current_user.is_authenticated %}
-                    <a href="{{url_for('logout')}}" class="btn btn-secondary btn-sm">Log Out</a>
-                    <a href="{{url_for('fitness_profile')}}" class="btn btn-secondary btn-sm">Edit Profile</a>
-                    <form action="{{ url_for('delete_account') }}" method="POST">
-                        <button class="btn btn-danger btn-sm" type="submit">Delete Account</button>
-                    </form> <!-- <a> tag will always send GET request -->
-                {% else %}
-                    <a href="{{url_for('login')}}" class="btn btn-dark btn-sm">Log In</a>
-                    <a href="{{url_for('register')}}" class="btn btn-outline-dark btn-sm">Sign Up</a>
-                {% endif %}
-            </div>
+          <!-- Right Side -->
+    <div class="d-flex align-items-center">
+        {% if current_user.is_authenticated %}
+        <div class="dropdown">
+            <!-- Profile -->
+            <a href="#"
+               class="d-flex align-items-center text-decoration-none"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+                <!-- DP -->
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold me-2"
+                     style="width: 40px; height: 40px;">
+                    {{ current_user.email[0].upper() }}
+                </div>
+                <!-- Email -->
+                <span class="text-dark">
+                    {{ current_user.name }}
+                </span>
 
+            </a>
+            <!-- Dropdown Menu -->
+            <ul class="dropdown-menu shadow profile-dropdown">
+                <!-- Email -->
+                <li>
+                    <h6 class="dropdown-header">
+                        {{ current_user.email }}
+                    </h6>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <!-- Edit Profile -->
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('fitness_profile') }}">✏️ Edit Profile</a>
+                </li>
+                <!-- Account Settings -->
+                <li>
+                    <a class="dropdown-item" href="#">⚙️ Account Settings</a>
+                </li>
+                <!-- Privacy -->
+                <li>
+                    <a class="dropdown-item" href="#">🔒 Privacy & Security</a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <!-- Logout -->
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('logout') }}">🚪 Log Out</a>
+                </li>
+                <!-- Delete -->
+                <li>
+                    <form action="{{ url_for('delete_account') }}"
+                          method="POST">
+                        <button class="dropdown-item text-danger" type="submit"> 🗑️ Delete Account</button>
+                    </form>
+                </li>
+            </ul>
         </div>
-
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-dark btn-sm me-2">Log In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-dark btn-sm">Sign Up</a>
+        {% endif %}
     </div>
+</div>
+</div>
+</div>
 </nav>

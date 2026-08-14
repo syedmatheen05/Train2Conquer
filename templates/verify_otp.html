@@ -7,7 +7,7 @@
         <h2 class="text-center mb-4">Verify OTP</h2>
         {{ render_form(form) }}
         <p id="timer" class="mt-3">Resend OTP in <span id="countdown">30</span> seconds</p><br>
-        <a id="resend-btn" class="btn btn-secondary btn-sm w-auto d-inline-block d-none" href="{{url_for('resend_otp')}}">Resend Code</a>
+        <a id="resend-btn" class="btn btn-secondary btn-sm w-auto d-inline-block d-none" href="{{url_for('resend_otp')}}" style="display:none;">Resend Code</a>
     </div>
 <script>
     let seconds={{ remaining | tojson }};

@@ -6,32 +6,52 @@
     {{ bootstrap.load_css() }}
     <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
     <title>Home</title>
+    <style>img{
+        max-width: 100px;
+    }
+    </style>
 </head> 
 <body class="d-flex flex-column min-vh-100">
 {% include 'navbar.html' %}
+<div class="container my-5">
+    
+
+    <h1 class="text-center fw-bold mb-2">
+        Your 7-Day Workout Plan
+    </h1>
+
+    <p class="text-center text-muted mb-5">
+        Train consistently. Stay strong. Conquer your goals.
+    </p>
+
 {% for workout in workout_plans %}
-            <div class="workout-plan">
-                <h5>{{ workout.created_at.strftime("%d-%m-%Y") }}</h5>
-                <p>{{ workout.plan }}</p>
+
+    <div class="workout-plan">
+        {% for day_key, day in workout.plan.items() %}
+            <div class="workout-row">
+                <!-- IMAGE -->
+                <img
+                    src="{{ url_for('static', filename='assets/images/chest-bicep.jpg') }}"
+                    class="workout-image"
+                    alt="{{ day[0][0] }}"
+                >
+                <!-- CONTENT -->
+                <div class="workout-info">
+                    <h2>Day {{ loop.index }}</h2>
+                    <h4>{{ day[0][0] }}</h4>
+                    <p>{{ day[0][1] }}</p>
+                </div>
+                <!-- BUTTON -->
+                <div class="workout-action">
+                    <a href="{{ url_for('start_workout', day=loop.index) }}"
+                       class="btn btn-primary">
+                        Start Training
+                    </a>
+                </div>
             </div>
-{% endfor %}
-<main class="flex-grow-1 d-flex align-items-center">
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-5 col-md-7 col-sm-10">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category,message in messages %}
-                        <div id="flash-messages" class="alert alert-{{category}}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
+        {% endfor %}
     </div>
-</div>
-</main>
+{% endfor %}
 {% include "footer.html" %}
     {{ bootstrap.load_js() }}
     <script src="{{url_for('static',filename='js/script.js')}}"></script>

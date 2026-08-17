@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, flash
 from forms import Loginform, OTPform, Registerform,FitnessProfileform
 from flask_bootstrap import Bootstrap5
-import random, os, time, resend
+import random, os, time, resend, json
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
@@ -242,13 +242,70 @@ def delete_account():
     logout_user()
     return redirect(url_for('home'))
 
+@app.route("/start-workout/<int:day>")
+@login_required
+def start_workout(day):
+    workout_plan_db = (
+        db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().first())
+    if not workout_plan_db:
+        return "No workout found", 404
+    plan = json.loads(workout_plan_db.plan)
+    day_key = f"day_{day}"
+    if day_key not in plan:
+        return "Workout day not found", 404
+    workouts = plan[day_key][1:]
+    exercise_names = {
+    "jumping-jacks": "Jumping Jacks",
+    "high-knees": "High Knees",
+    "push-ups": "Push Ups",
+    "pull-ups": "Pull Ups",
+    "hindu-push-ups": "Hindu Push Ups",
+    "military-push-ups": "Military Push Ups",
+    "pike-push-ups": "Pike Push Ups",
+    "incline-push-ups": "Incline Push Ups",
+    "decline-push-ups": "Decline Push Ups",
+    "burpees": "Burpees",
+    "mountain-climbers": "Mountain Climbers",
+    "diamond-push-ups": "Diamond Push Ups",
+    "cobra-stretch": "Cobra Stretch",
+    "sit-ups": "Sit Ups",
+    "bicycle-crunches": "Bicycle Crunches",
+    "v-up": "V Ups",
+    "russian-twist": "Russian Twists",
+    "butt-bridge": "Glute Bridge",
+    "plank": "Plank",
+    "skipping": "Skipping",
+    "skipping-without-rope": "Skipping Without Rope",
+    "alternating-hooks": "Alternating Hooks",
+    "dumbell-bicep-curls": "Dumbbell Bicep Curls",
+    "tricep-kickbacks": "Tricep Kickbacks",
+    "tricep-overhead-single-arm-dumbell-extension-left": "Tricep Overhead Dumbbell Extension Left",
+    "tricep-overhead-single-arm-dumbell-extension-right": "Tricep Overhead Dumbbell Extension Right",
+    "squats": "Squats",
+    "lunges-with-dumbells": "Lunges With Dumbbells",
+    "lunges-with-bagpack": "Lunges With Backpack",
+    "jumping-squats": "Jumping Squats",
+    "wall-sit": "Wall Sit",
+    "mike-tyson-push-ups": "Mike Tyson Push Ups",
+    "cat-cow-pose": "Cat Cow Pose",
+    "floor-y-raises": "Floor Y Raises",
+    "reverse-snow-angels": "Reverse Snow Angels",
+    "child-pose": "Child's Pose"
+    }
+    for workout in workouts:
+        workout["exercise"] = exercise_names.get(workout["exercise"],"")
+
+    return render_template("workout.html",day_number=day,workouts=workouts)
+
 @app.route("/")
 def home():
     if current_user.is_authenticated:
         workout_plans = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().all()
+        for workout_plan in workout_plans:
+            workout_plan.plan = json.loads(workout_plan.plan)
         return render_template("home.html",workout_plans=workout_plans)
     return render_template("dashboard.html")
-
+ 
 @app.route("/about")
 def about():
     return render_template("about.html")

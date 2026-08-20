@@ -1,4 +1,4 @@
-import os, json
+import os, json, time
 from google import genai
 from dotenv import load_dotenv
 client=genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -510,9 +510,14 @@ def generate_fitness_plan(profile):
     {json.dumps(profile, indent=2)}
     AVAILABLE EXERCISE KEYS: {exercise_keys}
     Image keys: {image_keys}"""
-    
-   
-    response=client.models.generate_content(model="gemini-3.1-flash-lite", contents=prompt, 
+    for attempt in range(3):
+        try:
+            response=client.models.generate_content(model="gemini-3.1-flash-lite", contents=prompt, 
                                             config={"response_mime_type": "application/json"})
+            break
+        except Exception:
+            if attempt==2:
+                return None
+        time.sleep(2)
     ai_result=json.loads(response.text)
     return json.dumps(ai_result)

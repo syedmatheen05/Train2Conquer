@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, flash
 from forms import Loginform, OTPform, Registerform,FitnessProfileform
 from flask_bootstrap import Bootstrap5
-import random, os, time, resend, json
+import random, os, time, resend, json, smtplib
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
@@ -10,6 +10,8 @@ from functools import wraps
 from dotenv import load_dotenv
 from datetime import date, datetime
 from ai import generate_fitness_plan
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Creating flak object
 app=Flask(__name__)
@@ -30,8 +32,8 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:  ///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
-#app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
-app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
+app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
+#app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
 db=SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
@@ -82,21 +84,29 @@ def logged_in_users_only(function):
         return function(*args,**kwargs)
     return decorator_function
 
-def send_verification_code(receiver_email, verification_code):
-    params = {
-        "from": "onboarding@resend.dev",
-        "to": [receiver_email],
-        "subject": "Train2Conquer Verification Code",
-        "html": f"""
-        <h2>Train2Conquer</h2>
-        <p>Hello,</p>
-        <p>Your Train2Conquer verification code is:</p>
-        <h3>{verification_code}</h3>
-        <p>This OTP is valid for 5 minutes.</p>
-        <p>Do not share this code with anyone.</p>
-        <p>Regards,<br>
-        Train2Conquer Team</p>"""}
-    resend.Emails.send(params)
+def send_verification_code(email, otp):
+    sender_email = os.environ.get("EMAIL")
+    sender_password = os.environ.get("PASSWORD")
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = email
+    message["Subject"] = "Train2Conquer Verification Code"
+    body = f"""
+    <html>
+        <body>
+            <h2>Train2Conquer</h2>
+            <p>Your verification code is:</p>
+            <h1>{otp}</h1>
+            <p>Enter this code to verify your email.</p>
+        </body>
+    </html>
+    """
+    message.attach(MIMEText(body, "html"))
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(
+            sender_email, email,message.as_string()) 
 
 def generate_otp(email):
         otp=random.randint(100000,999999)
@@ -212,6 +222,9 @@ def fitness_profile():
                     "workout_days": profile.workout_days,
                     "equipment": profile.equipment.split(",") }
         ai_result=generate_fitness_plan(profile=profile_data)
+        if ai_result is None:
+            flash("We couldn't generate your workout plan right now. Please try again.","danger")
+            return redirect(url_for("fitness_profile"))
         workout_plan = WorkoutPlan(user_id=current_user.id,plan=ai_result)
         db.session.add(workout_plan)
         db.session.commit()

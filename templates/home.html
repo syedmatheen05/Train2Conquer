@@ -24,9 +24,9 @@
         Train consistently. Stay strong. Conquer your goals.
     </p>
 
-{% for workout in workout_plans %}
+{% if workout_plan %}
     <div class="workout-plan">
-        {% for day_key, day in workout.plan.items() %}
+        {% for day_key, day in workout_plan_data.items() %}
             <div class="workout-row">
                 <!-- IMAGE -->
                 <img
@@ -42,15 +42,38 @@
                 </div>
                 <!-- BUTTON -->
                 <div class="workout-action">
-                    <a href="{{ url_for('start_workout', day=loop.index) }}"
-                       class="btn btn-primary">
-                        Start Training
-                    </a>
+                    {% if loop.index in completed_days %}
+                        <button class="btn btn-success" disabled>✓ Completed</button>
+                    {% else %}
+                        <a href="{{ url_for('start_workout', day=loop.index) }}" class="btn btn-primary">Start Training</a>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
     </div>
-{% endfor %}
+
+    {% else %}
+
+        <div class="text-center mt-5">
+
+            <h3>
+                You don't have a workout plan yet.
+            </h3>
+
+            <p class="text-muted">
+                Complete your fitness profile to generate your plan.
+            </p>
+
+            <a
+                href="{{ url_for('fitness_profile') }}"
+                class="btn btn-primary"
+            >
+                Create Workout Plan
+            </a>
+
+        </div>
+
+    {% endif %}
 {% include "footer.html" %}
     {{ bootstrap.load_js() }}
     <script src="{{url_for('static',filename='js/script.js')}}"></script>

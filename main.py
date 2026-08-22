@@ -12,7 +12,7 @@ from datetime import date, datetime
 from ai import generate_fitness_plan
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
+from sqlalchemy.pool import NullPool
 # Creating flak object
 app=Flask(__name__)
 #that Flask-WTF needs a secret key to generate and verify the CSRF token.
@@ -28,13 +28,18 @@ resend.api_key=os.environ.get("API_KEY")
 class Base(DeclarativeBase):# Create a base class for all database models.A database model is a Python class that defines the structure of a database table. Each attribute in the class becomes a column in the table.
     pass
 
+
+database_url = os.environ.get("SUBABASE","sqlite:///train2conquer.db")
 # Configure the database connection for SQLAlchemy.
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:  ///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
-app.config["SQLALCHEMY_DATABASE_URI"]=os.environ.get("DATABASE_URL","sqlite:///train2conquer.db") 
+app.config["SQLALCHEMY_DATABASE_URI"]=database_url 
 #app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
-db=SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
+if database_url.startswith("postgresql://"):
+    db = SQLAlchemy(model_class=Base,engine_options={"poolclass": NullPool})
+else:
+    db = SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
 
@@ -61,9 +66,11 @@ class FitnessProfile(db.Model):
 class WorkoutPlan(db.Model):
     __tablename__ = "workout_plans"
     id: Mapped[int] = mapped_column(Integer,primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),nullable=False,unique=True)
     created_at = db.Column(db.DateTime,default=datetime.utcnow)
     plan: Mapped[str] = mapped_column(Text,nullable=False)
+    completed_days: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+
 
 # Tell Flask that the following code belongs to this application.
 with app.app_context():
@@ -80,7 +87,7 @@ def logged_in_users_only(function):
     def decorator_function(*args,**kwargs):
         if not current_user.is_authenticated:
            flash("Please login or register first.", "warning")
-           return redirect(url_for('login'))
+           return redirect(url_for('login'))    
         return function(*args,**kwargs)
     return decorator_function
 
@@ -177,19 +184,21 @@ def register():
         return redirect(url_for('verify_otp'))
     return render_template("register.html",form=register_form)
 
-@app.route("/fitness-profile",methods=["GET","POST"])
+@app.route("/fitness-profile", methods=["GET", "POST"])
 @login_required
 def fitness_profile():
-    profile=db.session.execute(db.select(FitnessProfile).where(FitnessProfile.user_id==current_user.id)).scalar_one_or_none()
+    profile = db.session.execute(db.select(FitnessProfile).where(FitnessProfile.user_id == current_user.id)).scalar_one_or_none()
+    # Existing profile
     if profile:
-        fitness_form=FitnessProfileform(obj=profile)
+        fitness_form = FitnessProfileform(obj=profile)
         if profile.equipment:
             fitness_form.equipment.data = profile.equipment.split(",")
+    # New profile
     else:
         fitness_form = FitnessProfileform()
     if fitness_form.validate_on_submit():
+        # UPDATE EXISTING PROFILE
         if profile:
-            # Update existing profile
             profile.dob = fitness_form.dob.data
             profile.height = fitness_form.height.data
             profile.weight = fitness_form.weight.data
@@ -198,38 +207,62 @@ def fitness_profile():
             profile.experience = fitness_form.experience.data
             profile.workout_days = int(fitness_form.workout_days.data)
             profile.equipment = ",".join(fitness_form.equipment.data)
+        # CREATE NEW PROFILE
         else:
-            #create new profile
-            fitness_form=FitnessProfileform()
-            profile=FitnessProfile(user_id=current_user.id,
-                                       dob=fitness_form.dob.data,
-                                       height=fitness_form.height.data,
-                                       weight=fitness_form.weight.data, 
-                                       gender=fitness_form.gender.data, 
-                                       goal=fitness_form.goal.data, 
-                                       experience=fitness_form.experience.data,
-                                       workout_days=int(fitness_form.workout_days.data),
-                                       equipment=",".join(fitness_form.equipment.data) )
+            profile = FitnessProfile(
+                user_id=current_user.id,
+                dob=fitness_form.dob.data,
+                height=fitness_form.height.data,
+                weight=fitness_form.weight.data,
+                gender=fitness_form.gender.data,
+                goal=fitness_form.goal.data,
+                experience=fitness_form.experience.data,
+                workout_days=int(fitness_form.workout_days.data),
+                equipment=",".join(fitness_form.equipment.data))
             db.session.add(profile)
+        # Save profile
         db.session.commit()
         flash("Fitness profile saved successfully!", "success")
-        profile_data = { "dob": profile.dob.strftime("%d-%m-%Y"), 
-                    "height": profile.height, 
-                    "weight": profile.weight, 
-                    "gender": profile.gender,
-                    "goal": profile.goal,
-                    "experience": profile.experience, 
-                    "workout_days": profile.workout_days,
-                    "equipment": profile.equipment.split(",") }
-        ai_result=generate_fitness_plan(profile=profile_data)
+
+        # PREPARE DATA FOR AI
+        profile_data = {
+            "dob": profile.dob.strftime("%d-%m-%Y"),
+            "height": profile.height,
+            "weight": profile.weight,
+            "gender": profile.gender,
+            "goal": profile.goal,
+            "experience": profile.experience,
+            "workout_days": profile.workout_days,
+            "equipment": profile.equipment.split(",")
+        }
+
+        # GENERATE AI WORKOUT PLAN
+        ai_result = generate_fitness_plan(profile=profile_data)
         if ai_result is None:
             flash("We couldn't generate your workout plan right now. Please try again.","danger")
             return redirect(url_for("fitness_profile"))
-        workout_plan = WorkoutPlan(user_id=current_user.id,plan=ai_result)
-        db.session.add(workout_plan)
+        
+        # FIND EXISTING WORKOUT PLAN
+        workout_plan = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id)).scalar_one_or_none()
+
+        # OVERWRITE EXISTING PLAN
+        if workout_plan:
+            workout_plan.plan = ai_result
+            workout_plan.created_at = datetime.utcnow()
+            # New plan = reset completed days
+            workout_plan.completed_days = "[]"
+
+        # CREATE FIRST WORKOUT PLAN
+        else:
+            workout_plan = WorkoutPlan(user_id=current_user.id,plan=ai_result,completed_days="[]")
+            db.session.add(workout_plan)
+
+        # Save workout plan
         db.session.commit()
-        return redirect(url_for('home'))
-    return render_template("fitness-profile.html",form=fitness_form)
+
+        flash("Your workout plan has been updated!","success")
+        return redirect(url_for("home"))
+    return render_template( "fitness-profile.html", form=fitness_form)
 
 @app.route("/logout")
 @login_required
@@ -238,22 +271,19 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route("/delete-account",methods=["POST"])
+@app.route("/delete-account", methods=["POST"])
 @login_required
 def delete_account():
     user_id = current_user.id
-    fitness_profile = FitnessProfile.query.filter_by(user_id=user_id).first()
-    if fitness_profile:
-        db.session.delete(fitness_profile)
-    workout_plans = WorkoutPlan.query.filter_by(user_id=user_id).all()
-    for plan in workout_plans:
-        db.session.delete(plan)
-    user = db.session.get(User, user_id)
-    if user:
-        db.session.delete(user)
+    # Delete fitness profile directly from database
+    FitnessProfile.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    # Delete workout plan directly from database
+    WorkoutPlan.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    # Delete user
+    User.query.filter_by(id=user_id).delete(synchronize_session=False)
     db.session.commit()
     logout_user()
-    return redirect(url_for('home'))
+    return redirect(url_for("home"))
 
 @app.route("/start-workout/<int:day>")
 @login_required
@@ -310,13 +340,33 @@ def start_workout(day):
 
     return render_template("workout.html",day_number=day,workouts=workouts)
 
+@app.route("/complete-workout/<int:day>", methods=["POST"])
+@login_required
+def complete_workout(day):
+    workout_plan = WorkoutPlan.query.filter_by(user_id=current_user.id).first()
+    if not workout_plan:
+        return redirect(url_for("home"))
+    completed_days = json.loads(workout_plan.completed_days or "[]")
+    if day not in completed_days:
+        completed_days.append(day)
+    workout_plan.completed_days = json.dumps(completed_days)
+    db.session.commit()
+    return redirect(url_for("home"))
+
+
 @app.route("/")
 def home():
+    workout_plan = None
+    workout_plan_data=None
+    completed_days = []
     if current_user.is_authenticated:
-        workout_plans = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id).order_by(WorkoutPlan.created_at.desc())).scalars().all()
-        for workout_plan in workout_plans:
-            workout_plan.plan = json.loads(workout_plan.plan)
-        return render_template("home.html",workout_plans=workout_plans)
+        workout_plan = WorkoutPlan.query.filter_by(user_id=current_user.id).first()
+        if workout_plan:
+            # Convert database JSON string → Python dictionary
+            workout_plan_data = json.loads(workout_plan.plan)
+            # Get completed days from the WorkoutPlan itself
+            completed_days = json.loads(workout_plan.completed_days or "[]")
+        return render_template("home.html",workout_plan=workout_plan,workout_plan_data=workout_plan_data,completed_days=completed_days)
     return render_template("dashboard.html")
  
 @app.route("/about")

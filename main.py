@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, flash
 from forms import Loginform, OTPform, Registerform,FitnessProfileform
 from flask_bootstrap import Bootstrap5
-import random, os, time, resend, json, smtplib
+import random, os, time, json, smtplib
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
@@ -23,8 +23,6 @@ login_manager=LoginManager()
 login_manager.init_app(app)
 
 load_dotenv()
-resend.api_key=os.environ.get("API_KEY")
-
 class Base(DeclarativeBase):# Create a base class for all database models.A database model is a Python class that defines the structure of a database table. Each attribute in the class becomes a column in the table.
     pass
 

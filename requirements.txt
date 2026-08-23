@@ -9,5 +9,4 @@ gunicorn==25.1.0
 email-validator==2.3.0
 psycopg[binary]
 python-dotenv
-resend
 google-genai

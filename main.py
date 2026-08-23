@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, session, flash
 from forms import Loginform, OTPform, Registerform,FitnessProfileform
 from flask_bootstrap import Bootstrap5
 import random, os, time, resend, json, smtplib
-from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user,current_user, login_required
 from sqlalchemy import Integer, String, Text, Date, ForeignKey

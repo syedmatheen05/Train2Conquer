@@ -51,6 +51,21 @@
             </div>
         {% endfor %}
     </div>
+        <div class="text-center my-5">
+
+        <form method="POST" action="{{ url_for('load_next_week') }}">
+
+            <button
+                type="submit"
+                class="btn btn-primary btn-lg px-5" id="next-week-button" disabled>
+                
+                Load Next Week →
+
+            </button>
+
+        </form>
+
+    </div>
 
     {% else %}
 
@@ -82,7 +97,12 @@
                 if(flash){
                     flash.remove();
                 }} ,2000);
+    const completedDays = {{ completed_days | tojson }};
+    const nextWeekButton =
+        document.getElementById("next-week-button");
+    if (completedDays.length === 7) {
+        nextWeekButton.disabled = false;
+    }
     </script>
 </body>
 </html>
-       

@@ -29,17 +29,17 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
     pass
 
 
-database_url = os.environ.get("SUBABASE","sqlite:///train2conquer.db")
+#database_url = os.environ.get("SUBABASE","sqlite:///train2conquer.db")
 # Configure the database connection for SQLAlchemy.
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:  ///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
-app.config["SQLALCHEMY_DATABASE_URI"]=database_url 
-#app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
-if database_url.startswith("postgresql://"):
-    db = SQLAlchemy(model_class=Base,engine_options={"poolclass": NullPool})
-else:
-    db = SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
+#app.config["SQLALCHEMY_DATABASE_URI"]=database_url 
+app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
+#if database_url.startswith("postgresql://"):
+#    db = SQLAlchemy(model_class=Base,engine_options={"poolclass": NullPool})
+#else:
+db = SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
 
@@ -60,6 +60,7 @@ class FitnessProfile(db.Model):
     gender: Mapped[str] = mapped_column(String(20),nullable=False)
     goal: Mapped[str] = mapped_column(String(50),nullable=False)
     experience: Mapped[str] = mapped_column(String(30),nullable=False)
+    progression_score: Mapped[int] = mapped_column(Integer,nullable=False,default=1) 
     workout_days: Mapped[int] = mapped_column(Integer,nullable=False)
     equipment: Mapped[str] = mapped_column(Text,nullable=False)
 
@@ -205,6 +206,14 @@ def fitness_profile():
             profile.gender = fitness_form.gender.data
             profile.goal = fitness_form.goal.data
             profile.experience = fitness_form.experience.data
+            if profile.progression_score is None:
+                profile.progression_score = 1
+            if profile.experience=="intermediate":
+                if profile.progression_score<8:
+                    profile.progression_score+=7
+            elif  profile.experience=="advanced":
+                if profile.progression_score<15:
+                    profile.progression_score+=7
             profile.workout_days = int(fitness_form.workout_days.data)
             profile.equipment = ",".join(fitness_form.equipment.data)
         # CREATE NEW PROFILE
@@ -219,6 +228,14 @@ def fitness_profile():
                 experience=fitness_form.experience.data,
                 workout_days=int(fitness_form.workout_days.data),
                 equipment=",".join(fitness_form.equipment.data))
+            if profile.progression_score is None:
+                profile.progression_score = 1
+            if profile.experience=="intermediate":
+                if profile.progression_score<8:
+                    profile.progression_score+=7
+            elif  profile.experience=="advanced":
+                if profile.progression_score<15:
+                    profile.progression_score+=7
             db.session.add(profile)
         # Save profile
         db.session.commit()
@@ -232,18 +249,21 @@ def fitness_profile():
             "gender": profile.gender,
             "goal": profile.goal,
             "experience": profile.experience,
+
             "workout_days": profile.workout_days,
             "equipment": profile.equipment.split(",")
         }
-
+        workout_plan = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id)).scalar_one_or_none()
+        if workout_plan:
+            previous_plan = workout_plan.plan
+        else:
+            previous_plan = None
         # GENERATE AI WORKOUT PLAN
-        ai_result = generate_fitness_plan(profile=profile_data)
+        ai_result = generate_fitness_plan(profile=profile_data,previous_plan=previous_plan)
         if ai_result is None:
             flash("We couldn't generate your workout plan right now. Please try again.","danger")
             return redirect(url_for("fitness_profile"))
         
-        # FIND EXISTING WORKOUT PLAN
-        workout_plan = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id)).scalar_one_or_none()
 
         # OVERWRITE EXISTING PLAN
         if workout_plan:
@@ -256,10 +276,9 @@ def fitness_profile():
         else:
             workout_plan = WorkoutPlan(user_id=current_user.id,plan=ai_result,completed_days="[]")
             db.session.add(workout_plan)
-
+        
         # Save workout plan
         db.session.commit()
-
         flash("Your workout plan has been updated!","success")
         return redirect(url_for("home"))
     return render_template( "fitness-profile.html", form=fitness_form)
@@ -298,43 +317,101 @@ def start_workout(day):
         return "Workout day not found", 404
     workouts = plan[day_key][1:]
     exercise_names = {
+
     "jumping-jacks": "Jumping Jacks",
     "high-knees": "High Knees",
+
     "push-ups": "Push Ups",
     "pull-ups": "Pull Ups",
+    "side-lunges": "Side Lunges",
+
     "hindu-push-ups": "Hindu Push Ups",
     "military-push-ups": "Military Push Ups",
+    "calf-raises": "Calf Raises",
+    "single-leg-calf-raises": "Single Leg Calf Raises",
+
+    "lying-leg-raises": "Lying Leg Raises",
+    "reverse-crunches": "Reverse Crunches",
+
     "pike-push-ups": "Pike Push Ups",
     "incline-push-ups": "Incline Push Ups",
     "decline-push-ups": "Decline Push Ups",
+
+    "superman": "Superman",
+    "bird-dog": "Bird Dog",
+    "bulgarian-split-squats": "Bulgarian Split Squats",
+
     "burpees": "Burpees",
     "mountain-climbers": "Mountain Climbers",
     "diamond-push-ups": "Diamond Push Ups",
     "cobra-stretch": "Cobra Stretch",
+
+    "dumbbell-front-raises": "Dumbbell Front Raises",
+    "dumbbell-rear-delt-fly": "Dumbbell Rear Delt Fly",
+
     "sit-ups": "Sit Ups",
     "bicycle-crunches": "Bicycle Crunches",
     "v-up": "V Ups",
     "russian-twist": "Russian Twists",
     "butt-bridge": "Glute Bridge",
+
+    "dumbbell-lateral-raises": "Dumbbell Lateral Raises",
+
     "plank": "Plank",
     "skipping": "Skipping",
     "skipping-without-rope": "Skipping Without Rope",
     "alternating-hooks": "Alternating Hooks",
+
     "dumbell-bicep-curls": "Dumbbell Bicep Curls",
+
     "tricep-kickbacks": "Tricep Kickbacks",
     "tricep-overhead-single-arm-dumbell-extension-left": "Tricep Overhead Dumbbell Extension Left",
     "tricep-overhead-single-arm-dumbell-extension-right": "Tricep Overhead Dumbbell Extension Right",
+
     "squats": "Squats",
     "lunges-with-dumbells": "Lunges With Dumbbells",
     "lunges-with-bagpack": "Lunges With Backpack",
     "jumping-squats": "Jumping Squats",
     "wall-sit": "Wall Sit",
+
     "mike-tyson-push-ups": "Mike Tyson Push Ups",
+
     "cat-cow-pose": "Cat Cow Pose",
     "floor-y-raises": "Floor Y Raises",
     "reverse-snow-angels": "Reverse Snow Angels",
-    "child-pose": "Child's Pose"
-    }
+
+    "child-pose": "Child's Pose",
+
+    "explosive-push-ups": "Explosive Push Ups",
+
+    "flutter-kicks": "Flutter Kicks",
+    "bear-crawl": "Bear Crawl",
+    "tuck-jumps": "Tuck Jumps",
+    "shadow-boxing": "Shadow Boxing",
+
+    "downward-dog": "Downward Dog",
+    "worlds-greatest-stretch": "World's Greatest Stretch",
+
+    "pigeon-pose": "Pigeon Pose",
+    "seated-forward-fold": "Seated Forward Fold",
+
+    "hamstring-stretch-left": "Hamstring Stretch Left",
+    "hamstring-stretch-right": "Hamstring Stretch Right",
+
+    "quad-stretch-left": "Quad Stretch Left",
+    "quad-stretch-right": "Quad Stretch Right",
+
+    "hip-flexor-stretch-left": "Hip Flexor Stretch Left",
+    "butterfly-stretch": "Butterfly Stretch",
+
+    "childs-pose": "Child's Pose",
+
+    "barbell-back-squat": "Barbell Back Squat",
+    "barbell-bent-over-row": "Barbell Bent Over Row",
+    "barbell-overhead-press": "Barbell Overhead Press",
+    "barbell-skull-crushers": "Barbell Skull Crushers"
+
+}
     for workout in workouts:
         workout["exercise"] = exercise_names.get(workout["exercise"],"")
 
@@ -353,6 +430,53 @@ def complete_workout(day):
     db.session.commit()
     return redirect(url_for("home"))
 
+@app.route("/load-next-week", methods=["POST"])
+@login_required
+def load_next_week():
+    profile = db.session.execute(
+        db.select(FitnessProfile).where(
+            FitnessProfile.user_id == current_user.id
+        )
+    ).scalar_one_or_none()
+    if not profile:
+        flash("Please complete your fitness profile first.", "danger")
+        return redirect(url_for("fitness_profile"))
+    if profile.progression_score is None:
+        profile.progression_score = 1
+    profile.progression_score +=1 
+    if profile.progression_score==15 :
+        profile.experience="advanced"
+    elif profile.progression_score==8:
+            profile.experience="intermediate"
+    profile_data = {
+        "dob": profile.dob.strftime("%d-%m-%Y"),
+        "height": profile.height,
+        "weight": profile.weight,
+        "gender": profile.gender,
+        "goal": profile.goal,
+        "experience": profile.experience,
+        "progression_score": profile.progression_score,
+        "workout_days": profile.workout_days,
+        "equipment": profile.equipment.split(",")
+    }
+    workout_plan = db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == current_user.id)).scalar_one_or_none()
+    if workout_plan:
+        previous_plan = workout_plan.plan
+    else:
+        previous_plan = None
+    # Generate a new workout plan
+    ai_result = generate_fitness_plan(profile=profile_data,previous_plan=previous_plan)
+    if ai_result is None:
+        flash("We couldn't generate your next week's workout plan. Please try again.","danger")
+        return redirect(url_for("home"))
+    # Get existing workout plan
+    # Replace old plan with new plan
+    workout_plan.plan = ai_result
+    workout_plan.created_at = datetime.utcnow()
+    workout_plan.completed_days = "[]"
+    db.session.commit()
+    flash("Your next week's workout plan is ready!", "success")
+    return redirect(url_for("home"))
 
 @app.route("/")
 def home():

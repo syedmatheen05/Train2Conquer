@@ -1,8 +1,8 @@
 import os, json, time
 from google import genai
 from dotenv import load_dotenv
-client=genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 load_dotenv()
+client=genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 exercise_keys=["jumping-jacks","high-knees",
                "push-ups","pull-ups","side-lunges",
                "hindu-push-ups","military-push-ups","calf-raises","single-leg-calf-raises", "lying-leg-raises","reverse-crunches",

@@ -29,17 +29,17 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
     pass
 
 
-#database_url = os.environ.get("SUBABASE","sqlite:///train2conquer.db")
+database_url = os.environ.get("SUPABASE","sqlite:///train2conquer.db")
 # Configure the database connection for SQLAlchemy.
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:  ///" means use an SQLite database stored as a local file.
 # "train2conquer.db" is the database file that will be created in the project's instance folder (or configured location).
-#app.config["SQLALCHEMY_DATABASE_URI"]=database_url 
-app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
-#if database_url.startswith("postgresql://"):
-#    db = SQLAlchemy(model_class=Base,engine_options={"poolclass": NullPool})
-#else:
-db = SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
+app.config["SQLALCHEMY_DATABASE_URI"]=database_url 
+#app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///train2conquer.db" 
+if database_url.startswith("postgresql://"):
+    db = SQLAlchemy(model_class=Base,engine_options={"poolclass": NullPool})
+else:
+    db = SQLAlchemy(model_class=Base) ## Create a SQLAlchemy object and use our Base class for all models.
 #Connect SQLAlchemy to the Flask application.
 db.init_app(app) # now SQLAlchemy knows which app to use.
 

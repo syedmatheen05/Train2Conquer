@@ -14,8 +14,16 @@
 <body class="d-flex flex-column min-vh-100">
 {% include 'navbar.html' %}
 <div class="container my-5">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div id="flash-messages" class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
     
-
     <h1 class="text-center fw-bold mb-2">
         Your 7-Day Workout Plan
     </h1>

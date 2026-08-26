@@ -89,6 +89,7 @@
             padding: 0;
         }
         .t2c-links li{ position: relative; }
+        .t2c-link-mobile-login{ display: none; }
         .t2c-link{
             display: inline-flex;
             align-items: center;
@@ -302,6 +303,12 @@
             .t2c-link{ width: 100%; height: 46px; padding: 0 12px; }
             .t2c-link::after{ display: none; }
             .t2c-right .t2c-btn-ghost{ display:none; }
+            .t2c-link-mobile-login{
+                display: block;
+                margin-top: 8px;
+                padding-top: 10px;
+                border-top: 1px solid var(--t2c-line);
+            }
         }
 
         @media (prefers-reduced-motion: reduce){
@@ -338,6 +345,9 @@
             <li><a class="t2c-link" href="#">Nutrition</a></li>
             <li><a class="t2c-link" href="{{ url_for('about') }}">About</a></li>
             <li><a class="t2c-link" href="#">Contact</a></li>
+            {% if not current_user.is_authenticated %}
+            <li class="t2c-link-mobile-login"><a class="t2c-link" href="{{ url_for('login') }}">Log in</a></li>
+            {% endif %}
         </ul>
 
         <!-- Right side -->

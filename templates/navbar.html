@@ -4,103 +4,414 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Train2Conquer</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --t2c-ink:        #0B0C0F;
+            --t2c-surface:    #17191F;
+            --t2c-surface-2:  #1F222A;
+            --t2c-line:       rgba(255,255,255,0.09);
+            --t2c-text:       #F4F3EF;
+            --t2c-text-dim:   #9496A1;
+            --t2c-flame:      #FF4B26;
+            --t2c-flame-dim:  rgba(255,75,38,0.14);
+            --t2c-gold:       #D9A83B;
+            --t2c-danger:     #FF6259;
+            --t2c-nav-h:      72px;
+        }
+
+        .t2c-nav *{ box-sizing:border-box; }
+
+        .t2c-nav{
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: var(--t2c-nav-h);
+            display: flex;
+            align-items: center;
+            background: rgba(11,12,15,0.86);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--t2c-line);
+            font-family: 'Manrope', system-ui, sans-serif;
+            color: var(--t2c-text);
+        }
+
+        .t2c-nav-inner{
+            width: 100%;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        /* ---------- Brand ---------- */
+        .t2c-brand{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--t2c-text);
+            flex-shrink: 0;
+        }
+        .t2c-brand-mark{
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+        }
+        .t2c-brand-mark svg{ width: 100%; height: 100%; display:block; }
+        .t2c-brand-word{
+            font-family: 'Anton', sans-serif;
+            font-weight: 400;
+            font-size: 21px;
+            letter-spacing: 0.03em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .t2c-brand-word span{ color: var(--t2c-flame); }
+
+        /* ---------- Center links ---------- */
+        .t2c-links{
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .t2c-links li{ position: relative; }
+        .t2c-link{
+            display: inline-flex;
+            align-items: center;
+            height: 40px;
+            padding: 0 16px;
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--t2c-text-dim);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: color .18s ease, background-color .18s ease;
+        }
+        .t2c-link:hover{
+            color: var(--t2c-text);
+            background: rgba(255,255,255,0.045);
+        }
+        /* fill-bar underline — nods to a training progress bar */
+        .t2c-link::after{
+            content:"";
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 4px;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--t2c-flame);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .28s cubic-bezier(.4,0,.2,1);
+        }
+        .t2c-link:hover::after{ transform: scaleX(1); }
+        .t2c-link.active{ color: var(--t2c-text); }
+        .t2c-link.active::after{
+            transform: scaleX(1);
+            background: var(--t2c-gold);
+        }
+
+        /* ---------- Right side / auth ---------- */
+        .t2c-right{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .t2c-btn{
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
+        }
+        .t2c-btn:active{ transform: scale(0.97); }
+        .t2c-btn-ghost{
+            color: var(--t2c-text);
+            border-color: var(--t2c-line);
+            background: transparent;
+        }
+        .t2c-btn-ghost:hover{ border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.04); }
+        .t2c-btn-solid{
+            color: #17110C;
+            background: var(--t2c-flame);
+        }
+        .t2c-btn-solid:hover{ background: #ff5f3d; }
+
+        /* ---------- Profile trigger ---------- */
+        .t2c-profile{ position: relative; }
+        .t2c-profile-trigger{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px 6px 6px;
+            border-radius: 999px;
+            color: var(--t2c-text);
+            transition: background-color .15s ease;
+        }
+        .t2c-profile-trigger:hover{ background: rgba(255,255,255,0.05); }
+        .t2c-avatar{
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-family: 'Anton', sans-serif;
+            font-size: 14px;
+            color: #17110C;
+            background: linear-gradient(140deg, var(--t2c-gold), var(--t2c-flame));
+            flex-shrink: 0;
+        }
+        .t2c-profile-name{
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+        .t2c-caret{
+            width: 10px; height: 10px;
+            color: var(--t2c-text-dim);
+            transition: transform .18s ease;
+        }
+        .t2c-profile-trigger[aria-expanded="true"] .t2c-caret{ transform: rotate(180deg); }
+
+        /* ---------- Dropdown ---------- */
+        .t2c-dropdown{
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 240px;
+            background: var(--t2c-surface);
+            border: 1px solid var(--t2c-line);
+            border-radius: 14px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+            padding: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: opacity .16s ease, transform .16s ease, visibility .16s;
+        }
+        .t2c-dropdown.open{
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .t2c-dropdown-header{
+            padding: 10px 12px 8px;
+            font-size: 12px;
+            color: var(--t2c-text-dim);
+            word-break: break-all;
+        }
+        .t2c-dropdown-divider{
+            height: 1px;
+            background: var(--t2c-line);
+            margin: 6px 4px;
+            border: none;
+        }
+        .t2c-dropdown-item{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            text-align: left;
+            padding: 9px 12px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--t2c-text);
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .t2c-dropdown-item:hover{ background: var(--t2c-surface-2); }
+        .t2c-dropdown-item.danger{ color: var(--t2c-danger); }
+        .t2c-dropdown-item.danger:hover{ background: rgba(255,98,89,0.1); }
+        .t2c-dropdown form{ margin: 0; }
+
+        /* ---------- Mobile toggle ---------- */
+        .t2c-toggle{
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--t2c-line);
+            background: transparent;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .t2c-toggle span, .t2c-toggle span::before, .t2c-toggle span::after{
+            content:"";
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: var(--t2c-text);
+            position: relative;
+            transition: transform .2s ease, opacity .2s ease;
+        }
+        .t2c-toggle span::before{ position:absolute; top:-6px; }
+        .t2c-toggle span::after{ position:absolute; top:6px; }
+        .t2c-toggle.open span{ background: transparent; }
+        .t2c-toggle.open span::before{ transform: translateY(6px) rotate(45deg); }
+        .t2c-toggle.open span::after{ transform: translateY(-6px) rotate(-45deg); }
+
+        @media (max-width: 900px){
+            .t2c-toggle{ display: flex; }
+            .t2c-links{
+                position: fixed;
+                top: var(--t2c-nav-h);
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 2px;
+                background: var(--t2c-ink);
+                border-bottom: 1px solid var(--t2c-line);
+                padding: 10px 16px 16px;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height .25s ease;
+            }
+            .t2c-links.open{ max-height: 320px; }
+            .t2c-link{ width: 100%; height: 46px; padding: 0 12px; }
+            .t2c-link::after{ display: none; }
+            .t2c-right .t2c-btn-ghost{ display:none; }
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            .t2c-nav, .t2c-link, .t2c-link::after, .t2c-dropdown, .t2c-toggle span, .t2c-toggle span::before, .t2c-toggle span::after{
+                transition: none !important;
+            }
+        }
+    </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-light shadow-sm rounded-bottom sticky-top">
-    <div class="container-fluid px-4">
-        <!-- Logo -->
-        <a class="navbar-brand fw-bold fs-4" href="#">Train2Conquer</a>
-        <!-- Mobile Toggle -->
-        <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbar">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <!-- Navbar Content -->
-        <div class="collapse navbar-collapse" id="navbar">
-            <!-- Center Links -->
-            <ul class="navbar-nav mx-auto gap-4">
-                <li class="nav-item">
-                    <a id="home" class="nav-link" href="{{url_for('home')}}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Nutrition</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('about')}}">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Contact</a>
-                </li>
-            </ul>
-            <!-- Right Side -->
-          <!-- Right Side -->
-    <div class="d-flex align-items-center">
-        {% if current_user.is_authenticated %}
-        <div class="dropdown">
-            <!-- Profile -->
-            <a href="#"
-               class="d-flex align-items-center text-decoration-none"
-               data-bs-toggle="dropdown"
-               aria-expanded="false">
-                <!-- DP -->
-                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold me-2"
-                     style="width: 40px; height: 40px;">
-                    {{ current_user.email[0].upper() }}
-                </div>
-                <!-- Email -->
-                <span class="text-dark">
-                    {{ current_user.name }}
-                </span>
 
-            </a>
-            <!-- Dropdown Menu -->
-            <ul class="dropdown-menu shadow profile-dropdown">
-                <!-- Email -->
-                <li>
-                    <h6 class="dropdown-header">
-                        {{ current_user.email }}
-                    </h6>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <!-- Edit Profile -->
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('fitness_profile') }}">✏️ Edit Profile</a>
-                </li>
-                <!-- Account Settings -->
-                <li>
-                    <a class="dropdown-item" href="#">⚙️ Account Settings</a>
-                </li>
-                <!-- Privacy -->
-                <li>
-                    <a class="dropdown-item" href="#">🔒 Privacy & Security</a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <!-- Logout -->
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('logout') }}">🚪 Log Out</a>
-                </li>
-                <!-- Delete -->
-                <li>
-                    <form action="{{ url_for('delete_account') }}"
-                          method="POST">
-                        <button class="dropdown-item text-danger" type="submit"> 🗑️ Delete Account</button>
+<nav class="t2c-nav">
+    <div class="t2c-nav-inner">
+
+        <!-- Brand -->
+        <a class="t2c-brand" href="{{ url_for('home') }}">
+            <span class="t2c-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 24 L11 13 L16 18 L29 4" stroke="#FF4B26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 4 H29 V12" stroke="#D9A83B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span class="t2c-brand-word">TRAIN2<span>CONQUER</span></span>
+        </a>
+
+        <!-- Mobile toggle -->
+        <button class="t2c-toggle" id="t2cToggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span></span>
+        </button>
+
+        <!-- Center links -->
+        <ul class="t2c-links" id="t2cLinks">
+            <li><a id="home" class="t2c-link active" href="{{ url_for('home') }}">Home</a></li>
+            <li><a class="t2c-link" href="#">Nutrition</a></li>
+            <li><a class="t2c-link" href="{{ url_for('about') }}">About</a></li>
+            <li><a class="t2c-link" href="#">Contact</a></li>
+        </ul>
+
+        <!-- Right side -->
+        <div class="t2c-right">
+            {% if current_user.is_authenticated %}
+            <div class="t2c-profile">
+                <button class="t2c-profile-trigger" id="t2cProfileTrigger" aria-haspopup="true" aria-expanded="false">
+                    <span class="t2c-avatar">{{ current_user.email[0].upper() }}</span>
+                    <span class="t2c-profile-name">{{ current_user.name }}</span>
+                    <svg class="t2c-caret" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+
+                <div class="t2c-dropdown" id="t2cDropdown">
+                    <div class="t2c-dropdown-header">{{ current_user.email }}</div>
+                    <hr class="t2c-dropdown-divider">
+                    <a class="t2c-dropdown-item" href="{{ url_for('fitness_profile') }}">✏️ Edit profile</a>
+                    <a class="t2c-dropdown-item" href="#">⚙️ Account settings</a>
+                    <a class="t2c-dropdown-item" href="#">🔒 Privacy & security</a>
+                    <hr class="t2c-dropdown-divider">
+                    <a class="t2c-dropdown-item" href="{{ url_for('logout') }}">🚪 Log out</a>
+                    <form action="{{ url_for('delete_account') }}" method="POST">
+                        <button class="t2c-dropdown-item danger" type="submit">🗑️ Delete account</button>
                     </form>
-                </li>
-            </ul>
+                </div>
+            </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="t2c-btn t2c-btn-ghost">Log in</a>
+                <a href="{{ url_for('register') }}" class="t2c-btn t2c-btn-solid">Sign up</a>
+            {% endif %}
         </div>
-        {% else %}
-            <a href="{{ url_for('login') }}" class="btn btn-dark btn-sm me-2">Log In</a>
-            <a href="{{ url_for('register') }}" class="btn btn-outline-dark btn-sm">Sign Up</a>
-        {% endif %}
+
     </div>
-</div>
-</div>
-</div>
 </nav>
+
 {{ bootstrap.load_js() }}
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    
+
+<script>
+    // Mobile menu toggle
+    (function(){
+        const toggle = document.getElementById('t2cToggle');
+        const links = document.getElementById('t2cLinks');
+        if(!toggle || !links) return;
+        toggle.addEventListener('click', function(){
+            const isOpen = links.classList.toggle('open');
+            toggle.classList.toggle('open', isOpen);
+            toggle.setAttribute('aria-expanded', isOpen);
+        });
+    })();
+
+    // Profile dropdown (no Bootstrap JS dependency required)
+    (function(){
+        const trigger = document.getElementById('t2cProfileTrigger');
+        const dropdown = document.getElementById('t2cDropdown');
+        if(!trigger || !dropdown) return;
+
+        function close(){
+            dropdown.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+        trigger.addEventListener('click', function(e){
+            e.stopPropagation();
+            const willOpen = !dropdown.classList.contains('open');
+            dropdown.classList.toggle('open', willOpen);
+            trigger.setAttribute('aria-expanded', String(willOpen));
+        });
+        document.addEventListener('click', function(e){
+            if(!dropdown.contains(e.target) && !trigger.contains(e.target)) close();
+        });
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape') close();
+        });
+    })();
+</script>
+
 </body>
 </html>

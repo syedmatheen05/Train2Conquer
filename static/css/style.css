@@ -1,7 +1,7 @@
 .login-container{
     max-width: 50%;
 }
-.hero {
+/* .hero {
     min-height: 1000px;
     background-image: url("../assets/img/stocksnap-man-2604149_1920.jpg");
     background-size: cover;
@@ -12,7 +12,7 @@
     align-items: center;
     text-align: center;
     position: relative;
-}
+} */
 
 ul {
     list-style: none;

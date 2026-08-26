@@ -27,7 +27,9 @@ class Base(DeclarativeBase):# Create a base class for all database models.A data
     pass
 
 
-database_url = os.environ.get("SUPABASE","sqlite:///train2conquer.db")
+database_url = os.environ.get("SUPABASE")
+if not database_url:
+    raise RuntimeError("SUPABASE environment variable is not set")
 # Configure the database connection for SQLAlchemy.
 # "SQLALCHEMY_DATABASE_URI" tells Flask which database to use.
 # "sqlite:  ///" means use an SQLite database stored as a local file.
@@ -71,11 +73,11 @@ class WorkoutPlan(db.Model):
     completed_days: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
 
 
-# Tell Flask that the following code belongs to this application.
-with app.app_context():
-    # Create all the tables in the database.
-    # If the tables already exist, nothing happens.
-    db.create_all()
+# # Tell Flask that the following code belongs to this application.
+# with app.app_context():
+#     # Create all the tables in the database.
+#     # If the tables already exist, nothing happens.
+#     db.create_all()
 
 @login_manager.user_loader #Tells Flask-Login: Use the function below whenever you need to load a logged-in user.
 def load_user(user_id): #Flask-Login automatically passes the logged-in user's ID to this function

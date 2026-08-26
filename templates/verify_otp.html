@@ -1,35 +1,791 @@
 {% extends 'base.html' %}
 {% from 'bootstrap5/form.html' import render_form %}
+
 {% block title %}Verification{% endblock %}
+
 {% block content %}
-    <br>
-    <div class="card shadow border-0 p-4">
-        <h2 class="text-center mb-4">Verify OTP</h2>
-        {{ render_form(form) }}
-        <p id="timer" class="mt-3">Resend OTP in <span id="countdown">30</span> seconds</p><br>
-        <a id="resend-btn" class="btn btn-secondary btn-sm d-none" href="{{url_for('resend_otp')}}">Resend Code</a>
-    </div>
-<script>
-    let seconds={{ remaining | tojson }};
-    const timer=document.getElementById("timer")
-    const countdown=document.getElementById("countdown")
-    const button=document.getElementById("resend-btn")
-    // Repeat every 1 second
-    let mytimer = setInterval(start_timer,1000)
-    // Start the timer
-    function start_timer(){
-        seconds=seconds-1;
-        countdown.innerHTML=seconds;
-        if(seconds<=0){
-            //Stop the timer
-            clearInterval(mytimer);
-            // hide the text
-            timer.style.display="none";
-            // Show the button
-            button.classList.remove("d-none");
-            button.classList.add("d-inline-block");
-        }
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+
+<style>
+
+:root{
+    --t2c-bg:#08090C;
+    --t2c-panel:#101217;
+    --t2c-panel-2:#151820;
+
+    --t2c-border:rgba(255,255,255,.08);
+
+    --t2c-text:#F5F5F3;
+    --t2c-muted:#8E929D;
+
+    --t2c-orange:#FF512F;
+    --t2c-orange-light:#FF704D;
+
+    --t2c-gold:#D7AA48;
+    --t2c-danger:#FF6961;
+}
+
+
+/* =========================================================
+   MAIN AREA
+========================================================= */
+
+.t2c-verify{
+
+    min-height:calc(100vh - 72px);
+
+    width:100vw;
+
+    position:relative;
+
+    left:50%;
+
+    margin-left:-50vw;
+
+    padding:42px 24px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:
+
+        radial-gradient(
+            circle at 15% 15%,
+            rgba(255,81,47,.10),
+            transparent 28%
+        ),
+
+        radial-gradient(
+            circle at 85% 90%,
+            rgba(215,170,72,.07),
+            transparent 25%
+        ),
+
+        var(--t2c-bg);
+
+    font-family:'Manrope',system-ui,sans-serif;
+
+    color:var(--t2c-text);
+}
+
+
+/* =========================================================
+   VERIFICATION CARD
+========================================================= */
+
+.t2c-verify-card{
+
+    width:min(560px,100%);
+
+    background:var(--t2c-panel);
+
+    border:1px solid var(--t2c-border);
+
+    border-radius:24px;
+
+    padding:50px clamp(28px,6vw,60px);
+
+    text-align:center;
+
+    box-shadow:
+
+        0 30px 90px rgba(0,0,0,.55),
+
+        0 0 0 1px rgba(255,255,255,.015);
+
+    position:relative;
+
+    overflow:hidden;
+}
+
+
+/* Top orange glow */
+
+.t2c-verify-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:260px;
+
+    height:260px;
+
+    left:50%;
+
+    top:-210px;
+
+    transform:translateX(-50%);
+
+    border-radius:50%;
+
+    background:rgba(255,81,47,.13);
+
+    filter:blur(25px);
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.t2c-verify-logo{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    text-decoration:none !important;
+
+    color:var(--t2c-text) !important;
+
+    margin-bottom:35px;
+
+    position:relative;
+}
+
+
+.t2c-verify-logo svg{
+
+    width:29px;
+
+    height:29px;
+}
+
+
+.t2c-verify-logo span{
+
+    font-family:'Anton',sans-serif;
+
+    font-size:18px;
+
+    letter-spacing:.04em;
+}
+
+
+.t2c-verify-logo .accent{
+
+    color:var(--t2c-orange);
+}
+
+
+/* =========================================================
+   VERIFICATION ICON
+========================================================= */
+
+.t2c-verify-icon{
+
+    width:68px;
+
+    height:68px;
+
+    margin:0 auto 24px;
+
+    display:grid;
+
+    place-items:center;
+
+    border-radius:20px;
+
+    background:rgba(255,81,47,.09);
+
+    border:1px solid rgba(255,81,47,.18);
+
+    position:relative;
+}
+
+
+.t2c-verify-icon svg{
+
+    width:32px;
+
+    height:32px;
+}
+
+
+/* =========================================================
+   HEADING
+========================================================= */
+
+.t2c-verify-card h1{
+
+    font-family:'Anton',sans-serif;
+
+    font-weight:400;
+
+    text-transform:uppercase;
+
+    font-size:2.15rem;
+
+    letter-spacing:.015em;
+
+    margin:0 0 9px;
+
+    color:var(--t2c-text);
+}
+
+
+.t2c-verify-description{
+
+    color:var(--t2c-muted);
+
+    font-size:13px;
+
+    line-height:1.7;
+
+    max-width:390px;
+
+    margin:0 auto 30px;
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.t2c-verify-form{
+
+    text-align:left;
+}
+
+
+.t2c-verify-form form label,
+.t2c-verify-form form .form-label{
+
+    display:block;
+
+    color:#A7AAB3;
+
+    font-size:11px;
+
+    font-weight:800;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+
+    margin-bottom:7px;
+}
+
+
+.t2c-verify-form form .form-control{
+
+    min-height:52px;
+
+    width:100%;
+
+    background:var(--t2c-panel-2);
+
+    border:1px solid var(--t2c-border);
+
+    color:var(--t2c-text);
+
+    border-radius:11px;
+
+    padding:12px 15px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    letter-spacing:.08em;
+
+    text-align:center;
+
+    font-family:'Manrope',sans-serif;
+
+    transition:
+
+        border-color .18s ease,
+
+        box-shadow .18s ease,
+
+        background .18s ease;
+}
+
+
+.t2c-verify-form form .form-control:hover{
+
+    border-color:rgba(255,255,255,.14);
+}
+
+
+.t2c-verify-form form .form-control:focus{
+
+    background:#181B23;
+
+    border-color:var(--t2c-orange);
+
+    color:var(--t2c-text);
+
+    box-shadow:
+
+        0 0 0 3px rgba(255,81,47,.13);
+
+}
+
+
+.t2c-verify-form form .form-control::placeholder{
+
+    color:#555A66;
+
+    letter-spacing:normal;
+}
+
+
+.t2c-verify-form form .invalid-feedback{
+
+    color:var(--t2c-danger);
+
+    font-size:11px;
+
+    text-align:center;
+}
+
+
+.t2c-verify-form form .form-text{
+
+    color:#777B86;
+
+    font-size:11px;
+
+    text-align:center;
+}
+
+
+.t2c-verify-form form .mb-3{
+
+    margin-bottom:18px !important;
+}
+
+
+/* =========================================================
+   VERIFY BUTTON
+========================================================= */
+
+.t2c-verify-form form [type="submit"],
+.t2c-verify-form form .btn-primary{
+
+    width:100%;
+
+    min-height:49px;
+
+    margin-top:7px;
+
+    border:none;
+
+    border-radius:11px;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            var(--t2c-orange),
+            var(--t2c-orange-light)
+        );
+
+    color:#170E0A;
+
+    font-size:13px;
+
+    font-weight:800;
+
+    letter-spacing:.04em;
+
+    text-transform:uppercase;
+
+    box-shadow:
+
+        0 10px 25px rgba(255,81,47,.16);
+
+    transition:
+
+        transform .15s ease,
+
+        box-shadow .15s ease,
+
+        filter .15s ease;
+}
+
+
+.t2c-verify-form form [type="submit"]:hover,
+.t2c-verify-form form .btn-primary:hover{
+
+    filter:brightness(1.06);
+
+    transform:translateY(-1px);
+
+    box-shadow:
+
+        0 14px 30px rgba(255,81,47,.22);
+}
+
+
+.t2c-verify-form form [type="submit"]:active,
+.t2c-verify-form form .btn-primary:active{
+
+    transform:translateY(0);
+}
+
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+.t2c-verify-timer{
+
+    margin:24px 0 0;
+
+    color:var(--t2c-muted);
+
+    font-size:12px;
+
+    line-height:1.6;
+}
+
+
+.t2c-verify-timer span{
+
+    color:var(--t2c-orange);
+
+    font-weight:800;
+
+    font-variant-numeric:tabular-nums;
+}
+
+
+/* =========================================================
+   RESEND BUTTON
+========================================================= */
+
+.t2c-resend-btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-height:42px;
+
+    padding:9px 22px;
+
+    margin-top:20px;
+
+    border:1px solid rgba(215,170,72,.25);
+
+    border-radius:10px;
+
+    background:rgba(215,170,72,.07);
+
+    color:var(--t2c-gold);
+
+    font-size:12px;
+
+    font-weight:800;
+
+    text-decoration:none;
+
+    transition:
+
+        background .18s ease,
+
+        border-color .18s ease,
+
+        transform .18s ease;
+}
+
+
+.t2c-resend-btn:hover{
+
+    color:#F0C766;
+
+    background:rgba(215,170,72,.12);
+
+    border-color:rgba(215,170,72,.4);
+
+    transform:translateY(-1px);
+}
+
+
+/* =========================================================
+   BOTTOM NOTE
+========================================================= */
+
+.t2c-verify-note{
+
+    margin:28px 0 0;
+
+    padding-top:20px;
+
+    border-top:1px solid var(--t2c-border);
+
+    color:#656A76;
+
+    font-size:10.5px;
+
+    line-height:1.6;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:600px){
+
+    .t2c-verify{
+
+        padding:22px 12px;
+
+        align-items:flex-start;
     }
+
+    .t2c-verify-card{
+
+        margin-top:20px;
+
+        padding:38px 22px;
+
+        border-radius:20px;
+    }
+
+    .t2c-verify-logo{
+
+        margin-bottom:28px;
+    }
+
+    .t2c-verify-card h1{
+
+        font-size:1.9rem;
+    }
+
+    .t2c-verify-description{
+
+        font-size:12.5px;
+    }
+}
+
+</style>
+
+
+<div class="t2c-verify">
+
+    <div class="t2c-verify-card">
+
+
+        <!-- =====================================================
+             LOGO
+        ====================================================== -->
+
+        <a
+            class="t2c-verify-logo"
+            href="{{ url_for('home') }}">
+
+            <svg
+                viewBox="0 0 32 32"
+                fill="none">
+
+                <path
+                    d="M3 24 L11 13 L16 18 L29 4"
+                    stroke="#FF512F"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"/>
+
+                <path
+                    d="M21 4 H29 V12"
+                    stroke="#D7AA48"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"/>
+
+            </svg>
+
+            <span>
+                TRAIN2<span class="accent">CONQUER</span>
+            </span>
+
+        </a>
+
+
+        <!-- =====================================================
+             VERIFICATION ICON
+        ====================================================== -->
+
+        <div class="t2c-verify-icon">
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+
+                <rect
+                    x="3"
+                    y="5"
+                    width="18"
+                    height="14"
+                    rx="3"
+                    stroke="#FF512F"
+                    stroke-width="1.7"/>
+
+                <path
+                    d="M7 9L12 13L17 9"
+                    stroke="#D7AA48"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"/>
+
+            </svg>
+
+        </div>
+
+
+        <!-- =====================================================
+             HEADING
+        ====================================================== -->
+
+        <h1>
+            Verify OTP
+        </h1>
+
+
+        <p class="t2c-verify-description">
+
+            We've sent a verification code to your email.
+            Enter the code below to continue securely.
+
+        </p>
+
+
+        <!-- =====================================================
+             FORM
+        ====================================================== -->
+
+        <div class="t2c-verify-form">
+
+            {{ render_form(form) }}
+
+        </div>
+
+
+        <!-- =====================================================
+             TIMER
+        ====================================================== -->
+
+        <p
+            id="timer"
+            class="t2c-verify-timer">
+
+            Resend OTP in
+
+            <span id="countdown">
+                {{ remaining }}
+            </span>
+
+            seconds
+
+        </p>
+
+
+        <!-- =====================================================
+             RESEND BUTTON
+        ====================================================== -->
+
+        <a
+            id="resend-btn"
+            class="t2c-resend-btn d-none"
+            href="{{ url_for('resend_otp') }}">
+
+            ↻ &nbsp; Resend verification code
+
+        </a>
+
+
+        <!-- =====================================================
+             NOTE
+        ====================================================== -->
+
+        <p class="t2c-verify-note">
+
+            Didn't receive the code?
+            Check your spam or junk folder.
+            You can request a new code when the timer expires.
+
+        </p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    let seconds = {{ remaining | tojson }};
+
+    const timer =
+        document.getElementById("timer");
+
+    const countdown =
+        document.getElementById("countdown");
+
+    const button =
+        document.getElementById("resend-btn");
+
+
+    function start_timer(){
+
+        seconds--;
+
+        countdown.textContent =
+            Math.max(seconds, 0);
+
+
+        if(seconds <= 0){
+
+            clearInterval(mytimer);
+
+            timer.style.display = "none";
+
+            button.classList.remove("d-none");
+
+            button.classList.add("d-inline-flex");
+
+        }
+
+    }
+
+
+    let mytimer =
+        setInterval(start_timer, 1000);
+
+
+    /* Handle page load when timer is already expired */
+
+    if(seconds <= 0){
+
+        clearInterval(mytimer);
+
+        timer.style.display = "none";
+
+        button.classList.remove("d-none");
+
+        button.classList.add("d-inline-flex");
+
+    }
+
 </script>
+
 
 {% endblock %}

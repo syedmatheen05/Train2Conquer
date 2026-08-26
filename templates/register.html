@@ -9,256 +9,893 @@
 
 <style>
     :root{
-        --t2c-ink:        #0B0C0F;
-        --t2c-surface:    #17191F;
-        --t2c-surface-2:  #1F222A;
-        --t2c-line:       rgba(255,255,255,0.09);
-        --t2c-text:       #F4F3EF;
-        --t2c-text-dim:   #9496A1;
-        --t2c-flame:      #FF4B26;
-        --t2c-gold:       #D9A83B;
+        --t2c-bg: #08090C;
+        --t2c-panel: #101217;
+        --t2c-panel-2: #151820;
+        --t2c-border: rgba(255,255,255,.08);
+        --t2c-text: #F5F5F3;
+        --t2c-muted: #8E929D;
+        --t2c-orange: #FF512F;
+        --t2c-orange-light: #FF704D;
+        --t2c-gold: #D7AA48;
+        --t2c-danger: #FF6961;
+    }
+
+    *{
+        box-sizing: border-box;
     }
 
     .t2c-auth{
-        background: var(--t2c-ink);
-        font-family: 'Manrope', system-ui, sans-serif;
         min-height: calc(100vh - 72px);
-        display: flex;
-        align-items: stretch;
-        padding: 0 40px;
-        /* break out of any parent .container so there's no gap on either side */
         width: 100vw;
         position: relative;
         left: 50%;
-        right: 50%;
         margin-left: -50vw;
-        margin-right: -50vw;
+
+        padding: 42px 24px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background:
+            radial-gradient(
+                circle at 5% 15%,
+                rgba(255,81,47,.10),
+                transparent 28%
+            ),
+            radial-gradient(
+                circle at 95% 90%,
+                rgba(215,170,72,.07),
+                transparent 25%
+            ),
+            var(--t2c-bg);
+
+        font-family: 'Manrope', system-ui, sans-serif;
+        color: var(--t2c-text);
     }
-    .t2c-auth *{ box-sizing: border-box; }
 
     .t2c-auth-shell{
+        width: min(1080px, 100%);
+        min-height: 650px;
+
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        width: 100%;
-        max-width: 1160px;
-        margin: 40px auto;
-        border-radius: 18px;
+        grid-template-columns: .92fr 1.08fr;
+
+        background: var(--t2c-panel);
+
+        border: 1px solid var(--t2c-border);
+        border-radius: 24px;
+
         overflow: hidden;
-        border: 1px solid var(--t2c-line);
-        box-shadow: 0 30px 70px rgba(0,0,0,0.35);
+
+        box-shadow:
+            0 30px 90px rgba(0,0,0,.55),
+            0 0 0 1px rgba(255,255,255,.015);
     }
 
-    /* ---------- Left brand panel ---------- */
+
+    /* =========================================================
+       LEFT SIDE
+    ========================================================= */
+
     .t2c-auth-brand{
         position: relative;
-        padding: 44px 60px;
-        color: var(--t2c-text);
+
+        padding: 42px 46px;
+
         overflow: hidden;
         isolation: isolate;
+
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        background: var(--t2c-surface);
-        border-right: 1px solid var(--t2c-line);
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,.025),
+                transparent 45%
+            ),
+            #0D0F14;
+
+        border-right: 1px solid var(--t2c-border);
     }
+
     .t2c-auth-brand::before{
         content: "";
-        position: absolute; inset: 0; z-index: -2;
-        background-image:
-            radial-gradient(70% 60% at 15% 10%, rgba(255,75,38,0.20), transparent 70%),
-            radial-gradient(55% 50% at 90% 95%, rgba(217,168,59,0.14), transparent 70%);
-    }
-    .t2c-auth-climb{ position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; opacity: 0.45; }
 
-    a.t2c-auth-mark,
-    a.t2c-auth-mark:hover,
-    a.t2c-auth-mark:visited{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--t2c-text);
-        text-decoration: none;
+        position: absolute;
+
+        width: 330px;
+        height: 330px;
+
+        left: -170px;
+        top: -150px;
+
+        border-radius: 50%;
+
+        background: rgba(255,81,47,.12);
+
+        filter: blur(25px);
+
+        z-index: -2;
     }
-    .t2c-auth-mark svg{ width: 26px; height: 26px; }
+
+    .t2c-auth-brand::after{
+        content: "";
+
+        position: absolute;
+
+        width: 280px;
+        height: 280px;
+
+        right: -160px;
+        bottom: -150px;
+
+        border-radius: 50%;
+
+        background: rgba(215,170,72,.08);
+
+        filter: blur(25px);
+
+        z-index: -2;
+    }
+
+
+    /* Climbing graphic */
+
+    .t2c-auth-climb{
+        position: absolute;
+
+        inset: 0;
+
+        width: 100%;
+        height: 100%;
+
+        opacity: .28;
+
+        z-index: -1;
+    }
+
+
+    /* Logo */
+
+    .t2c-auth-mark{
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 11px;
+
+        width: max-content;
+
+        color: var(--t2c-text) !important;
+
+        text-decoration: none !important;
+    }
+
+    .t2c-auth-mark svg{
+        width: 31px;
+        height: 31px;
+    }
+
     .t2c-auth-mark span{
         font-family: 'Anton', sans-serif;
-        font-size: 17px;
-        letter-spacing: 0.03em;
-        color: var(--t2c-text);
-    }
-    .t2c-auth-mark span .accent{ color: var(--t2c-flame); }
 
-    .t2c-auth-headline{ margin-top: 40px; }
+        font-size: 19px;
+
+        letter-spacing: .04em;
+
+        line-height: 1;
+    }
+
+    .t2c-auth-mark .accent{
+        color: var(--t2c-orange);
+    }
+
+
+    /* Main content */
+
+    .t2c-auth-content{
+        position: relative;
+        z-index: 1;
+
+        margin-top: auto;
+        margin-bottom: auto;
+
+        padding: 70px 0 40px;
+    }
+
+
+    .t2c-auth-eyebrow{
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        color: var(--t2c-gold);
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        letter-spacing: .14em;
+
+        text-transform: uppercase;
+
+        margin-bottom: 18px;
+    }
+
+    .t2c-auth-eyebrow::before{
+        content: "";
+
+        width: 24px;
+        height: 2px;
+
+        background: var(--t2c-orange);
+
+        border-radius: 10px;
+    }
+
+
     .t2c-auth-headline h2{
         font-family: 'Anton', sans-serif;
+
         font-weight: 400;
+
         text-transform: uppercase;
-        font-size: clamp(1.6rem, 3vw, 2.1rem);
-        line-height: 1.08;
-        margin: 0 0 14px;
+
+        font-size: clamp(
+            2.1rem,
+            4vw,
+            3.25rem
+        );
+
+        line-height: .98;
+
+        letter-spacing: .01em;
+
+        margin: 0 0 20px;
+
+        max-width: 400px;
     }
+
     .t2c-auth-headline h2 .accent{
-        background: linear-gradient(120deg, var(--t2c-gold), var(--t2c-flame));
-        -webkit-background-clip: text; background-clip: text; color: transparent;
+        color: var(--t2c-orange);
     }
+
+
     .t2c-auth-headline p{
-        color: var(--t2c-text-dim);
+        color: var(--t2c-muted);
+
         font-size: 14px;
-        line-height: 1.6;
-        max-width: 320px;
+
+        line-height: 1.75;
+
+        max-width: 360px;
+
         margin: 0;
     }
 
-    .t2c-auth-points{ list-style: none; margin: 32px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-    .t2c-auth-points li{ display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--t2c-text-dim); line-height: 1.5; }
-    .t2c-auth-points li::before{
-        content: "✓"; color: var(--t2c-gold); font-weight: 700; flex-shrink: 0;
-        width: 18px; height: 18px; border-radius: 50%; background: rgba(217,168,59,0.14);
-        display: grid; place-items: center; font-size: 10px; margin-top: 1px;
+
+    /* Benefits */
+
+    .t2c-auth-points{
+        list-style: none;
+
+        margin: 30px 0 0;
+
+        padding: 0;
+
+        display: grid;
+
+        gap: 13px;
     }
 
-    /* ---------- Right form panel ---------- */
-    .t2c-auth-form-panel{
-        padding: 48px 56px;
-        background: var(--t2c-ink);
+    .t2c-auth-points li{
         display: flex;
+
+        align-items: center;
+
+        gap: 11px;
+
+        color: #B5B8C0;
+
+        font-size: 13px;
+    }
+
+    .t2c-auth-points li::before{
+        content: "✓";
+
+        display: grid;
+
+        place-items: center;
+
+        width: 22px;
+        height: 22px;
+
+        border-radius: 7px;
+
+        color: var(--t2c-orange);
+
+        background: rgba(255,81,47,.10);
+
+        border: 1px solid rgba(255,81,47,.16);
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        flex-shrink: 0;
+    }
+
+
+    .t2c-auth-quote{
+        color: #656A76;
+
+        font-size: 11px;
+
+        font-weight: 700;
+
+        letter-spacing: .08em;
+    }
+
+
+
+    /* =========================================================
+       RIGHT SIDE
+    ========================================================= */
+
+    .t2c-auth-form-panel{
+        padding: 58px clamp(30px, 5vw, 70px);
+
+        display: flex;
+
         flex-direction: column;
+
         justify-content: center;
+
+        background: var(--t2c-panel);
     }
 
-    .t2c-auth-form-panel h1{
+
+    /* Heading */
+
+    .t2c-auth-form-head{
+        margin-bottom: 30px;
+    }
+
+    .t2c-auth-form-head h1{
         font-family: 'Anton', sans-serif;
+
         font-weight: 400;
+
         text-transform: uppercase;
-        font-size: 1.7rem;
+
+        font-size: 2.15rem;
+
+        letter-spacing: .015em;
+
+        margin: 0 0 7px;
+
         color: var(--t2c-text);
-        margin: 0 0 6px;
-    }
-    .t2c-auth-form-panel .t2c-auth-sub{
-        font-size: 13.5px;
-        color: var(--t2c-text-dim);
-        margin: 0 0 28px;
     }
 
-    /* Restyle the WTForms/Bootstrap-rendered fields */
+    .t2c-auth-sub{
+        color: var(--t2c-muted);
+
+        font-size: 13px;
+
+        margin: 0;
+
+        line-height: 1.6;
+    }
+
+
+
+    /* =========================================================
+       FORM
+    ========================================================= */
+
     .t2c-auth-form-panel form label,
     .t2c-auth-form-panel form .form-label{
-        font-size: 12.5px;
-        font-weight: 700;
-        letter-spacing: 0.03em;
+        display: block;
+
+        color: #A7AAB3;
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        letter-spacing: .09em;
+
         text-transform: uppercase;
-        color: var(--t2c-text-dim);
-        margin-bottom: 6px;
+
+        margin-bottom: 7px;
     }
+
+
     .t2c-auth-form-panel form .form-control,
     .t2c-auth-form-panel form .form-select{
-        background: var(--t2c-surface-2);
-        border: 1px solid var(--t2c-line);
+
+        min-height: 47px;
+
+        background: var(--t2c-panel-2);
+
+        border: 1px solid var(--t2c-border);
+
         color: var(--t2c-text);
-        border-radius: 9px;
+
+        border-radius: 11px;
+
         padding: 11px 14px;
-        font-size: 14px;
+
+        font-size: 13.5px;
+
         font-family: 'Manrope', sans-serif;
+
+        transition:
+            border-color .18s ease,
+            box-shadow .18s ease,
+            background .18s ease;
     }
-    .t2c-auth-form-panel form .form-control::placeholder{ color: #61636E; }
+
+
+    .t2c-auth-form-panel form .form-control:hover,
+    .t2c-auth-form-panel form .form-select:hover{
+        border-color: rgba(255,255,255,.14);
+    }
+
+
+    .t2c-auth-form-panel form .form-control::placeholder{
+        color: #555A66;
+    }
+
+
     .t2c-auth-form-panel form .form-control:focus,
     .t2c-auth-form-panel form .form-select:focus{
-        background: var(--t2c-surface-2);
-        border-color: var(--t2c-flame);
+
+        background: #181B23;
+
+        border-color: var(--t2c-orange);
+
         color: var(--t2c-text);
-        box-shadow: 0 0 0 3px rgba(255,75,38,0.18);
+
+        box-shadow:
+            0 0 0 3px rgba(255,81,47,.13);
     }
-    .t2c-auth-form-panel form .form-text{ color: var(--t2c-text-dim); font-size: 12px; }
-    .t2c-auth-form-panel form .invalid-feedback{ color: #FF6259; font-size: 12px; }
-    .t2c-auth-form-panel form .form-check-label{ color: var(--t2c-text-dim); font-size: 13px; }
-    .t2c-auth-form-panel form .mb-3{ margin-bottom: 18px !important; }
+
+
+    .t2c-auth-form-panel form .form-text{
+        color: #777B86;
+
+        font-size: 11px;
+    }
+
+
+    .t2c-auth-form-panel form .invalid-feedback{
+        color: var(--t2c-danger);
+
+        font-size: 11px;
+    }
+
+
+    .t2c-auth-form-panel form .form-check-label{
+
+        color: var(--t2c-muted);
+
+        font-size: 12.5px;
+
+        text-transform: none;
+
+        letter-spacing: 0;
+    }
+
+
+    .t2c-auth-form-panel form .form-check-input{
+
+        background-color: var(--t2c-panel-2);
+
+        border-color: var(--t2c-border);
+    }
+
+
+    .t2c-auth-form-panel form .mb-3{
+        margin-bottom: 17px !important;
+    }
+
+
+
+    /* =========================================================
+       SUBMIT BUTTON
+    ========================================================= */
 
     .t2c-auth-form-panel form [type="submit"],
     .t2c-auth-form-panel form .btn-primary{
+
         width: 100%;
-        background: var(--t2c-flame);
+
+        min-height: 48px;
+
+        margin-top: 7px;
+
         border: none;
-        color: #17110C;
-        font-weight: 700;
-        font-size: 14px;
-        letter-spacing: 0.02em;
-        padding: 12px 20px;
-        border-radius: 9px;
-        margin-top: 6px;
-        transition: background-color .15s ease, transform .15s ease;
+
+        border-radius: 11px;
+
+        background:
+            linear-gradient(
+                135deg,
+                var(--t2c-orange),
+                var(--t2c-orange-light)
+            );
+
+        color: #170E0A;
+
+        font-size: 13px;
+
+        font-weight: 800;
+
+        letter-spacing: .04em;
+
+        text-transform: uppercase;
+
+        box-shadow:
+            0 10px 25px rgba(255,81,47,.16);
+
+        transition:
+            transform .15s ease,
+            box-shadow .15s ease,
+            filter .15s ease;
     }
+
+
     .t2c-auth-form-panel form [type="submit"]:hover,
-    .t2c-auth-form-panel form .btn-primary:hover{ background: #ff5f3d; }
+    .t2c-auth-form-panel form .btn-primary:hover{
+
+        filter: brightness(1.06);
+
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 14px 30px rgba(255,81,47,.22);
+    }
+
+
     .t2c-auth-form-panel form [type="submit"]:active,
-    .t2c-auth-form-panel form .btn-primary:active{ transform: scale(0.98); }
+    .t2c-auth-form-panel form .btn-primary:active{
+
+        transform: translateY(0);
+    }
+
+
+
+    /* =========================================================
+       LOGIN LINK
+    ========================================================= */
+
+    .t2c-auth-divider{
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        margin: 25px 0 0;
+
+        color: #454A55;
+
+        font-size: 10px;
+
+        font-weight: 800;
+
+        letter-spacing: .12em;
+
+        text-transform: uppercase;
+    }
+
+
+    .t2c-auth-divider::before,
+    .t2c-auth-divider::after{
+
+        content: "";
+
+        height: 1px;
+
+        flex: 1;
+
+        background: var(--t2c-border);
+    }
+
 
     .t2c-auth-footer-line{
-        margin-top: 22px;
+
+        margin: 17px 0 0;
+
         text-align: center;
-        font-size: 13.5px;
-        color: var(--t2c-text-dim);
+
+        color: var(--t2c-muted);
+
+        font-size: 12.5px;
     }
+
+
     .t2c-auth-footer-line a{
+
         color: var(--t2c-gold);
-        font-weight: 700;
+
+        font-weight: 800;
+
         text-decoration: none;
     }
-    .t2c-auth-footer-line a:hover{ text-decoration: underline; }
 
-    @media (max-width: 760px){
-        .t2c-auth{ padding: 0 16px; }
-        .t2c-auth-shell{ grid-template-columns: 1fr; margin: 24px auto; }
-        .t2c-auth-brand{ display: none; }
-        .t2c-auth-form-panel{ padding: 36px 24px; justify-content: flex-start; }
+
+    .t2c-auth-footer-line a:hover{
+
+        color: #F0C766;
+
+        text-decoration: none;
     }
+
+
+
+    /* =========================================================
+       TABLET / MOBILE
+    ========================================================= */
+
+    @media (max-width: 850px){
+
+        .t2c-auth{
+            padding: 26px 16px;
+        }
+
+        .t2c-auth-shell{
+
+            grid-template-columns: 1fr;
+
+            min-height: auto;
+
+            max-width: 570px;
+        }
+
+        .t2c-auth-brand{
+            display: none;
+        }
+
+        .t2c-auth-form-panel{
+
+            padding: 42px 30px;
+        }
+    }
+
+
+    @media (max-width: 480px){
+
+        .t2c-auth{
+
+            padding: 16px 10px;
+
+            align-items: flex-start;
+        }
+
+        .t2c-auth-shell{
+
+            border-radius: 18px;
+        }
+
+        .t2c-auth-form-panel{
+
+            padding: 34px 20px;
+        }
+
+        .t2c-auth-form-head h1{
+
+            font-size: 1.9rem;
+        }
+    }
+
+
+    @media (prefers-reduced-motion: reduce){
+
+        .t2c-auth-form-panel form .form-control,
+        .t2c-auth-form-panel form .form-select,
+        .t2c-auth-form-panel form [type="submit"],
+        .t2c-auth-form-panel form .btn-primary{
+
+            transition: none;
+        }
+    }
+
 </style>
 
+
 <div class="t2c-auth">
+
     <div class="t2c-auth-shell">
 
-        <!-- Left brand panel -->
-        <div class="t2c-auth-brand">
-            <svg class="t2c-auth-climb" viewBox="0 0 400 500" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M0,420 L90,420 L140,300 L190,360 L260,150 L320,220 L400,60"
-                      fill="none" stroke="url(#t2cAuthClimbGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- =====================================================
+             LEFT BRAND PANEL
+        ====================================================== -->
+
+        <section class="t2c-auth-brand">
+
+            <svg
+                class="t2c-auth-climb"
+                viewBox="0 0 400 650"
+                preserveAspectRatio="none"
+                aria-hidden="true">
+
+                <path
+                    d="M0,560 L70,560 L125,430 L180,485 L245,270 L310,335 L400,100"
+                    fill="none"
+                    stroke="url(#t2cAuthClimbGrad)"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"/>
+
                 <defs>
-                    <linearGradient id="t2cAuthClimbGrad" x1="0" y1="1" x2="0" y2="0">
-                        <stop offset="0%" stop-color="#D9A83B" stop-opacity="0.35"/>
-                        <stop offset="100%" stop-color="#FF4B26" stop-opacity="0.35"/>
+
+                    <linearGradient
+                        id="t2cAuthClimbGrad"
+                        x1="0"
+                        y1="1"
+                        x2="1"
+                        y2="0">
+
+                        <stop
+                            offset="0%"
+                            stop-color="#D7AA48"
+                            stop-opacity=".25"/>
+
+                        <stop
+                            offset="100%"
+                            stop-color="#FF512F"
+                            stop-opacity=".42"/>
+
                     </linearGradient>
+
                 </defs>
+
             </svg>
 
-            <a class="t2c-auth-mark" href="{{ url_for('home') }}">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 24 L11 13 L16 18 L29 4" stroke="#FF4B26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M21 4 H29 V12" stroke="#D9A83B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+            <!-- Logo -->
+
+            <a
+                class="t2c-auth-mark"
+                href="{{ url_for('home') }}">
+
+                <svg
+                    viewBox="0 0 32 32"
+                    fill="none">
+
+                    <path
+                        d="M3 24 L11 13 L16 18 L29 4"
+                        stroke="#FF512F"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"/>
+
+                    <path
+                        d="M21 4 H29 V12"
+                        stroke="#D7AA48"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"/>
+
                 </svg>
-                <span>TRAIN2<span class="accent">CONQUER</span></span>
+
+
+                <span>
+                    TRAIN2<span class="accent">CONQUER</span>
+                </span>
+
             </a>
 
-            <div class="t2c-auth-headline">
-                <h2>Start your <span class="accent">climb</span> today</h2>
-                <p>Create your account and get your first workout in under two minutes.</p>
 
-                <ul class="t2c-auth-points">
-                    <li>No equipment needed to start</li>
-                    <li>Track every rep and streak</li>
-                    <li>Hire a certified trainer anytime</li>
-                </ul>
+            <!-- Main message -->
+
+            <div class="t2c-auth-content">
+
+                <div class="t2c-auth-eyebrow">
+                    Train with purpose
+                </div>
+
+
+                <div class="t2c-auth-headline">
+
+                    <h2>
+                        Build your
+                        <span class="accent">
+                            stronger
+                        </span>
+                        self.
+                    </h2>
+
+
+                    <p>
+                        Create your account and turn your fitness
+                        goals into a routine you can actually stick with.
+                    </p>
+
+
+                    <ul class="t2c-auth-points">
+
+                        <li>
+                            Personalized workout plans
+                        </li>
+
+                        <li>
+                            Track your progress and streaks
+                        </li>
+
+                        <li>
+                            Train anywhere, anytime
+                        </li>
+
+                    </ul>
+
+                </div>
+
             </div>
-        </div>
 
-        <!-- Right form panel -->
-        <div class="t2c-auth-form-panel">
-            <h1>Sign up</h1>
+
+            <div class="t2c-auth-quote">
+                CONSISTENCY &nbsp;•&nbsp;
+                DISCIPLINE &nbsp;•&nbsp;
+                PROGRESS
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================================
+             FORM PANEL
+        ====================================================== -->
+
+        <section class="t2c-auth-form-panel">
+
+
+            <div class="t2c-auth-form-head">
+
+                <h1>
+                    Create account
+                </h1>
+
+                <p class="t2c-auth-sub">
+                    Start your journey with Train2Conquer.
+                </p>
+
+            </div>
+
 
             {{ render_form(form) }}
 
-            <p class="t2c-auth-footer-line">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
-        </div>
+
+            <div class="t2c-auth-divider">
+                Already a member?
+            </div>
+
+
+            <p class="t2c-auth-footer-line">
+
+                <a href="{{ url_for('login') }}">
+                    Log in to your account →
+                </a>
+
+            </p>
+
+
+        </section>
 
     </div>
+
 </div>
+
 
 {% endblock %}

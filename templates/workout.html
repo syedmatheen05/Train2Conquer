@@ -1,54 +1,894 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout</title>
-    <!-- Bootstrap -->
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Train2Conquer | Workout</title>
+
     {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           TRAIN2CONQUER WORKOUT SCREEN
+        ===================================================== */
+
+        :root{
+
+            --t2c-bg: #08090C;
+
+            --t2c-panel: #101217;
+
+            --t2c-panel-2: #151820;
+
+            --t2c-panel-3: #1B1E26;
+
+            --t2c-border: rgba(255,255,255,.08);
+
+            --t2c-border-hover: rgba(255,255,255,.14);
+
+            --t2c-text: #F5F5F3;
+
+            --t2c-muted: #8E929D;
+
+            --t2c-muted-2: #666B76;
+
+            --t2c-orange: #FF512F;
+
+            --t2c-orange-light: #FF704D;
+
+            --t2c-gold: #D7AA48;
+
+            --t2c-green: #35C978;
+        }
+
+
+        *{
+            box-sizing: border-box;
+        }
+
+
+        body{
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            background:
+
+                radial-gradient(
+                    circle at 10% 5%,
+                    rgba(255,81,47,.09),
+                    transparent 25%
+                ),
+
+                radial-gradient(
+                    circle at 90% 90%,
+                    rgba(215,170,72,.06),
+                    transparent 25%
+                ),
+
+                var(--t2c-bg);
+
+            color: var(--t2c-text);
+
+            font-family:
+                'Manrope',
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                'Segoe UI',
+                sans-serif;
+
+            overflow-x: hidden;
+        }
+
+
+        /* =====================================================
+           MAIN WORKOUT CONTAINER
+        ===================================================== */
+
+        .t2c-workout-page{
+
+            width: min(900px, 100%);
+
+            margin: 0 auto;
+
+            padding: 35px 18px 60px;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .t2c-workout-top{
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 15px;
+
+            margin-bottom: 18px;
+        }
+
+
+        .t2c-day{
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+        }
+
+
+        .t2c-day-label{
+
+            color: var(--t2c-orange);
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            letter-spacing: .15em;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-day-number{
+
+            font-family: 'Anton', sans-serif;
+
+            font-size: 28px;
+
+            font-weight: 400;
+
+            line-height: 1;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-workout-count{
+
+            padding: 9px 14px;
+
+            border-radius: 10px;
+
+            background: var(--t2c-panel);
+
+            border: 1px solid var(--t2c-border);
+
+            color: var(--t2c-muted);
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            letter-spacing: .05em;
+        }
+
+
+        .t2c-workout-count span{
+
+            color: var(--t2c-text);
+
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           MAIN CARD
+        ===================================================== */
+
+        .t2c-workout-card{
+
+            overflow: hidden;
+
+            background: var(--t2c-panel);
+
+            border: 1px solid var(--t2c-border);
+
+            border-radius: 22px;
+
+            box-shadow:
+
+                0 30px 80px rgba(0,0,0,.4);
+        }
+
+
+        /* =====================================================
+           VIDEO
+        ===================================================== */
+
+        .t2c-video-wrapper{
+
+            position: relative;
+
+            width: 100%;
+
+            aspect-ratio: 16 / 9;
+
+            background: #050608;
+
+            overflow: hidden;
+        }
+
+
+        .t2c-video-wrapper::after{
+
+            content: "";
+
+            position: absolute;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            background:
+
+                linear-gradient(
+                    to top,
+                    rgba(0,0,0,.45),
+                    transparent 35%
+                );
+        }
+
+
+        #workout-video{
+
+            width: 100%;
+
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+
+            background: #050608;
+        }
+
+
+        /* =====================================================
+           EXERCISE INFORMATION
+        ===================================================== */
+
+        .t2c-exercise-info{
+
+            padding: 28px 30px 25px;
+
+            text-align: center;
+
+            border-bottom: 1px solid var(--t2c-border);
+        }
+
+
+        .t2c-exercise-label{
+
+            color: var(--t2c-gold);
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: .14em;
+
+            margin-bottom: 8px;
+        }
+
+
+        #exercise-name{
+
+            margin: 0 0 7px;
+
+            font-family: 'Anton', sans-serif;
+
+            font-size: clamp(
+                1.8rem,
+                5vw,
+                2.6rem
+            );
+
+            font-weight: 400;
+
+            line-height: 1.05;
+
+            text-transform: uppercase;
+
+            color: var(--t2c-text);
+        }
+
+
+        #reps{
+
+            margin: 0;
+
+            color: var(--t2c-orange);
+
+            font-size: 15px;
+
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
+
+        .t2c-navigation{
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-top: 17px;
+        }
+
+
+        .t2c-navigation form{
+
+            flex: 1;
+
+            display: flex;
+
+            justify-content: flex-end;
+        }
+
+
+        .t2c-navigation .btn{
+
+            min-height: 46px;
+
+            min-width: 140px;
+
+            padding: 10px 20px;
+
+            border-radius: 11px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            letter-spacing: .04em;
+
+            text-transform: uppercase;
+
+            transition:
+
+                transform .15s ease,
+
+                box-shadow .15s ease,
+
+                filter .15s ease;
+        }
+
+
+        /* Previous */
+
+        #previous-button{
+
+            background: var(--t2c-panel);
+
+            border: 1px solid var(--t2c-border);
+
+            color: var(--t2c-muted);
+        }
+
+
+        #previous-button:hover:not(:disabled){
+
+            background: var(--t2c-panel-2);
+
+            border-color: var(--t2c-border-hover);
+
+            color: var(--t2c-text);
+
+            transform: translateY(-1px);
+        }
+
+
+        #previous-button:disabled{
+
+            opacity: .35;
+
+            cursor: not-allowed;
+        }
+
+
+        /* Done */
+
+        #next-button{
+
+            border: none;
+
+            background:
+
+                linear-gradient(
+                    135deg,
+                    var(--t2c-orange),
+                    var(--t2c-orange-light)
+                );
+
+            color: #170E0A;
+
+            box-shadow:
+
+                0 9px 24px rgba(255,81,47,.16);
+        }
+
+
+        #next-button:hover{
+
+            filter: brightness(1.06);
+
+            transform: translateY(-1px);
+
+            box-shadow:
+
+                0 13px 30px rgba(255,81,47,.22);
+        }
+
+
+        /* =====================================================
+   REST SCREEN
+===================================================== */
+
+#rest-screen {
+    width: 100%;
+    margin-top: 20px;
+
+    min-height: 390px;
+
+    padding: 45px 25px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(215,170,72,.08),
+            transparent 55%
+        ),
+        var(--t2c-panel);
+
+    border: 1px solid var(--t2c-border);
+
+    border-radius: 20px;
+
+    color: var(--t2c-text);
+
+    box-shadow:
+        0 20px 55px rgba(0,0,0,.3);
+}
+
+
+/* REST heading */
+
+#rest-title {
+    margin: 0 0 12px;
+
+    font-family: 'Anton', sans-serif;
+
+    font-size: 3rem;
+
+    font-weight: 400;
+
+    line-height: 1;
+
+    letter-spacing: .03em;
+
+    color: var(--t2c-gold);
+
+    text-align: center;
+}
+
+
+/* Rest message */
+
+#rest-message {
+    width: 100%;
+
+    margin: 0 auto 15px;
+
+    color: var(--t2c-muted);
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    text-align: center;
+}
+
+
+/* Next exercise */
+
+#next-exercise {
+    width: 100%;
+
+    max-width: 500px;
+
+    margin: 0 auto 20px;
+
+    color: var(--t2c-text);
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    line-height: 1.5;
+
+    text-align: center;
+}
+
+
+/* =====================================================
+   REST TIMER
+===================================================== */
+
+#rest-timer {
+    width: 100%;
+
+    margin: 5px 0 25px !important;
+
+    font-family: 'Anton', sans-serif;
+
+    font-size: 4.5rem !important;
+
+    font-weight: 400;
+
+    line-height: 1;
+
+    letter-spacing: .01em;
+
+    color: var(--t2c-text);
+
+    text-align: center;
+
+    white-space: nowrap;
+}
+
+
+/* Skip button */
+
+#skip-rest {
+    min-width: 150px;
+
+    min-height: 43px;
+
+    padding: 10px 22px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--t2c-border);
+
+    background: var(--t2c-panel-2);
+
+    color: var(--t2c-muted);
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+
+    text-align: center;
+}
+
+
+#skip-rest:hover {
+    color: var(--t2c-text);
+
+    border-color: var(--t2c-border-hover);
+
+    background: var(--t2c-panel-3);
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+    #rest-screen {
+        min-height: 350px;
+
+        padding: 35px 18px;
+    }
+
+    #rest-title {
+        font-size: 2.4rem;
+    }
+
+    #rest-message {
+        font-size: 13px;
+    }
+
+    #next-exercise {
+        font-size: 12px;
+        max-width: 330px;
+    }
+
+    #rest-timer {
+        font-size: 3.2rem !important;
+        margin: 8px 0 25px !important;
+    }
+
+}
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 380px) {
+
+    #rest-screen {
+        min-height: 320px;
+
+        padding: 30px 15px;
+    }
+
+    #rest-title {
+        font-size: 2.1rem;
+    }
+
+    #rest-timer {
+        font-size: 2.8rem !important;
+    }
+
+}
+
+        /* =====================================================
+           REDUCED MOTION
+        ===================================================== */
+
+        @media(prefers-reduced-motion: reduce){
+
+            .t2c-navigation .btn{
+
+                transition: none;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
-	<!-- VIDEO -->
-	<div class="container workout-container">
-		<!-- DAY --> <!-- WORKOUT NUMBER -->
-		<div class="d-flex justify-content-between align-items-center mb-2 mt-0">
-    		<h3 class="fw-bold mb-0">Day {{ day_number }}</h3>
-    		<h5 class="mb-0">Workout <span id="workout-number">1</span></h5>
-		</div>
-		<!-- WORKOUT CARD -->
-		<div class="card shadow-sm border-0 workout-card">
-			<!-- VIDEO -->
-			<div class="video-wrapper">
-				<video id="workout-video" autoplay muted loop playsinline>
-					<source id="video-source" src="" type="video/mp4">
-				</video>
-				</div>
-				<!-- CARD BODY -->
-				<div class="card-body text-center p-4">
-					<h3 id="exercise-name" class="fw-bold mb-1"></h3>
-					<h4 id="reps" class="fw-bold"></h4>
-				</div>
-			</div>
-			<!-- PREVIOUS / NEXT -->
-			<div  id="navigation-buttons"  class="d-flex justify-content-between align-items-center mt-3">
-				<button id="previous-button"class="btn btn-outline-primary px-4" disabled>← Previous</button>
-                <form id="completeWorkoutForm" method="POST" action="{{ url_for('complete_workout', day=day_number) }}"></form>
-				    <button id="next-button" class="btn btn-primary px-4">Done →</button>
-                </form>
-			</div>
-			<!-- REST SCREEN -->
-			<div id="rest-screen" class="card shadow border-0 text-center p-5 mt-4 d-none">
-				<h2 id="rest-title" class="fw-bold text-primary">REST</h2>
-				<p id="rest-message" class="text-muted">Take a short break before your next exercise.</p>
-                <p id="next-exercise" class="text-muted"></p>
-				<div id="rest-timer" class="display-1 fw-bold my-4"></div>
-				<button id="skip-rest" class="btn btn-outline-secondary d-inline-block w-auto">Skip Rest</button>
-			</div>
-		</div>
-	</div>
-	{{ bootstrap.load_js() }}
-    <script> const workouts = {{ workouts | tojson | safe }};</script>
-<script src="{{url_for('static',filename='js/script.js')}}"></script>
+
+
+<div class="t2c-workout-page">
+
+
+    <!-- =====================================================
+         TOP INFORMATION
+    ====================================================== -->
+
+    <div class="t2c-workout-top">
+
+
+        <div class="t2c-day">
+
+            <span class="t2c-day-label">
+                Current session
+            </span>
+
+            <span class="t2c-day-number">
+                Day {{ day_number }}
+            </span>
+
+        </div>
+
+
+        <div class="t2c-workout-count">
+
+            Workout
+            <span id="workout-number">1</span>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         WORKOUT CARD
+    ====================================================== -->
+
+    <div class="t2c-workout-card workout-card">
+
+
+        <!-- VIDEO -->
+
+        <div class="t2c-video-wrapper">
+
+            <video
+                id="workout-video"
+                autoplay
+                muted
+                loop
+                playsinline
+            >
+
+                <source
+                    id="video-source"
+                    src=""
+                    type="video/mp4"
+                >
+
+            </video>
+
+        </div>
+
+
+        <!-- EXERCISE INFORMATION -->
+
+        <div class="t2c-exercise-info">
+
+            <div class="t2c-exercise-label">
+                Next movement
+            </div>
+
+
+            <h3 id="exercise-name">
+            </h3>
+
+
+            <h4 id="reps">
+            </h4>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         PREVIOUS / DONE
+    ====================================================== -->
+
+    <div
+        id="navigation-buttons"
+        class="t2c-navigation"
+    >
+
+
+        <button
+            id="previous-button"
+            class="btn"
+            disabled
+        >
+            ← Previous
+        </button>
+
+
+        <form
+            id="completeWorkoutForm"
+            method="POST"
+            action="{{ url_for(
+                'complete_workout',
+                day=day_number
+            ) }}"
+        >
+
+            <button
+                id="next-button"
+                type="button"
+                class="btn"
+            >
+                Done →
+            </button>
+
+        </form>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         REST SCREEN
+    ====================================================== -->
+
+    <div
+        id="rest-screen"
+        class="d-none"
+    >
+
+
+        <h2 id="rest-title">
+            REST
+        </h2>
+
+
+        <p id="rest-message">
+
+            Take a short break before your
+            next exercise.
+
+        </p>
+
+
+        <p id="next-exercise">
+        </p>
+
+
+        <div id="rest-timer">
+        </div>
+
+
+        <button
+            id="skip-rest"
+            class="btn"
+        >
+            Skip Rest
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+
+{{ bootstrap.load_js() }}
+
+
+<script>
+
+    const workouts =
+        {{ workouts | tojson | safe }};
+
+</script>
+
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/script.js'
+    ) }}"
+></script>
+
+
 </body>
+
 </html>

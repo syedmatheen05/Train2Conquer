@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Contact </title>
+
+    <!-- Bootstrap -->
+    {{ bootstrap.load_css() }}
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <style>
+
+        /* =====================================================
+           TRAIN2CONQUER — CONTACT PAGE
+        ===================================================== */
+
+        :root {
+
+            --t2c-bg: #08090c;
+
+            --t2c-panel: #101217;
+
+            --t2c-panel-2: #171a21;
+
+            --t2c-panel-3: #1d2028;
+
+            --t2c-border: rgba(255,255,255,.08);
+
+            --t2c-border-hover: rgba(255,255,255,.17);
+
+            --t2c-text: #f5f5f3;
+
+            --t2c-muted: #8d919c;
+
+            --t2c-muted-2: #676c77;
+
+            --t2c-orange: #ff512f;
+
+            --t2c-orange-light: #ff704d;
+
+            --t2c-gold: #d7aa48;
+
+        }
+
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background: var(--t2c-bg);
+
+            color: var(--t2c-text);
+
+            font-family:
+                'Manrope',
+                system-ui,
+                sans-serif;
+        }
+
+
+        /* =====================================================
+           HERO
+        ===================================================== */
+
+        .t2c-contact-hero {
+
+            position: relative;
+
+            min-height: 390px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 85px 20px 70px;
+
+            overflow: hidden;
+
+            background:
+
+                radial-gradient(
+                    circle at 15% 25%,
+                    rgba(255,81,47,.14),
+                    transparent 30%
+                ),
+
+                radial-gradient(
+                    circle at 85% 75%,
+                    rgba(215,170,72,.09),
+                    transparent 30%
+                ),
+
+                #08090c;
+        }
+
+
+        .t2c-contact-hero::before {
+
+            content: "";
+
+            position: absolute;
+
+            inset: 0;
+
+            background-image:
+
+                linear-gradient(
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                ),
+
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.025) 1px,
+                    transparent 1px
+                );
+
+            background-size: 55px 55px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent
+                );
+        }
+
+
+        .t2c-contact-hero-content {
+
+            position: relative;
+
+            z-index: 2;
+
+            max-width: 760px;
+
+            margin: auto;
+        }
+
+
+        .t2c-contact-kicker {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-bottom: 18px;
+
+            color: var(--t2c-gold);
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            letter-spacing: .18em;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-kicker::before,
+        .t2c-contact-kicker::after {
+
+            content: "";
+
+            width: 28px;
+
+            height: 2px;
+
+            border-radius: 5px;
+
+            background: var(--t2c-orange);
+        }
+
+
+        .t2c-contact-hero h1 {
+
+            margin: 0;
+
+            font-family: 'Anton', sans-serif;
+
+            font-size:
+                clamp(
+                    3rem,
+                    8vw,
+                    6rem
+                );
+
+            font-weight: 400;
+
+            line-height: .95;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-hero h1 span {
+
+            color: var(--t2c-orange);
+        }
+
+
+        .t2c-contact-hero p {
+
+            max-width: 600px;
+
+            margin: 22px auto 0;
+
+            color: var(--t2c-muted);
+
+            font-size: 14px;
+
+            line-height: 1.8;
+        }
+
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .t2c-contact-main {
+
+            width: min(1100px, 100%);
+
+            margin: auto;
+
+            padding:
+                75px 20px
+                90px;
+        }
+
+
+        /* =====================================================
+           CONTACT GRID
+        ===================================================== */
+
+        .t2c-contact-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                .85fr 1.15fr;
+
+            gap: 25px;
+
+            align-items: stretch;
+        }
+
+
+        /* =====================================================
+           LEFT INFORMATION PANEL
+        ===================================================== */
+
+        .t2c-contact-info {
+
+            padding: 35px;
+
+            background:
+
+                linear-gradient(
+                    145deg,
+                    #15171d,
+                    #101217
+                );
+
+            border: 1px solid var(--t2c-border);
+
+            border-radius: 18px;
+
+            position: relative;
+
+            overflow: hidden;
+        }
+
+
+        .t2c-contact-info::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 220px;
+
+            height: 220px;
+
+            right: -100px;
+
+            bottom: -110px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255,81,47,.08);
+
+            filter: blur(10px);
+        }
+
+
+        .t2c-section-label {
+
+            margin-bottom: 12px;
+
+            color: var(--t2c-orange);
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            letter-spacing: .15em;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-info h2 {
+
+            margin: 0 0 17px;
+
+            font-family: 'Anton', sans-serif;
+
+            font-size: 2.8rem;
+
+            font-weight: 400;
+
+            line-height: 1;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-info h2 span {
+
+            color: var(--t2c-gold);
+        }
+
+
+        .t2c-contact-info > p {
+
+            margin-bottom: 30px;
+
+            color: var(--t2c-muted);
+
+            font-size: 13px;
+
+            line-height: 1.8;
+        }
+
+
+        /* =====================================================
+           CONTACT DETAILS
+        ===================================================== */
+
+        .t2c-contact-details {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+        }
+
+
+        .t2c-contact-detail {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            padding: 15px;
+
+            background: var(--t2c-panel-2);
+
+            border: 1px solid var(--t2c-border);
+
+            border-radius: 11px;
+
+            text-decoration: none;
+
+            transition:
+                border-color .18s ease,
+                transform .18s ease,
+                background .18s ease;
+        }
+
+
+        .t2c-contact-detail:hover {
+
+            transform: translateX(4px);
+
+            background: var(--t2c-panel-3);
+
+            border-color:
+                rgba(255,81,47,.3);
+        }
+
+
+        .t2c-contact-icon {
+
+            width: 42px;
+
+            height: 42px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,81,47,.1);
+
+            color: var(--t2c-orange);
+
+            font-size: 18px;
+
+            font-weight: 800;
+        }
+
+
+        .t2c-contact-detail-text {
+
+            min-width: 0;
+        }
+
+
+        .t2c-contact-detail-text small {
+
+            display: block;
+
+            margin-bottom: 3px;
+
+            color: var(--t2c-muted-2);
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            letter-spacing: .08em;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-detail-text strong {
+
+            display: block;
+
+            color: var(--t2c-text);
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           FORM PANEL
+        ===================================================== */
+
+        .t2c-contact-form {
+
+            padding: 35px;
+
+            background: var(--t2c-panel);
+
+            border: 1px solid var(--t2c-border);
+
+            border-radius: 18px;
+        }
+
+
+        .t2c-contact-form h2 {
+
+            margin: 0 0 7px;
+
+            font-family: 'Anton', sans-serif;
+
+            font-size: 2.5rem;
+
+            font-weight: 400;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-form h2 span {
+
+            color: var(--t2c-orange);
+        }
+
+
+        .t2c-contact-form-subtitle {
+
+            margin: 0 0 28px;
+
+            color: var(--t2c-muted);
+
+            font-size: 12px;
+
+            line-height: 1.7;
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .t2c-contact-form label {
+
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: var(--t2c-muted);
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            letter-spacing: .07em;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-form .form-control,
+        .t2c-contact-form .form-select {
+
+            width: 100%;
+
+            min-height: 47px;
+
+            padding: 11px 13px;
+
+            background: var(--t2c-panel-2);
+
+            color: var(--t2c-text);
+
+            border: 1px solid var(--t2c-border);
+
+            border-radius: 9px;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            transition:
+                border-color .15s ease,
+                box-shadow .15s ease,
+                background .15s ease;
+        }
+
+
+        .t2c-contact-form textarea.form-control {
+
+            min-height: 135px;
+
+            resize: vertical;
+        }
+
+
+        .t2c-contact-form .form-control::placeholder {
+
+            color: var(--t2c-muted-2);
+        }
+
+
+        .t2c-contact-form .form-control:hover,
+        .t2c-contact-form .form-select:hover {
+
+            border-color:
+                var(--t2c-border-hover);
+        }
+
+
+        .t2c-contact-form .form-control:focus,
+        .t2c-contact-form .form-select:focus {
+
+            background: var(--t2c-panel-3);
+
+            color: var(--t2c-text);
+
+            border-color: var(--t2c-orange);
+
+            box-shadow:
+                0 0 0 3px rgba(255,81,47,.12);
+
+            outline: none;
+        }
+
+
+        .t2c-contact-form select option {
+
+            background: var(--t2c-panel-2);
+
+            color: var(--t2c-text);
+        }
+
+
+        .t2c-contact-form .form-group,
+        .t2c-contact-form .mb-3 {
+
+            margin-bottom: 18px !important;
+        }
+
+
+        /* =====================================================
+           SEND BUTTON
+        ===================================================== */
+
+        .t2c-send-button {
+
+            width: 100%;
+
+            min-height: 50px;
+
+            margin-top: 3px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--t2c-orange),
+                    var(--t2c-orange-light)
+                );
+
+            color: #170d09;
+
+            font-size: 11px;
+
+            font-weight: 900;
+
+            letter-spacing: .08em;
+
+            text-transform: uppercase;
+
+            box-shadow:
+                0 10px 25px rgba(255,81,47,.15);
+
+            transition:
+                transform .15s ease,
+                filter .15s ease;
+        }
+
+
+        .t2c-send-button:hover {
+
+            filter: brightness(1.07);
+
+            transform: translateY(-2px);
+        }
+
+
+        .t2c-send-button:active {
+
+            transform: scale(.98);
+        }
+
+
+        /* =====================================================
+           BOTTOM MESSAGE
+        ===================================================== */
+
+        .t2c-contact-bottom {
+
+            margin-top: 65px;
+
+            padding: 50px 25px;
+
+            text-align: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #15171d,
+                    #101217
+                );
+
+            border: 1px solid var(--t2c-border);
+
+            border-radius: 18px;
+        }
+
+
+        .t2c-contact-bottom h2 {
+
+            margin: 0 0 10px;
+
+            font-family: 'Anton', sans-serif;
+
+            font-size: 2.5rem;
+
+            font-weight: 400;
+
+            text-transform: uppercase;
+        }
+
+
+        .t2c-contact-bottom h2 span {
+
+            color: var(--t2c-orange);
+        }
+
+
+        .t2c-contact-bottom p {
+
+            max-width: 550px;
+
+            margin: auto;
+
+            color: var(--t2c-muted);
+
+            font-size: 13px;
+
+            line-height: 1.7;
+        }
+
+
+        /* =====================================================
+           TABLET
+        ===================================================== */
+
+        @media (max-width: 850px) {
+
+            .t2c-contact-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+
+            .t2c-contact-info {
+
+                padding: 30px;
+            }
+
+
+            .t2c-contact-form {
+
+                padding: 30px;
+            }
+
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 600px) {
+
+            .t2c-contact-hero {
+
+                min-height: 350px;
+
+                padding:
+                    70px
+                    18px
+                    55px;
+            }
+
+
+            .t2c-contact-hero h1 {
+
+                font-size: 3.3rem;
+            }
+
+
+            .t2c-contact-hero p {
+
+                font-size: 12px;
+            }
+
+
+            .t2c-contact-main {
+
+                padding:
+                    50px
+                    14px
+                    60px;
+            }
+
+
+            .t2c-contact-info,
+            .t2c-contact-form {
+
+                padding: 24px 18px;
+
+                border-radius: 15px;
+            }
+
+
+            .t2c-contact-info h2 {
+
+                font-size: 2.35rem;
+            }
+
+
+            .t2c-contact-form h2 {
+
+                font-size: 2.2rem;
+            }
+
+
+            .t2c-contact-bottom {
+
+                margin-top: 50px;
+
+                padding:
+                    40px
+                    18px;
+            }
+
+
+            .t2c-contact-bottom h2 {
+
+                font-size: 2.1rem;
+            }
+
+        }
+
+
+        /* =====================================================
+           SMALL PHONES
+        ===================================================== */
+
+        @media (max-width: 380px) {
+
+            .t2c-contact-hero h1 {
+
+                font-size: 2.8rem;
+            }
+
+
+            .t2c-contact-detail {
+
+                padding: 12px;
+            }
+
+
+            .t2c-contact-icon {
+
+                width: 38px;
+
+                height: 38px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="t2c-contact-hero">
+
+        <div class="t2c-contact-hero-content">
+
+            <div class="t2c-contact-kicker">
+                We're Here To Help
+            </div>
+
+            <h1>
+                Let's
+                <span>Connect</span>
+            </h1>
+
+            <p>
+                Have a question about Train2Conquer,
+                your workout plan or anything else?
+                Send us a message and we'll get back to you.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="t2c-contact-main">
+
+        <div class="t2c-contact-grid">
+
+
+            <!-- =================================================
+                 CONTACT INFORMATION
+            ================================================== -->
+
+            <section class="t2c-contact-info">
+
+                <div class="t2c-section-label">
+                    Get In Touch
+                </div>
+
+                <h2>
+                    Talk To
+                    <span>Us.</span>
+                </h2>
+
+                <p>
+                    Whether you have feedback, a question,
+                    a technical issue or simply want to know
+                    more about Train2Conquer, we'd love to hear
+                    from you.
+                </p>
+
+
+                <div class="t2c-contact-details">
+
+
+                    <!-- EMAIL -->
+
+                    <a
+                        href="mailto:syedmatheen2910@gmail.com"
+                        class="t2c-contact-detail"
+                    >
+
+                        <div class="t2c-contact-icon">
+                            @
+                        </div>
+
+                        <div class="t2c-contact-detail-text">
+
+                            <small>
+                                Email
+                            </small>
+
+                            <strong>
+                                syedmatheen2910@gmail.com
+                            </strong>
+
+                        </div>
+
+                    </a>
+
+
+                    <!-- RESPONSE -->
+
+                    <div class="t2c-contact-detail">
+
+                        <div class="t2c-contact-icon">
+                            ✓
+                        </div>
+
+                        <div class="t2c-contact-detail-text">
+
+                            <small>
+                                Response Time
+                            </small>
+
+                            <strong>
+                                Usually within 24 hours
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUPPORT -->
+
+                    <div class="t2c-contact-detail">
+
+                        <div class="t2c-contact-icon">
+                            +
+                        </div>
+
+                        <div class="t2c-contact-detail-text">
+
+                            <small>
+                                Support
+                            </small>
+
+                            <strong>
+                                Fitness & Platform Support
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 CONTACT FORM
+            ================================================== -->
+
+            <section class="t2c-contact-form">
+
+                <div class="t2c-section-label">
+                    Send A Message
+                </div>
+
+                <h2>
+                    Contact
+                    <span>Us</span>
+                </h2>
+
+                <p class="t2c-contact-form-subtitle">
+                    Fill in the details below and tell us
+                    how we can help.
+                </p>
+
+
+                <form
+                    method="POST"
+                    action=""
+                >
+
+                    <!-- NAME -->
+
+                    <div class="mb-3">
+
+                        <label for="name">
+                            Your Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            class="form-control"
+                            placeholder="Enter your name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="mb-3">
+
+                        <label for="email">
+                            Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="form-control"
+                            placeholder="you@example.com"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- SUBJECT -->
+
+                    <div class="mb-3">
+
+                        <label for="subject">
+                            Subject
+                        </label>
+
+                        <select
+                            id="subject"
+                            name="subject"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="" selected disabled>
+                                Select a topic
+                            </option>
+
+                            <option value="general">
+                                General Question
+                            </option>
+
+                            <option value="workout">
+                                Workout Plan
+                            </option>
+
+                            <option value="technical">
+                                Technical Issue
+                            </option>
+
+                            <option value="feedback">
+                                Feedback
+                            </option>
+
+                            <option value="other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- MESSAGE -->
+
+                    <div class="mb-3">
+
+                        <label for="message">
+                            Message
+                        </label>
+
+                        <textarea
+                            id="message"
+                            name="message"
+                            class="form-control"
+                            placeholder="Tell us how we can help..."
+                            required
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="t2c-send-button"
+                    >
+                        Send Message →
+                    </button>
+
+                </form>
+
+            </section>
+
+
+        </div>
+
+
+        <!-- =================================================
+             BOTTOM CTA
+        ================================================== -->
+
+        <section class="t2c-contact-bottom">
+
+            <h2>
+                Keep Training.
+                <span>Keep Conquering.</span>
+            </h2>
+
+            <p>
+                Every question, every workout and every
+                improvement is part of the journey.
+                Stay consistent and keep moving forward.
+            </p>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    {% include 'footer.html' %}
+
+
+
+    {{ bootstrap.load_js() }}
+
+
+</body>
+
+</html>

@@ -492,6 +492,10 @@ def home():
             completed_days = json.loads(workout_plan.completed_days or "[]")
         return render_template("home.html",workout_plan=workout_plan,workout_plan_data=workout_plan_data,completed_days=completed_days)
     return render_template("dashboard.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
  
 @app.route("/about")
 def about():

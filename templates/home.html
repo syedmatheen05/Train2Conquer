@@ -14,7 +14,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        href="{{ url_for('static', filename='css/style2.css') }}"
     >
 
     <title>Train2Conquer | Workout Plan</title>
@@ -1022,7 +1022,12 @@
 
 
 {% include 'navbar.html' %}
-
+    <div id="page-loader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Train2Conquer</div>
+    </div>
+</div>
 
 <!-- =========================================================
      DASHBOARD
@@ -1325,7 +1330,7 @@
 {{ bootstrap.load_js() }}
 
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script2.js') }}"></script>
 
 
 <script>

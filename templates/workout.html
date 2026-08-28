@@ -16,7 +16,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        href="{{ url_for('static', filename='css/style2.css') }}"
     >
 
 
@@ -691,7 +691,12 @@
 
 
 <body>
-
+    <div id="page-loader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Train2Conquer</div>
+    </div>
+</div>
 
 <div class="t2c-workout-page">
 
@@ -884,7 +889,7 @@
 <script
     src="{{ url_for(
         'static',
-        filename='js/script.js'
+        filename='js/script2.js'
     ) }}"
 ></script>
 

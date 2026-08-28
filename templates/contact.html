@@ -7,7 +7,7 @@
     {{ bootstrap.load_css() }}
 
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+          href="{{ url_for('static', filename='css/style2.css') }}">
 
     <title>Contact | Train2Conquer</title>
     <style>/* =========================================
@@ -356,7 +356,12 @@
 </head>
 
 <body>
-
+    <div id="page-loader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Train2Conquer</div>
+    </div>
+</div>
 <!-- =========================
      CONTACT HERO
 ========================= -->
@@ -760,7 +765,7 @@
 
 {{ bootstrap.load_js() }}
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script2.js') }}"></script>
 
 
 </body>

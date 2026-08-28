@@ -1,983 +1,1922 @@
-{% extends 'base.html' %}
-{% from 'bootstrap5/form.html' import render_form %}
+<!DOCTYPE html>
 
-{% block title %}Log-in{% endblock %}
+<html lang="en">
+<head>
 
-{% block content %}
+```
+<meta charset="UTF-8">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Log-in | Train2Conquer</title>
+
+
+<!-- =========================================================
+     BOOTSTRAP
+========================================================== -->
+
+{{ bootstrap.load_css() }}
+
+
+<!-- =========================================================
+     FONTS
+========================================================== -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
 
 <style>
 
-:root{
-    --t2c-bg: #08090C;
-    --t2c-panel: #101217;
-    --t2c-panel-2: #151820;
-    --t2c-border: rgba(255,255,255,.08);
+    /* =========================================================
+       TRAIN2CONQUER AUTH DESIGN SYSTEM
+    ========================================================== */
 
-    --t2c-text: #F5F5F3;
-    --t2c-muted: #8E929D;
+    :root {
 
-    --t2c-orange: #FF512F;
-    --t2c-orange-light: #FF704D;
+        --t2c-bg: #08090C;
 
-    --t2c-gold: #D7AA48;
-    --t2c-danger: #FF6961;
-}
+        --t2c-panel: #101217;
+        --t2c-panel-2: #151820;
+        --t2c-panel-3: #0D0F14;
 
+        --t2c-border:
+            rgba(255,255,255,.08);
 
-/* =========================================================
-   MAIN LOGIN AREA
-========================================================= */
+        --t2c-text:
+            #F5F5F3;
 
-.t2c-login{
+        --t2c-muted:
+            #8E929D;
 
-    min-height: calc(100vh - 72px);
+        --t2c-muted-2:
+            #656A76;
 
-    width: 100vw;
+        --t2c-orange:
+            #FF512F;
 
-    position: relative;
+        --t2c-orange-light:
+            #FF704D;
 
-    left: 50%;
+        --t2c-gold:
+            #D7AA48;
 
-    margin-left: -50vw;
+        --t2c-danger:
+            #FF6961;
 
-    padding: 42px 24px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    background:
-
-        radial-gradient(
-            circle at 8% 15%,
-            rgba(255,81,47,.10),
-            transparent 28%
-        ),
-
-        radial-gradient(
-            circle at 90% 90%,
-            rgba(215,170,72,.07),
-            transparent 25%
-        ),
-
-        var(--t2c-bg);
-
-    font-family: 'Manrope', sans-serif;
-
-    color: var(--t2c-text);
-}
-
-
-/* =========================================================
-   LOGIN CARD
-========================================================= */
-
-.t2c-login-card{
-
-    width: min(1050px, 100%);
-
-    min-height: 610px;
-
-    display: grid;
-
-    grid-template-columns: .9fr 1.1fr;
-
-    background: var(--t2c-panel);
-
-    border: 1px solid var(--t2c-border);
-
-    border-radius: 24px;
-
-    overflow: hidden;
-
-    box-shadow:
-
-        0 30px 90px rgba(0,0,0,.55),
-
-        0 0 0 1px rgba(255,255,255,.015);
-}
-
-
-/* =========================================================
-   LEFT SIDE
-========================================================= */
-
-.t2c-login-brand{
-
-    position: relative;
-
-    overflow: hidden;
-
-    padding: 45px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: space-between;
-
-    background:
-
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,.025),
-            transparent 45%
-        ),
-
-        #0D0F14;
-
-    border-right: 1px solid var(--t2c-border);
-
-    isolation: isolate;
-}
-
-
-/* Glow */
-
-.t2c-login-brand::before{
-
-    content: "";
-
-    position: absolute;
-
-    width: 330px;
-
-    height: 330px;
-
-    left: -160px;
-
-    top: -150px;
-
-    border-radius: 50%;
-
-    background: rgba(255,81,47,.12);
-
-    filter: blur(25px);
-
-    z-index: -2;
-}
-
-
-.t2c-login-brand::after{
-
-    content: "";
-
-    position: absolute;
-
-    width: 280px;
-
-    height: 280px;
-
-    right: -150px;
-
-    bottom: -150px;
-
-    border-radius: 50%;
-
-    background: rgba(215,170,72,.08);
-
-    filter: blur(25px);
-
-    z-index: -2;
-}
-
-
-/* =========================================================
-   GRAPHIC
-========================================================= */
-
-.t2c-login-climb{
-
-    position: absolute;
-
-    inset: 0;
-
-    width: 100%;
-
-    height: 100%;
-
-    opacity: .28;
-
-    z-index: -1;
-}
-
-
-/* =========================================================
-   LOGO
-========================================================= */
-
-.t2c-login-logo{
-
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 11px;
-
-    width: max-content;
-
-    color: var(--t2c-text) !important;
-
-    text-decoration: none !important;
-}
-
-
-.t2c-login-logo svg{
-
-    width: 31px;
-
-    height: 31px;
-}
-
-
-.t2c-login-logo span{
-
-    font-family: 'Anton', sans-serif;
-
-    font-size: 19px;
-
-    letter-spacing: .04em;
-
-    line-height: 1;
-}
-
-
-.t2c-login-logo .accent{
-
-    color: var(--t2c-orange);
-}
-
-
-/* =========================================================
-   LEFT CONTENT
-========================================================= */
-
-.t2c-login-content{
-
-    margin-top: auto;
-
-    margin-bottom: auto;
-
-    padding: 70px 0 40px;
-
-    position: relative;
-
-    z-index: 1;
-}
-
-
-.t2c-login-eyebrow{
-
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    margin-bottom: 18px;
-
-    color: var(--t2c-gold);
-
-    font-size: 11px;
-
-    font-weight: 800;
-
-    letter-spacing: .14em;
-
-    text-transform: uppercase;
-}
-
-
-.t2c-login-eyebrow::before{
-
-    content: "";
-
-    width: 24px;
-
-    height: 2px;
-
-    border-radius: 10px;
-
-    background: var(--t2c-orange);
-}
-
-
-.t2c-login-content h2{
-
-    font-family: 'Anton', sans-serif;
-
-    font-weight: 400;
-
-    text-transform: uppercase;
-
-    font-size: clamp(
-        2.1rem,
-        4vw,
-        3.25rem
-    );
-
-    line-height: .98;
-
-    margin: 0 0 20px;
-
-    max-width: 400px;
-}
-
-
-.t2c-login-content h2 .accent{
-
-    color: var(--t2c-orange);
-}
-
-
-.t2c-login-content p{
-
-    color: var(--t2c-muted);
-
-    font-size: 14px;
-
-    line-height: 1.75;
-
-    max-width: 360px;
-
-    margin: 0;
-}
-
-
-/* =========================================================
-   BENEFITS
-========================================================= */
-
-.t2c-login-points{
-
-    list-style: none;
-
-    margin: 30px 0 0;
-
-    padding: 0;
-
-    display: grid;
-
-    gap: 13px;
-}
-
-
-.t2c-login-points li{
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 11px;
-
-    color: #B5B8C0;
-
-    font-size: 13px;
-}
-
-
-.t2c-login-points li::before{
-
-    content: "✓";
-
-    display: grid;
-
-    place-items: center;
-
-    width: 22px;
-
-    height: 22px;
-
-    border-radius: 7px;
-
-    color: var(--t2c-orange);
-
-    background: rgba(255,81,47,.10);
-
-    border: 1px solid rgba(255,81,47,.16);
-
-    font-size: 11px;
-
-    font-weight: 800;
-
-    flex-shrink: 0;
-}
-
-
-.t2c-login-bottom{
-
-    color: #656A76;
-
-    font-size: 11px;
-
-    font-weight: 700;
-
-    letter-spacing: .08em;
-}
-
-
-/* =========================================================
-   RIGHT FORM
-========================================================= */
-
-.t2c-login-form{
-
-    padding: 60px clamp(30px, 5vw, 70px);
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: center;
-
-    background: var(--t2c-panel);
-}
-
-
-/* Heading */
-
-.t2c-login-heading{
-
-    margin-bottom: 30px;
-}
-
-
-.t2c-login-heading h1{
-
-    font-family: 'Anton', sans-serif;
-
-    font-weight: 400;
-
-    text-transform: uppercase;
-
-    font-size: 2.2rem;
-
-    letter-spacing: .015em;
-
-    margin: 0 0 7px;
-
-    color: var(--t2c-text);
-}
-
-
-.t2c-login-heading p{
-
-    color: var(--t2c-muted);
-
-    font-size: 13px;
-
-    margin: 0;
-
-    line-height: 1.6;
-}
-
-
-/* =========================================================
-   FORM FIELDS
-========================================================= */
-
-.t2c-login-form form label,
-.t2c-login-form form .form-label{
-
-    display: block;
-
-    color: #A7AAB3;
-
-    font-size: 11px;
-
-    font-weight: 800;
-
-    letter-spacing: .09em;
-
-    text-transform: uppercase;
-
-    margin-bottom: 7px;
-}
-
-
-.t2c-login-form form .form-control,
-.t2c-login-form form .form-select{
-
-    min-height: 48px;
-
-    background: var(--t2c-panel-2);
-
-    border: 1px solid var(--t2c-border);
-
-    color: var(--t2c-text);
-
-    border-radius: 11px;
-
-    padding: 11px 14px;
-
-    font-size: 13.5px;
-
-    font-family: 'Manrope', sans-serif;
-
-    transition:
-
-        border-color .18s ease,
-
-        box-shadow .18s ease,
-
-        background .18s ease;
-}
-
-
-.t2c-login-form form .form-control:hover{
-
-    border-color: rgba(255,255,255,.14);
-}
-
-
-.t2c-login-form form .form-control::placeholder{
-
-    color: #555A66;
-}
-
-
-.t2c-login-form form .form-control:focus,
-.t2c-login-form form .form-select:focus{
-
-    background: #181B23;
-
-    border-color: var(--t2c-orange);
-
-    color: var(--t2c-text);
-
-    box-shadow:
-
-        0 0 0 3px rgba(255,81,47,.13);
-}
-
-
-.t2c-login-form form .invalid-feedback{
-
-    color: var(--t2c-danger);
-
-    font-size: 11px;
-}
-
-
-.t2c-login-form form .form-text{
-
-    color: #777B86;
-
-    font-size: 11px;
-}
-
-
-.t2c-login-form form .form-check-label{
-
-    color: var(--t2c-muted);
-
-    font-size: 12.5px;
-
-    text-transform: none;
-
-    letter-spacing: 0;
-}
-
-
-.t2c-login-form form .mb-3{
-
-    margin-bottom: 18px !important;
-}
-
-
-/* =========================================================
-   LOGIN BUTTON
-========================================================= */
-
-.t2c-login-form form [type="submit"],
-.t2c-login-form form .btn-primary{
-
-    width: 100%;
-
-    min-height: 49px;
-
-    margin-top: 7px;
-
-    border: none;
-
-    border-radius: 11px;
-
-    background:
-
-        linear-gradient(
-            135deg,
-            var(--t2c-orange),
-            var(--t2c-orange-light)
-        );
-
-    color: #170E0A;
-
-    font-size: 13px;
-
-    font-weight: 800;
-
-    letter-spacing: .04em;
-
-    text-transform: uppercase;
-
-    box-shadow:
-
-        0 10px 25px rgba(255,81,47,.16);
-
-    transition:
-
-        transform .15s ease,
-
-        box-shadow .15s ease,
-
-        filter .15s ease;
-}
-
-
-.t2c-login-form form [type="submit"]:hover,
-.t2c-login-form form .btn-primary:hover{
-
-    filter: brightness(1.06);
-
-    transform: translateY(-1px);
-
-    box-shadow:
-
-        0 14px 30px rgba(255,81,47,.22);
-}
-
-
-.t2c-login-form form [type="submit"]:active,
-.t2c-login-form form .btn-primary:active{
-
-    transform: translateY(0);
-}
-
-
-/* =========================================================
-   REGISTER LINK
-========================================================= */
-
-.t2c-login-divider{
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    margin: 25px 0 0;
-
-    color: #454A55;
-
-    font-size: 10px;
-
-    font-weight: 800;
-
-    letter-spacing: .12em;
-
-    text-transform: uppercase;
-}
-
-
-.t2c-login-divider::before,
-.t2c-login-divider::after{
-
-    content: "";
-
-    height: 1px;
-
-    flex: 1;
-
-    background: var(--t2c-border);
-}
-
-
-.t2c-register-link{
-
-    margin: 17px 0 0;
-
-    text-align: center;
-
-    color: var(--t2c-muted);
-
-    font-size: 12.5px;
-}
-
-
-.t2c-register-link a{
-
-    color: var(--t2c-gold);
-
-    font-weight: 800;
-
-    text-decoration: none;
-}
-
-
-.t2c-register-link a:hover{
-
-    color: #F0C766;
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 850px){
-
-    .t2c-login{
-
-        padding: 26px 16px;
+        --t2c-radius:
+            24px;
     }
 
-    .t2c-login-card{
 
-        grid-template-columns: 1fr;
+    /* =========================================================
+       RESET
+    ========================================================== */
 
-        min-height: auto;
+    *,
+    *::before,
+    *::after {
 
-        max-width: 570px;
+        box-sizing:
+            border-box;
     }
 
-    .t2c-login-brand{
 
-        display: none;
+    html {
+
+        scroll-behavior:
+            smooth;
     }
 
-    .t2c-login-form{
 
-        padding: 42px 30px;
+    body {
+
+        margin:
+            0;
+
+        min-height:
+            100vh;
+
+        background:
+
+            radial-gradient(
+                circle at 8% 10%,
+                rgba(255,81,47,.10),
+                transparent 30%
+            ),
+
+            radial-gradient(
+                circle at 92% 90%,
+                rgba(215,170,72,.07),
+                transparent 30%
+            ),
+
+            var(--t2c-bg);
+
+        color:
+            var(--t2c-text);
+
+        font-family:
+            'Manrope',
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            sans-serif;
+
+        overflow-x:
+            hidden;
     }
-}
 
 
-@media (max-width: 480px){
+    /* =========================================================
+       MAIN LOGIN AREA
+    ========================================================== */
 
-    .t2c-login{
+    .t2c-login {
 
-        padding: 16px 10px;
+        width:
+            100%;
 
-        align-items: flex-start;
+        min-height:
+            100vh;
+
+        padding:
+            38px 22px;
+
+        display:
+            flex;
+
+        align-items:
+            center;
+
+        justify-content:
+            center;
+
+        position:
+            relative;
+
+        isolation:
+            isolate;
     }
 
-    .t2c-login-card{
 
-        border-radius: 18px;
+    /* =========================================================
+       BACKGROUND GLOW
+    ========================================================== */
+
+    .t2c-login::before {
+
+        content:
+            "";
+
+        position:
+            fixed;
+
+        width:
+            440px;
+
+        height:
+            440px;
+
+        left:
+            -250px;
+
+        top:
+            -230px;
+
+        border-radius:
+            50%;
+
+        background:
+            rgba(255,81,47,.055);
+
+        filter:
+            blur(85px);
+
+        pointer-events:
+            none;
+
+        z-index:
+            -2;
     }
 
-    .t2c-login-form{
 
-        padding: 34px 20px;
+    .t2c-login::after {
+
+        content:
+            "";
+
+        position:
+            fixed;
+
+        width:
+            420px;
+
+        height:
+            420px;
+
+        right:
+            -250px;
+
+        bottom:
+            -240px;
+
+        border-radius:
+            50%;
+
+        background:
+            rgba(215,170,72,.045);
+
+        filter:
+            blur(85px);
+
+        pointer-events:
+            none;
+
+        z-index:
+            -2;
     }
 
-    .t2c-login-heading h1{
 
-        font-size: 1.9rem;
+    /* =========================================================
+       LOGIN SHELL
+    ========================================================== */
+
+    .t2c-login-card {
+
+        width:
+            min(1080px, 100%);
+
+        min-height:
+            650px;
+
+        display:
+            grid;
+
+        grid-template-columns:
+            .92fr 1.08fr;
+
+        background:
+            var(--t2c-panel);
+
+        border:
+            1px solid
+            var(--t2c-border);
+
+        border-radius:
+            var(--t2c-radius);
+
+        overflow:
+            hidden;
+
+        position:
+            relative;
+
+        box-shadow:
+
+            0 35px 100px
+            rgba(0,0,0,.58),
+
+            0 0 0 1px
+            rgba(255,255,255,.012);
+
+        animation:
+            t2cLoginIn .55s ease both;
     }
-}
+
+
+    /* =========================================================
+       CARD ACCENT LINE
+    ========================================================== */
+
+    .t2c-login-card::before {
+
+        content:
+            "";
+
+        position:
+            absolute;
+
+        top:
+            0;
+
+        left:
+            0;
+
+        right:
+            0;
+
+        height:
+            2px;
+
+        background:
+
+            linear-gradient(
+                90deg,
+                var(--t2c-orange),
+                var(--t2c-gold)
+            );
+
+        z-index:
+            5;
+    }
+
+
+    /* =========================================================
+       CARD ANIMATION
+    ========================================================== */
+
+    @keyframes t2cLoginIn {
+
+        from {
+
+            opacity:
+                0;
+
+            transform:
+                translateY(18px)
+                scale(.985);
+        }
+
+        to {
+
+            opacity:
+                1;
+
+            transform:
+                translateY(0)
+                scale(1);
+        }
+    }
+
+
+    /* =========================================================
+       LEFT BRAND PANEL
+    ========================================================== */
+
+    .t2c-login-brand {
+
+        min-width:
+            0;
+
+        position:
+            relative;
+
+        overflow:
+            hidden;
+
+        padding:
+            42px 46px;
+
+        display:
+            flex;
+
+        flex-direction:
+            column;
+
+        justify-content:
+            space-between;
+
+        background:
+
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,.025),
+                transparent 45%
+            ),
+
+            var(--t2c-panel-3);
+
+        border-right:
+            1px solid
+            var(--t2c-border);
+
+        isolation:
+            isolate;
+    }
+
+
+    /* =========================================================
+       LEFT PANEL GLOWS
+    ========================================================== */
+
+    .t2c-login-brand::before {
+
+        content:
+            "";
+
+        position:
+            absolute;
+
+        width:
+            350px;
+
+        height:
+            350px;
+
+        left:
+            -180px;
+
+        top:
+            -160px;
+
+        border-radius:
+            50%;
+
+        background:
+            rgba(255,81,47,.12);
+
+        filter:
+            blur(28px);
+
+        z-index:
+            -3;
+    }
+
+
+    .t2c-login-brand::after {
+
+        content:
+            "";
+
+        position:
+            absolute;
+
+        width:
+            300px;
+
+        height:
+            300px;
+
+        right:
+            -170px;
+
+        bottom:
+            -170px;
+
+        border-radius:
+            50%;
+
+        background:
+            rgba(215,170,72,.08);
+
+        filter:
+            blur(28px);
+
+        z-index:
+            -3;
+    }
+
+
+    /* =========================================================
+       DECORATIVE CLIMB GRAPHIC
+    ========================================================== */
+
+    .t2c-login-climb {
+
+        position:
+            absolute;
+
+        inset:
+            0;
+
+        width:
+            100%;
+
+        height:
+            100%;
+
+        opacity:
+            .26;
+
+        z-index:
+            -2;
+
+        pointer-events:
+            none;
+    }
+
+
+    /* =========================================================
+       LOGO
+    ========================================================== */
+
+    .t2c-login-logo {
+
+        display:
+            inline-flex;
+
+        align-items:
+            center;
+
+        gap:
+            11px;
+
+        width:
+            max-content;
+
+        color:
+            var(--t2c-text) !important;
+
+        text-decoration:
+            none !important;
+
+        position:
+            relative;
+
+        z-index:
+            3;
+    }
+
+
+    .t2c-login-logo svg {
+
+        width:
+            31px;
+
+        height:
+            31px;
+
+        flex-shrink:
+            0;
+    }
+
+
+    .t2c-login-logo span {
+
+        font-family:
+            'Anton',
+            sans-serif;
+
+        font-size:
+            19px;
+
+        letter-spacing:
+            .04em;
+
+        line-height:
+            1;
+    }
+
+
+    .t2c-login-logo .accent {
+
+        color:
+            var(--t2c-orange);
+    }
+
+
+    /* =========================================================
+       LEFT CONTENT
+    ========================================================== */
+
+    .t2c-login-content {
+
+        margin-top:
+            auto;
+
+        margin-bottom:
+            auto;
+
+        padding:
+            70px 0 40px;
+
+        position:
+            relative;
+
+        z-index:
+            2;
+    }
+
+
+    /* =========================================================
+       EYEBROW
+    ========================================================== */
+
+    .t2c-login-eyebrow {
+
+        display:
+            inline-flex;
+
+        align-items:
+            center;
+
+        gap:
+            8px;
+
+        margin-bottom:
+            18px;
+
+        color:
+            var(--t2c-gold);
+
+        font-size:
+            11px;
+
+        font-weight:
+            800;
+
+        letter-spacing:
+            .14em;
+
+        text-transform:
+            uppercase;
+    }
+
+
+    .t2c-login-eyebrow::before {
+
+        content:
+            "";
+
+        width:
+            24px;
+
+        height:
+            2px;
+
+        border-radius:
+            10px;
+
+        background:
+            var(--t2c-orange);
+    }
+
+
+    /* =========================================================
+       LEFT HEADLINE
+    ========================================================== */
+
+    .t2c-login-content h2 {
+
+        margin:
+            0 0 20px;
+
+        max-width:
+            410px;
+
+        font-family:
+            'Anton',
+            sans-serif;
+
+        font-size:
+            clamp(
+                2.1rem,
+                4vw,
+                3.25rem
+            );
+
+        font-weight:
+            400;
+
+        line-height:
+            .98;
+
+        letter-spacing:
+            .01em;
+
+        text-transform:
+            uppercase;
+    }
+
+
+    .t2c-login-content h2 .accent {
+
+        color:
+            var(--t2c-orange);
+    }
+
+
+    .t2c-login-content p {
+
+        max-width:
+            365px;
+
+        margin:
+            0;
+
+        color:
+            var(--t2c-muted);
+
+        font-size:
+            14px;
+
+        line-height:
+            1.75;
+    }
+
+
+    /* =========================================================
+       BENEFITS
+    ========================================================== */
+
+    .t2c-login-points {
+
+        list-style:
+            none;
+
+        margin:
+            30px 0 0;
+
+        padding:
+            0;
+
+        display:
+            grid;
+
+        gap:
+            13px;
+    }
+
+
+    .t2c-login-points li {
+
+        display:
+            flex;
+
+        align-items:
+            center;
+
+        gap:
+            11px;
+
+        color:
+            #B5B8C0;
+
+        font-size:
+            13px;
+
+        line-height:
+            1.4;
+    }
+
+
+    .t2c-login-points li::before {
+
+        content:
+            "✓";
+
+        width:
+            22px;
+
+        height:
+            22px;
+
+        display:
+            grid;
+
+        place-items:
+            center;
+
+        flex-shrink:
+            0;
+
+        border-radius:
+            7px;
+
+        background:
+            rgba(255,81,47,.10);
+
+        border:
+            1px solid
+            rgba(255,81,47,.16);
+
+        color:
+            var(--t2c-orange);
+
+        font-size:
+            11px;
+
+        font-weight:
+            800;
+    }
+
+
+    /* =========================================================
+       LEFT FOOTER
+    ========================================================== */
+
+    .t2c-login-bottom {
+
+        color:
+            var(--t2c-muted-2);
+
+        font-size:
+            10px;
+
+        font-weight:
+            800;
+
+        letter-spacing:
+            .09em;
+
+        position:
+            relative;
+
+        z-index:
+            3;
+    }
+
+
+    /* =========================================================
+       RIGHT LOGIN PANEL
+    ========================================================== */
+
+    .t2c-login-form {
+
+        padding:
+            58px
+            clamp(30px, 5vw, 70px);
+
+        display:
+            flex;
+
+        flex-direction:
+            column;
+
+        justify-content:
+            center;
+
+        min-width:
+            0;
+
+        background:
+            var(--t2c-panel);
+
+        position:
+            relative;
+    }
+
+
+    /* =========================================================
+       RIGHT PANEL GLOW
+    ========================================================== */
+
+    .t2c-login-form::after {
+
+        content:
+            "";
+
+        position:
+            absolute;
+
+        width:
+            260px;
+
+        height:
+            260px;
+
+        right:
+            -170px;
+
+        top:
+            -170px;
+
+        border-radius:
+            50%;
+
+        background:
+            rgba(255,81,47,.035);
+
+        filter:
+            blur(40px);
+
+        pointer-events:
+            none;
+    }
+
+
+    /* =========================================================
+       LOGIN HEADER
+    ========================================================== */
+
+    .t2c-login-heading {
+
+        margin-bottom:
+            30px;
+
+        position:
+            relative;
+
+        z-index:
+            2;
+    }
+
+
+    .t2c-login-heading h1 {
+
+        margin:
+            0 0 8px;
+
+        color:
+            var(--t2c-text);
+
+        font-family:
+            'Anton',
+            sans-serif;
+
+        font-size:
+            2.15rem;
+
+        font-weight:
+            400;
+
+        line-height:
+            1.15;
+
+        letter-spacing:
+            .015em;
+
+        text-transform:
+            uppercase;
+    }
+
+
+    .t2c-login-heading p {
+
+        margin:
+            0;
+
+        color:
+            var(--t2c-muted);
+
+        font-size:
+            13px;
+
+        line-height:
+            1.6;
+    }
+
+
+    /* =========================================================
+       FLASH MESSAGES
+    ========================================================== */
+
+    .t2c-login-flash {
+
+        position:
+            relative;
+
+        z-index:
+            3;
+
+        margin-bottom:
+            20px;
+
+        border:
+            1px solid
+            var(--t2c-border);
+
+        border-radius:
+            10px;
+
+        background:
+            var(--t2c-panel-2);
+
+        color:
+            var(--t2c-text);
+
+        font-size:
+            12px;
+    }
+
+
+    /* =========================================================
+       FORM
+    ========================================================== */
+
+    .t2c-login-form form {
+
+        position:
+            relative;
+
+        z-index:
+            2;
+    }
+
+
+    /* =========================================================
+       FORM LABELS
+    ========================================================== */
+
+    .t2c-login-form form label,
+    .t2c-login-form form .form-label {
+
+        display:
+            block;
+
+        margin-bottom:
+            7px;
+
+        color:
+            #A7AAB3;
+
+        font-size:
+            11px;
+
+        font-weight:
+            800;
+
+        letter-spacing:
+            .09em;
+
+        text-transform:
+            uppercase;
+    }
+
+
+    /* =========================================================
+       INPUTS
+    ========================================================== */
+
+    .t2c-login-form form .form-control,
+    .t2c-login-form form .form-select {
+
+        width:
+            100%;
+
+        min-height:
+            47px;
+
+        padding:
+            11px 14px;
+
+        background:
+            var(--t2c-panel-2);
+
+        border:
+            1px solid
+            var(--t2c-border);
+
+        border-radius:
+            11px;
+
+        color:
+            var(--t2c-text);
+
+        font-family:
+            'Manrope',
+            sans-serif;
+
+        font-size:
+            13.5px;
+
+        font-weight:
+            600;
+
+        transition:
+            border-color .18s ease,
+            box-shadow .18s ease,
+            background .18s ease;
+    }
+
+
+    .t2c-login-form form .form-control:hover,
+    .t2c-login-form form .form-select:hover {
+
+        border-color:
+            rgba(255,255,255,.14);
+    }
+
+
+    .t2c-login-form form .form-control::placeholder {
+
+        color:
+            #555A66;
+    }
+
+
+    .t2c-login-form form .form-control:focus,
+    .t2c-login-form form .form-select:focus {
+
+        background:
+            #181B23;
+
+        border-color:
+            var(--t2c-orange);
+
+        color:
+            var(--t2c-text);
+
+        outline:
+            none;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(255,81,47,.13);
+    }
+
+
+    /* =========================================================
+       SELECT OPTIONS
+    ========================================================== */
+
+    .t2c-login-form form .form-select option {
+
+        background:
+            var(--t2c-panel-2);
+
+        color:
+            var(--t2c-text);
+    }
+
+
+    /* =========================================================
+       CHECKBOX
+    ========================================================== */
+
+    .t2c-login-form form .form-check {
+
+        margin-top:
+            4px;
+    }
+
+
+    .t2c-login-form form .form-check-label {
+
+        color:
+            var(--t2c-muted);
+
+        font-size:
+            12.5px;
+
+        font-weight:
+            500;
+
+        letter-spacing:
+            0;
+
+        text-transform:
+            none;
+    }
+
+
+    .t2c-login-form form .form-check-input {
+
+        background-color:
+            var(--t2c-panel-2);
+
+        border-color:
+            var(--t2c-border);
+    }
+
+
+    .t2c-login-form form .form-check-input:checked {
+
+        background-color:
+            var(--t2c-orange);
+
+        border-color:
+            var(--t2c-orange);
+    }
+
+
+    /* =========================================================
+       HELP / ERROR TEXT
+    ========================================================== */
+
+    .t2c-login-form form .form-text {
+
+        margin-top:
+            5px;
+
+        color:
+            #777B86;
+
+        font-size:
+            11px;
+    }
+
+
+    .t2c-login-form form .invalid-feedback {
+
+        color:
+            var(--t2c-danger);
+
+        font-size:
+            11px;
+    }
+
+
+    /* =========================================================
+       FORM SPACING
+    ========================================================== */
+
+    .t2c-login-form form .mb-3 {
+
+        margin-bottom:
+            17px !important;
+    }
+
+
+    /* =========================================================
+       LOGIN BUTTON
+    ========================================================== */
+
+    .t2c-login-form form [type="submit"],
+    .t2c-login-form form .btn-primary {
+
+        width:
+            100%;
+
+        min-height:
+            49px;
+
+        margin-top:
+            7px;
+
+        border:
+            none;
+
+        border-radius:
+            11px;
+
+        background:
+
+            linear-gradient(
+                135deg,
+                var(--t2c-orange),
+                var(--t2c-orange-light)
+            );
+
+        color:
+            #170E0A;
+
+        font-size:
+            13px;
+
+        font-weight:
+            800;
+
+        letter-spacing:
+            .045em;
+
+        text-transform:
+            uppercase;
+
+        box-shadow:
+            0 10px 25px
+            rgba(255,81,47,.16);
+
+        cursor:
+            pointer;
+
+        transition:
+            transform .15s ease,
+            box-shadow .15s ease,
+            filter .15s ease;
+    }
+
+
+    .t2c-login-form form [type="submit"]:hover,
+    .t2c-login-form form .btn-primary:hover {
+
+        filter:
+            brightness(1.06);
+
+        transform:
+            translateY(-1px);
+
+        box-shadow:
+            0 14px 30px
+            rgba(255,81,47,.22);
+    }
+
+
+    .t2c-login-form form [type="submit"]:active,
+    .t2c-login-form form .btn-primary:active {
+
+        transform:
+            translateY(0);
+    }
+
+
+    /* =========================================================
+       REGISTER DIVIDER
+    ========================================================== */
+
+    .t2c-login-divider {
+
+        display:
+            flex;
+
+        align-items:
+            center;
+
+        gap:
+            12px;
+
+        margin:
+            25px 0 0;
+
+        color:
+            #454A55;
+
+        font-size:
+            10px;
+
+        font-weight:
+            800;
+
+        letter-spacing:
+            .12em;
+
+        text-transform:
+            uppercase;
+    }
+
+
+    .t2c-login-divider::before,
+    .t2c-login-divider::after {
+
+        content:
+            "";
+
+        height:
+            1px;
+
+        flex:
+            1;
+
+        background:
+            var(--t2c-border);
+    }
+
+
+    /* =========================================================
+       REGISTER LINK
+    ========================================================== */
+
+    .t2c-register-link {
+
+        margin:
+            17px 0 0;
+
+        color:
+            var(--t2c-muted);
+
+        font-size:
+            12.5px;
+
+        text-align:
+            center;
+    }
+
+
+    .t2c-register-link a {
+
+        color:
+            var(--t2c-gold);
+
+        font-weight:
+            800;
+
+        text-decoration:
+            none;
+
+        transition:
+            color .18s ease;
+    }
+
+
+    .t2c-register-link a:hover {
+
+        color:
+            #F0C766;
+
+        text-decoration:
+            none;
+    }
+
+
+    /* =========================================================
+       SECURITY NOTE
+    ========================================================== */
+
+    .t2c-login-security {
+
+        margin-top:
+            25px;
+
+        padding-top:
+            20px;
+
+        border-top:
+            1px solid
+            var(--t2c-border);
+
+        color:
+            var(--t2c-muted-2);
+
+        font-size:
+            10.5px;
+
+        line-height:
+            1.65;
+
+        text-align:
+            center;
+    }
+
+
+    /* =========================================================
+       TABLET
+    ========================================================== */
+
+    @media (max-width: 850px) {
+
+        .t2c-login {
+
+            padding:
+                26px 16px;
+        }
+
+
+        .t2c-login-card {
+
+            width:
+                min(570px, 100%);
+
+            min-height:
+                auto;
+
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .t2c-login-brand {
+
+            display:
+                none;
+        }
+
+
+        .t2c-login-form {
+
+            padding:
+                44px 30px;
+        }
+    }
+
+
+    /* =========================================================
+       MOBILE
+    ========================================================== */
+
+    @media (max-width: 600px) {
+
+        .t2c-login {
+
+            min-height:
+                100vh;
+
+            padding:
+                18px 12px;
+
+            align-items:
+                flex-start;
+        }
+
+
+        .t2c-login-card {
+
+            border-radius:
+                20px;
+        }
+
+
+        .t2c-login-form {
+
+            padding:
+                38px 22px;
+        }
+
+
+        .t2c-login-heading {
+
+            margin-bottom:
+                27px;
+        }
+
+
+        .t2c-login-heading h1 {
+
+            font-size:
+                1.9rem;
+        }
+
+
+        .t2c-login-heading p {
+
+            font-size:
+                12.5px;
+        }
+    }
+
+
+    /* =========================================================
+       SMALL MOBILE
+    ========================================================== */
+
+    @media (max-width: 360px) {
+
+        .t2c-login {
+
+            padding:
+                14px 9px;
+        }
+
+
+        .t2c-login-form {
+
+            padding:
+                32px 17px;
+        }
+
+
+        .t2c-login-heading h1 {
+
+            font-size:
+                1.72rem;
+        }
+    }
+
+
+    /* =========================================================
+       REDUCED MOTION
+    ========================================================== */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .t2c-login-card {
+
+            animation:
+                none;
+        }
+
+
+        *,
+        *::before,
+        *::after {
+
+            scroll-behavior:
+                auto !important;
+        }
+    }
 
 </style>
+```
 
+</head>
+
+<body>
+    {% include 'navbar.html'%}
+    <div id="page-loader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Train2Conquer</div>
+    </div>
+</div>
+{% from 'bootstrap5/form.html' import render_form %}
+<!-- =============================================================
+     LOGIN PAGE
+============================================================== -->
 
 <div class="t2c-login">
 
-    <div class="t2c-login-card">
+```
+<div class="t2c-login-card">
 
 
-        <!-- =====================================================
-             LEFT BRAND PANEL
-        ====================================================== -->
+    <!-- =====================================================
+         LEFT BRAND PANEL
+    ====================================================== -->
 
-        <section class="t2c-login-brand">
+    <section class="t2c-login-brand">
 
 
-            <!-- Background climbing graphic -->
+        <!-- =================================================
+             DECORATIVE CLIMBING GRAPHIC
+        ================================================== -->
+
+        <svg
+            class="t2c-login-climb"
+            viewBox="0 0 400 650"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+        >
+
+            <path
+                d="
+                    M0,560
+                    L70,560
+                    L125,430
+                    L180,485
+                    L245,270
+                    L310,335
+                    L400,100
+                "
+                fill="none"
+                stroke="url(#t2cLoginGradient)"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <defs>
+
+                <linearGradient
+                    id="t2cLoginGradient"
+                    x1="0"
+                    y1="1"
+                    x2="1"
+                    y2="0"
+                >
+
+                    <stop
+                        offset="0%"
+                        stop-color="#D7AA48"
+                        stop-opacity=".25"
+                    />
+
+                    <stop
+                        offset="100%"
+                        stop-color="#FF512F"
+                        stop-opacity=".42"
+                    />
+
+                </linearGradient>
+
+            </defs>
+
+        </svg>
+
+
+        <!-- =================================================
+             TRAIN2CONQUER LOGO
+        ================================================== -->
+
+        <a
+            class="t2c-login-logo"
+            href="{{ url_for('home') }}"
+            aria-label="Train2Conquer Home"
+        >
 
             <svg
-                class="t2c-login-climb"
-                viewBox="0 0 400 650"
-                preserveAspectRatio="none"
-                aria-hidden="true">
+                viewBox="0 0 32 32"
+                fill="none"
+                aria-hidden="true"
+            >
 
                 <path
-                    d="M0,560 L70,560 L125,430 L180,485 L245,270 L310,335 L400,100"
-                    fill="none"
-                    stroke="url(#t2cLoginGradient)"
-                    stroke-width="2.5"
+                    d="M3 24 L11 13 L16 18 L29 4"
+                    stroke="#FF512F"
+                    stroke-width="3"
                     stroke-linecap="round"
-                    stroke-linejoin="round"/>
+                    stroke-linejoin="round"
+                />
 
-                <defs>
 
-                    <linearGradient
-                        id="t2cLoginGradient"
-                        x1="0"
-                        y1="1"
-                        x2="1"
-                        y2="0">
-
-                        <stop
-                            offset="0%"
-                            stop-color="#D7AA48"
-                            stop-opacity=".25"/>
-
-                        <stop
-                            offset="100%"
-                            stop-color="#FF512F"
-                            stop-opacity=".42"/>
-
-                    </linearGradient>
-
-                </defs>
+                <path
+                    d="M21 4 H29 V12"
+                    stroke="#D7AA48"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
 
             </svg>
 
 
-            <!-- Logo -->
+            <span>
 
-            <a
-                class="t2c-login-logo"
-                href="{{ url_for('home') }}">
-
-                <svg
-                    viewBox="0 0 32 32"
-                    fill="none">
-
-                    <path
-                        d="M3 24 L11 13 L16 18 L29 4"
-                        stroke="#FF512F"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"/>
-
-                    <path
-                        d="M21 4 H29 V12"
-                        stroke="#D7AA48"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"/>
-
-                </svg>
-
-
-                <span>
-                    TRAIN2<span class="accent">CONQUER</span>
+                TRAIN2<span class="accent">
+                    CONQUER
                 </span>
 
-            </a>
+            </span>
+
+        </a>
 
 
-            <!-- Message -->
+        <!-- =================================================
+             LEFT MESSAGE
+        ================================================== -->
 
-            <div class="t2c-login-content">
-
-                <div class="t2c-login-eyebrow">
-                    Welcome back
-                </div>
+        <div class="t2c-login-content">
 
 
-                <h2>
+            <div class="t2c-login-eyebrow">
 
-                    Your next
-                    <span class="accent">
-                        level
-                    </span>
-                    starts here.
-
-                </h2>
-
-
-                <p>
-
-                    Log in and continue building
-                    strength, discipline and consistency
-                    one workout at a time.
-
-                </p>
-
-
-                <ul class="t2c-login-points">
-
-                    <li>
-                        Continue your workout plan
-                    </li>
-
-                    <li>
-                        Keep your progress streak alive
-                    </li>
-
-                    <li>
-                        Track your fitness journey
-                    </li>
-
-                </ul>
+                Welcome back
 
             </div>
 
 
-            <div class="t2c-login-bottom">
+            <h2>
 
-                CONSISTENCY&nbsp;&nbsp;•&nbsp;&nbsp;
-                DISCIPLINE&nbsp;&nbsp;•&nbsp;&nbsp;
-                PROGRESS
+                Your next
 
-            </div>
+                <span class="accent">
+                    level
+                </span>
 
-        </section>
+                starts here.
 
-
-
-        <!-- =====================================================
-             LOGIN FORM
-        ====================================================== -->
-
-        <section class="t2c-login-form">
+            </h2>
 
 
-            <div class="t2c-login-heading">
+            <p>
 
-                <h1>
-                    Welcome back
-                </h1>
-
-                <p>
-                    Log in to continue your Train2Conquer journey.
-                </p>
-
-            </div>
-
-
-            {{ render_form(form) }}
-
-
-            <div class="t2c-login-divider">
-
-                New to Train2Conquer?
-
-            </div>
-
-
-            <p class="t2c-register-link">
-
-                <a href="{{ url_for('register') }}">
-                    Create your account →
-                </a>
+                Log in and continue building
+                strength, discipline and consistency
+                one workout at a time.
 
             </p>
 
 
-        </section>
+            <ul class="t2c-login-points">
 
-    </div>
+                <li>
+                    Continue your workout plan
+                </li>
+
+                <li>
+                    Keep your progress streak alive
+                </li>
+
+                <li>
+                    Track your fitness journey
+                </li>
+
+            </ul>
+
+
+        </div>
+
+
+        <!-- =================================================
+             LEFT FOOTER
+        ================================================== -->
+
+        <div class="t2c-login-bottom">
+
+            CONSISTENCY
+            &nbsp;•&nbsp;
+            DISCIPLINE
+            &nbsp;•&nbsp;
+            PROGRESS
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         RIGHT LOGIN FORM
+    ====================================================== -->
+
+    <section class="t2c-login-form">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="t2c-login-heading">
+
+            <h1>
+                Welcome back
+            </h1>
+
+
+            <p>
+
+                Log in to continue your
+                Train2Conquer journey.
+
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             FLASH MESSAGES
+        ================================================== -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert alert-{{ category }} t2c-login-flash"
+                        role="alert"
+                    >
+
+                        {{ message }}
+
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- =================================================
+             LOGIN FORM
+
+             IMPORTANT:
+             Keep this exactly as render_form(form)
+             so Flask-WTF / Bootstrap-Flask handles:
+
+             • CSRF
+             • validation
+             • errors
+             • form fields
+             • POST action
+             • submit button
+        ================================================== -->
+
+        {{ render_form(form) }}
+
+
+        <!-- =================================================
+             REGISTER DIVIDER
+        ================================================== -->
+
+        <div class="t2c-login-divider">
+
+            New to Train2Conquer?
+
+        </div>
+
+
+        <!-- =================================================
+             REGISTER LINK
+        ================================================== -->
+
+        <p class="t2c-register-link">
+
+            <a href="{{ url_for('register') }}">
+
+                Create your account →
+
+            </a>
+
+        </p>
+
+
+        <!-- =================================================
+             SECURITY
+        ================================================== -->
+
+        <div class="t2c-login-security">
+
+            🔒 Your account information is protected and used
+            only to provide your Train2Conquer experience.
+
+            <br>
+
+            Keep your login details private and secure.
+
+        </div>
+
+
+    </section>
+
+
+</div>
+```
 
 </div>
 
-{% endblock %}
+<!-- =============================================================
+     BOOTSTRAP JS
+============================================================== -->
+
+{{ bootstrap.load_js() }}
+<script src="{{url_for('static',filename='js/script2.js')}}"></script>
+
+</body>
+</html>

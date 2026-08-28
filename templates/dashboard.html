@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style2.css')}}">
     <link rel="icon" href="{{url_for('static',filename='assets/img/logo.png')}}">
     <title>Train2Conquer</title>
 
@@ -203,6 +203,13 @@
 </head>
 <body>
     {% include 'navbar.html'%}
+    <!-- Page Loader -->
+<div id="page-loader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Train2Conquer</div>
+    </div>
+</div>
      {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category,message in messages %}
@@ -399,5 +406,6 @@
     </section>
 
     {% include 'footer.html' %}
+    <script src="{{url_for('static',filename='js/script2.js')}}"></script>
 </body>
 </html>

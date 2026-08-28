@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Train2Conquer</title>
     {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style2.css')}}">
 
 <style>
 
@@ -617,6 +617,12 @@
 
 <body>
     {% include 'navbar.html' %}
+        <div id="page-loader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Train2Conquer</div>
+    </div>
+</div>
     {% from 'bootstrap5/form.html' import render_form %}
 <div class="t2c-profile-page">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -674,7 +680,7 @@
 </div>
 {% include "footer.html" %}
 {{ bootstrap.load_js() }}
-<script src="{{url_for('static',filename='js/script.js')}}"></script>
+<script src="{{url_for('static',filename='js/script2.js')}}"></script>
     <script>
         setTimeout(function(){let flash=document.getElementById("flash-messages");
                 if(flash){

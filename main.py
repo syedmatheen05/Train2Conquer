@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, session, flash
-from forms import Loginform, OTPform, Registerform,FitnessProfileform
+from forms import Loginform, OTPform, Registerform,FitnessProfileform, ContactForm, ContactOTPForm
 from flask_bootstrap import Bootstrap5
 import random, os, time, json, smtplib
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
@@ -104,8 +104,32 @@ def send_verification_code(email, otp):
         <body>
             <h2>Train2Conquer</h2>
             <p>Your verification code is:</p>
-            <h1>{otp}</h1>
+            <h2>{otp}</h2>
             <p>Enter this code to verify your email.</p>
+        </body>
+    </html>
+    """
+    message.attach(MIMEText(body, "html"))
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(
+            sender_email, email,message.as_string()) 
+
+def send_contact_info(email,name,message):
+    sender_email = os.environ.get("EMAIL")
+    sender_password = os.environ.get("PASSWORD")
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = sender_email
+    message["Subject"] = "Train2Conquer Contact Info"
+    body = f"""
+    <html>
+        <body>
+            <h2>Train2Conquer</h2>
+            <p>from : {email}</p>
+            <h5>Name: {name}</h5>
+            <p>Message: {message}</p>
         </body>
     </html>
     """
@@ -493,10 +517,67 @@ def home():
         return render_template("home.html",workout_plan=workout_plan,workout_plan_data=workout_plan_data,completed_days=completed_days)
     return render_template("dashboard.html")
 
-@app.route("/contact")
+@app.route("/contact", methods=["GET", "POST"])
 def contact():
-    return render_template("contact.html")
- 
+    form = ContactForm()
+    if current_user.is_authenticated:
+        if form.validate_on_submit():
+            message = form.message.data.strip()
+            try:
+                send_contact_info(
+                    email=current_user.email,
+                    name=current_user.name,
+                    contact_message=message
+                )
+                flash("Your message has been sent successfully!","success")
+                return redirect(url_for("contact"))
+            except Exception as e:
+                print("CONTACT EMAIL ERROR:", e)
+                flash("We couldn't send your message right now. Please try again.","danger")
+        return render_template("contact.html",form=form)
+
+    if form.validate_on_submit():
+        name = form.name.data.strip()
+        email = form.email.data.strip()
+        message = form.message.data.strip()
+        # Save temporarily in session.
+        # Nothing is stored in the database.
+        session["name"] = name
+        session["email"] = email
+        session["message"] = message
+        # Generate and send OTP
+        generate_otp(email)
+        # Tell verify route this OTP is for contact verification
+        session["otp_purpose"] = "contact"
+        flash("A verification code has been sent to your email.","info")
+        return redirect(url_for("verify_contact"))
+    return render_template("contact.html",form=form)
+
+@app.route("/verify-contact", methods=["GET", "POST"])
+def verify_contact():
+    if session.get("otp_purpose") != "contact":
+        flash(
+            "No contact verification request found.",
+            "warning"
+        )
+        return redirect(url_for("contact"))
+    form=ContactOTPForm()
+    remaining=max(0,30-int(time.time()-session["otp_created"]))
+    if form.validate_on_submit():
+        if form.verification_code.data==session.get("otp"):
+            flash("OTP verified successfully!", "success")
+            send_contact_info(email=session.get("email"),name=session.get("name"),message=session.get("message"))
+            flash("Your Message sent!","success")
+            session.pop("otp",None)
+            session.pop("name",None)
+            session.pop("message",None)
+            return redirect(url_for('home'))
+        else:
+            flash("Invalid OTP. Please try again.", "danger")
+    return render_template("verify_contact.html",form=form,remaining=remaining)
+    
+        
+
 @app.route("/about")
 def about():
     return render_template("about.html")

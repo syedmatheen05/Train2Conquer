@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField
+from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, NumberRange
 from wtforms.widgets import ListWidget, CheckboxInput
 class Loginform(FlaskForm):
@@ -54,5 +54,37 @@ class FitnessProfileform(FlaskForm):
                                                         widget=ListWidget(prefix_label=False))
     submit = SubmitField("Save Profile")
 
-    
+class ContactForm(FlaskForm):
+    name = StringField(
+        "Name",
+        validators=[
+            DataRequired(),
+            Length(min=2, max=100)
+        ]
+    )
+
+    email = StringField(
+        "Email",
+        validators=[
+            DataRequired(),
+            Email()
+        ]
+    )
+
+    message = TextAreaField(
+        "Message",
+        validators=[
+            DataRequired(),
+            Length(min=10, max=2000)
+        ]
+    )
+
+    submit = SubmitField("Verify Email")
+
+class ContactOTPForm(FlaskForm):
+    verification_code=StringField("Verification code",
+                                          validators=[DataRequired(),
+                                                      Length(min=6,max=6,
+                                                             message="Verification code must be exactly 6 digits.")])
+    submit=SubmitField("Verify")
 

@@ -1,1231 +1,767 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Contact </title>
-
-    <!-- Bootstrap -->
     {{ bootstrap.load_css() }}
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <title>Contact | Train2Conquer</title>
+    <style>/* =========================================
+   CONTACT PAGE
+========================================= */
+
+.contact-hero {
+    padding: 90px 20px 70px;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(218, 170, 55, 0.12),
+            transparent 45%
+        ),
+        #08090c;
+}
+
+
+
+.contact-label,
+.small-label {
+    display: inline-block;
+    color: #ff4b2b;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+}
+
+.contact-title {
+    font-size: clamp(48px, 7vw, 90px);
+    font-weight: 900;
+    margin: 0;
+    color: #f5f5f5;
+    letter-spacing: -3px;
+}
+
+.contact-title span,
+.contact-info-card h2 span,
+.form-header h2 span {
+    color: #e2ad38;
+}
+
+.contact-subtitle {
+    max-width: 700px;
+    margin: 20px auto 0;
+    color: #8d94a5;
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+
+/* =========================================
+   CONTACT SECTION
+========================================= */
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
+.contact-section {
+    padding: 70px 0 100px;
+    background: #08090c;
+}
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
 
-    <style>
+/* =========================================
+   LEFT CARD
+========================================= */
 
-        /* =====================================================
-           TRAIN2CONQUER — CONTACT PAGE
-        ===================================================== */
+.contact-info-card {
+    padding: 40px;
+    border: 1px solid #292d36;
+    border-radius: 22px;
+    background:
+        linear-gradient(
+            145deg,
+            #151820,
+            #0e1015
+        );
+}
 
-        :root {
+.contact-info-card h2 {
+    color: #f5f5f5;
+    font-size: clamp(35px, 4vw, 55px);
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 25px;
+}
 
-            --t2c-bg: #08090c;
+.contact-info-card > p {
+    color: #8992a4;
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 35px;
+}
 
-            --t2c-panel: #101217;
 
-            --t2c-panel-2: #171a21;
+/* =========================================
+   INFO ITEMS
+========================================= */
 
-            --t2c-panel-3: #1d2028;
+.contact-info-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
 
-            --t2c-border: rgba(255,255,255,.08);
+    padding: 20px;
 
-            --t2c-border-hover: rgba(255,255,255,.17);
+    margin-top: 15px;
 
-            --t2c-text: #f5f5f3;
+    border: 1px solid #292d36;
+    border-radius: 16px;
 
-            --t2c-muted: #8d919c;
+    background: #171a21;
+}
 
-            --t2c-muted-2: #676c77;
+.contact-icon {
+    width: 50px;
+    height: 50px;
 
-            --t2c-orange: #ff512f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            --t2c-orange-light: #ff704d;
+    flex-shrink: 0;
 
-            --t2c-gold: #d7aa48;
+    border-radius: 14px;
 
-        }
+    background: rgba(255, 75, 43, 0.12);
 
+    color: #ff4b2b;
 
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
+    font-size: 22px;
+    font-weight: 800;
+}
 
-        * {
-            box-sizing: border-box;
-        }
+.contact-info-item small {
+    display: block;
 
+    color: #747d91;
 
-        html {
-            scroll-behavior: smooth;
-        }
+    font-size: 12px;
+    font-weight: 800;
 
+    letter-spacing: 1.5px;
 
-        body {
+    margin-bottom: 5px;
+}
 
-            margin: 0;
+.contact-info-item strong {
+    display: block;
 
-            background: var(--t2c-bg);
+    color: #f5f5f5;
 
-            color: var(--t2c-text);
+    font-size: 15px;
+}
 
-            font-family:
-                'Manrope',
-                system-ui,
-                sans-serif;
-        }
 
+/* =========================================
+   SECURITY
+========================================= */
 
-        /* =====================================================
-           HERO
-        ===================================================== */
+.contact-security {
+    display: flex;
+    gap: 15px;
 
-        .t2c-contact-hero {
+    margin-top: 25px;
+    padding: 20px;
 
-            position: relative;
+    border-radius: 16px;
 
-            min-height: 390px;
+    background: rgba(226, 173, 56, 0.06);
+    border: 1px solid rgba(226, 173, 56, 0.15);
+}
 
-            display: flex;
+.contact-security > span {
+    font-size: 22px;
+}
 
-            align-items: center;
+.contact-security strong {
+    color: #e2ad38;
+}
 
-            justify-content: center;
+.contact-security p {
+    margin: 5px 0 0;
 
-            text-align: center;
+    color: #7f8798;
 
-            padding: 85px 20px 70px;
+    font-size: 13px;
+    line-height: 1.6;
+}
 
-            overflow: hidden;
 
-            background:
+/* =========================================
+   FORM CARD
+========================================= */
 
-                radial-gradient(
-                    circle at 15% 25%,
-                    rgba(255,81,47,.14),
-                    transparent 30%
-                ),
+.contact-form-card {
+    padding: 45px;
 
-                radial-gradient(
-                    circle at 85% 75%,
-                    rgba(215,170,72,.09),
-                    transparent 30%
-                ),
+    border: 1px solid #292d36;
+    border-radius: 22px;
 
-                #08090c;
-        }
+    background:
+        linear-gradient(
+            145deg,
+            #12151b,
+            #0c0e12
+        );
+}
 
+.form-header h2 {
+    color: #f5f5f5;
 
-        .t2c-contact-hero::before {
+    font-size: clamp(30px, 4vw, 45px);
 
-            content: "";
+    font-weight: 900;
 
-            position: absolute;
+    margin-bottom: 12px;
+}
 
-            inset: 0;
+.form-header p {
+    color: #858da0;
 
-            background-image:
+    line-height: 1.7;
 
-                linear-gradient(
-                    rgba(255,255,255,.025) 1px,
-                    transparent 1px
-                ),
+    margin-bottom: 35px;
+}
 
-                linear-gradient(
-                    90deg,
-                    rgba(255,255,255,.025) 1px,
-                    transparent 1px
-                );
 
-            background-size: 55px 55px;
+/* =========================================
+   FORM
+========================================= */
 
-            mask-image:
-                linear-gradient(
-                    to bottom,
-                    black,
-                    transparent
-                );
-        }
+.contact-form-card .form-label {
+    display: block;
 
+    color: #dfe3eb;
 
-        .t2c-contact-hero-content {
+    font-size: 14px;
 
-            position: relative;
+    font-weight: 700;
 
-            z-index: 2;
+    margin-bottom: 10px;
+}
 
-            max-width: 760px;
+.contact-form-card .form-control {
+    width: 100%;
 
-            margin: auto;
-        }
+    min-height: 58px;
 
+    padding: 15px 18px;
 
-        .t2c-contact-kicker {
+    color: #f5f5f5 !important;
 
-            display: inline-flex;
+    background: #171a21 !important;
 
-            align-items: center;
+    border: 1px solid #303541 !important;
 
-            gap: 10px;
+    border-radius: 14px !important;
 
-            margin-bottom: 18px;
+    box-shadow: none !important;
 
-            color: var(--t2c-gold);
+    transition: 0.25s ease;
+}
 
-            font-size: 11px;
+.contact-form-card .form-control:focus {
+    border-color: #e2ad38 !important;
 
-            font-weight: 800;
+    box-shadow:
+        0 0 0 3px rgba(226, 173, 56, 0.10) !important;
+}
 
-            letter-spacing: .18em;
+.contact-form-card .form-control::placeholder {
+    color: #687083;
+}
 
-            text-transform: uppercase;
-        }
+.contact-message {
+    min-height: 170px !important;
 
+    resize: vertical;
+}
 
-        .t2c-contact-kicker::before,
-        .t2c-contact-kicker::after {
 
-            content: "";
+/* =========================================
+   SUBMIT BUTTON
+========================================= */
 
-            width: 28px;
+.contact-submit {
+    background: #171a21;
+    color: #fff;
+    border: 1px solid #343842;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
 
-            height: 2px;
+.contact-submit:hover {
+    background: #222630;
+    color: #fff;
+    border-color: #d9a928;
+}
 
-            border-radius: 5px;
+.contact-submit span {
+    margin-left: 8px;
+}
 
-            background: var(--t2c-orange);
-        }
 
 
-        .t2c-contact-hero h1 {
+/* =========================================
+   MOBILE
+========================================= */
 
-            margin: 0;
+@media (max-width: 767px) {
 
-            font-family: 'Anton', sans-serif;
+    .contact-hero {
+        padding: 65px 20px 50px;
+    }
 
-            font-size:
-                clamp(
-                    3rem,
-                    8vw,
-                    6rem
-                );
+    .contact-title {
+        font-size: 52px;
+        letter-spacing: -2px;
+    }
 
-            font-weight: 400;
+    .contact-subtitle {
+        font-size: 15px;
+    }
 
-            line-height: .95;
+    .contact-section {
+        padding: 40px 15px 70px;
+    }
 
-            text-transform: uppercase;
-        }
+    .contact-info-card,
+    .contact-form-card {
+        padding: 25px;
+        border-radius: 18px;
+    }
 
+    .contact-info-card h2 {
+        font-size: 38px;
+    }
 
-        .t2c-contact-hero h1 span {
+    .form-header h2 {
+        font-size: 32px;
+    }
 
-            color: var(--t2c-orange);
-        }
-
-
-        .t2c-contact-hero p {
-
-            max-width: 600px;
-
-            margin: 22px auto 0;
-
-            color: var(--t2c-muted);
-
-            font-size: 14px;
-
-            line-height: 1.8;
-        }
-
-
-        /* =====================================================
-           MAIN
-        ===================================================== */
-
-        .t2c-contact-main {
-
-            width: min(1100px, 100%);
-
-            margin: auto;
-
-            padding:
-                75px 20px
-                90px;
-        }
-
-
-        /* =====================================================
-           CONTACT GRID
-        ===================================================== */
-
-        .t2c-contact-grid {
-
-            display: grid;
-
-            grid-template-columns:
-                .85fr 1.15fr;
-
-            gap: 25px;
-
-            align-items: stretch;
-        }
-
-
-        /* =====================================================
-           LEFT INFORMATION PANEL
-        ===================================================== */
-
-        .t2c-contact-info {
-
-            padding: 35px;
-
-            background:
-
-                linear-gradient(
-                    145deg,
-                    #15171d,
-                    #101217
-                );
-
-            border: 1px solid var(--t2c-border);
-
-            border-radius: 18px;
-
-            position: relative;
-
-            overflow: hidden;
-        }
-
-
-        .t2c-contact-info::after {
-
-            content: "";
-
-            position: absolute;
-
-            width: 220px;
-
-            height: 220px;
-
-            right: -100px;
-
-            bottom: -110px;
-
-            border-radius: 50%;
-
-            background:
-                rgba(255,81,47,.08);
-
-            filter: blur(10px);
-        }
-
-
-        .t2c-section-label {
-
-            margin-bottom: 12px;
-
-            color: var(--t2c-orange);
-
-            font-size: 10px;
-
-            font-weight: 800;
-
-            letter-spacing: .15em;
-
-            text-transform: uppercase;
-        }
-
-
-        .t2c-contact-info h2 {
-
-            margin: 0 0 17px;
-
-            font-family: 'Anton', sans-serif;
-
-            font-size: 2.8rem;
-
-            font-weight: 400;
-
-            line-height: 1;
-
-            text-transform: uppercase;
-        }
-
-
-        .t2c-contact-info h2 span {
-
-            color: var(--t2c-gold);
-        }
-
-
-        .t2c-contact-info > p {
-
-            margin-bottom: 30px;
-
-            color: var(--t2c-muted);
-
-            font-size: 13px;
-
-            line-height: 1.8;
-        }
-
-
-        /* =====================================================
-           CONTACT DETAILS
-        ===================================================== */
-
-        .t2c-contact-details {
-
-            display: flex;
-
-            flex-direction: column;
-
-            gap: 12px;
-        }
-
-
-        .t2c-contact-detail {
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 14px;
-
-            padding: 15px;
-
-            background: var(--t2c-panel-2);
-
-            border: 1px solid var(--t2c-border);
-
-            border-radius: 11px;
-
-            text-decoration: none;
-
-            transition:
-                border-color .18s ease,
-                transform .18s ease,
-                background .18s ease;
-        }
-
-
-        .t2c-contact-detail:hover {
-
-            transform: translateX(4px);
-
-            background: var(--t2c-panel-3);
-
-            border-color:
-                rgba(255,81,47,.3);
-        }
-
-
-        .t2c-contact-icon {
-
-            width: 42px;
-
-            height: 42px;
-
-            flex-shrink: 0;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-radius: 10px;
-
-            background:
-                rgba(255,81,47,.1);
-
-            color: var(--t2c-orange);
-
-            font-size: 18px;
-
-            font-weight: 800;
-        }
-
-
-        .t2c-contact-detail-text {
-
-            min-width: 0;
-        }
-
-
-        .t2c-contact-detail-text small {
-
-            display: block;
-
-            margin-bottom: 3px;
-
-            color: var(--t2c-muted-2);
-
-            font-size: 9px;
-
-            font-weight: 800;
-
-            letter-spacing: .08em;
-
-            text-transform: uppercase;
-        }
-
-
-        .t2c-contact-detail-text strong {
-
-            display: block;
-
-            color: var(--t2c-text);
-
-            font-size: 12px;
-
-            font-weight: 700;
-
-            word-break: break-word;
-        }
-
-
-        /* =====================================================
-           FORM PANEL
-        ===================================================== */
-
-        .t2c-contact-form {
-
-            padding: 35px;
-
-            background: var(--t2c-panel);
-
-            border: 1px solid var(--t2c-border);
-
-            border-radius: 18px;
-        }
-
-
-        .t2c-contact-form h2 {
-
-            margin: 0 0 7px;
-
-            font-family: 'Anton', sans-serif;
-
-            font-size: 2.5rem;
-
-            font-weight: 400;
-
-            text-transform: uppercase;
-        }
-
-
-        .t2c-contact-form h2 span {
-
-            color: var(--t2c-orange);
-        }
-
-
-        .t2c-contact-form-subtitle {
-
-            margin: 0 0 28px;
-
-            color: var(--t2c-muted);
-
-            font-size: 12px;
-
-            line-height: 1.7;
-        }
-
-
-        /* =====================================================
-           FORM
-        ===================================================== */
-
-        .t2c-contact-form label {
-
-            display: block;
-
-            margin-bottom: 7px;
-
-            color: var(--t2c-muted);
-
-            font-size: 10px;
-
-            font-weight: 800;
-
-            letter-spacing: .07em;
-
-            text-transform: uppercase;
-        }
-
-
-        .t2c-contact-form .form-control,
-        .t2c-contact-form .form-select {
-
-            width: 100%;
-
-            min-height: 47px;
-
-            padding: 11px 13px;
-
-            background: var(--t2c-panel-2);
-
-            color: var(--t2c-text);
-
-            border: 1px solid var(--t2c-border);
-
-            border-radius: 9px;
-
-            font-family: inherit;
-
-            font-size: 13px;
-
-            transition:
-                border-color .15s ease,
-                box-shadow .15s ease,
-                background .15s ease;
-        }
-
-
-        .t2c-contact-form textarea.form-control {
-
-            min-height: 135px;
-
-            resize: vertical;
-        }
-
-
-        .t2c-contact-form .form-control::placeholder {
-
-            color: var(--t2c-muted-2);
-        }
-
-
-        .t2c-contact-form .form-control:hover,
-        .t2c-contact-form .form-select:hover {
-
-            border-color:
-                var(--t2c-border-hover);
-        }
-
-
-        .t2c-contact-form .form-control:focus,
-        .t2c-contact-form .form-select:focus {
-
-            background: var(--t2c-panel-3);
-
-            color: var(--t2c-text);
-
-            border-color: var(--t2c-orange);
-
-            box-shadow:
-                0 0 0 3px rgba(255,81,47,.12);
-
-            outline: none;
-        }
-
-
-        .t2c-contact-form select option {
-
-            background: var(--t2c-panel-2);
-
-            color: var(--t2c-text);
-        }
-
-
-        .t2c-contact-form .form-group,
-        .t2c-contact-form .mb-3 {
-
-            margin-bottom: 18px !important;
-        }
-
-
-        /* =====================================================
-           SEND BUTTON
-        ===================================================== */
-
-        .t2c-send-button {
-
-            width: 100%;
-
-            min-height: 50px;
-
-            margin-top: 3px;
-
-            border: none;
-
-            border-radius: 10px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    var(--t2c-orange),
-                    var(--t2c-orange-light)
-                );
-
-            color: #170d09;
-
-            font-size: 11px;
-
-            font-weight: 900;
-
-            letter-spacing: .08em;
-
-            text-transform: uppercase;
-
-            box-shadow:
-                0 10px 25px rgba(255,81,47,.15);
-
-            transition:
-                transform .15s ease,
-                filter .15s ease;
-        }
-
-
-        .t2c-send-button:hover {
-
-            filter: brightness(1.07);
-
-            transform: translateY(-2px);
-        }
-
-
-        .t2c-send-button:active {
-
-            transform: scale(.98);
-        }
-
-
-        /* =====================================================
-           BOTTOM MESSAGE
-        ===================================================== */
-
-        .t2c-contact-bottom {
-
-            margin-top: 65px;
-
-            padding: 50px 25px;
-
-            text-align: center;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #15171d,
-                    #101217
-                );
-
-            border: 1px solid var(--t2c-border);
-
-            border-radius: 18px;
-        }
-
-
-        .t2c-contact-bottom h2 {
-
-            margin: 0 0 10px;
-
-            font-family: 'Anton', sans-serif;
-
-            font-size: 2.5rem;
-
-            font-weight: 400;
-
-            text-transform: uppercase;
-        }
-
-
-        .t2c-contact-bottom h2 span {
-
-            color: var(--t2c-orange);
-        }
-
-
-        .t2c-contact-bottom p {
-
-            max-width: 550px;
-
-            margin: auto;
-
-            color: var(--t2c-muted);
-
-            font-size: 13px;
-
-            line-height: 1.7;
-        }
-
-
-        /* =====================================================
-           TABLET
-        ===================================================== */
-
-        @media (max-width: 850px) {
-
-            .t2c-contact-grid {
-
-                grid-template-columns: 1fr;
-            }
-
-
-            .t2c-contact-info {
-
-                padding: 30px;
-            }
-
-
-            .t2c-contact-form {
-
-                padding: 30px;
-            }
-
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
-
-        @media (max-width: 600px) {
-
-            .t2c-contact-hero {
-
-                min-height: 350px;
-
-                padding:
-                    70px
-                    18px
-                    55px;
-            }
-
-
-            .t2c-contact-hero h1 {
-
-                font-size: 3.3rem;
-            }
-
-
-            .t2c-contact-hero p {
-
-                font-size: 12px;
-            }
-
-
-            .t2c-contact-main {
-
-                padding:
-                    50px
-                    14px
-                    60px;
-            }
-
-
-            .t2c-contact-info,
-            .t2c-contact-form {
-
-                padding: 24px 18px;
-
-                border-radius: 15px;
-            }
-
-
-            .t2c-contact-info h2 {
-
-                font-size: 2.35rem;
-            }
-
-
-            .t2c-contact-form h2 {
-
-                font-size: 2.2rem;
-            }
-
-
-            .t2c-contact-bottom {
-
-                margin-top: 50px;
-
-                padding:
-                    40px
-                    18px;
-            }
-
-
-            .t2c-contact-bottom h2 {
-
-                font-size: 2.1rem;
-            }
-
-        }
-
-
-        /* =====================================================
-           SMALL PHONES
-        ===================================================== */
-
-        @media (max-width: 380px) {
-
-            .t2c-contact-hero h1 {
-
-                font-size: 2.8rem;
-            }
-
-
-            .t2c-contact-detail {
-
-                padding: 12px;
-            }
-
-
-            .t2c-contact-icon {
-
-                width: 38px;
-
-                height: 38px;
-            }
-
-        }
-
-    </style>
-
+}</style>
 </head>
-
 
 <body>
 
+<!-- =========================
+     CONTACT HERO
+========================= -->
 
-    <!-- =====================================================
-         HERO
-    ====================================================== -->
+<section class="contact-hero">
 
-    <section class="t2c-contact-hero">
+    <div class="container text-center">
 
-        <div class="t2c-contact-hero-content">
+        <span class="contact-label">
+            GET IN TOUCH
+        </span>
 
-            <div class="t2c-contact-kicker">
-                We're Here To Help
-            </div>
+        <h1 class="contact-title">
+            TALK TO <span>US.</span>
+        </h1>
 
-            <h1>
-                Let's
-                <span>Connect</span>
-            </h1>
+        <p class="contact-subtitle">
+            Whether you have feedback, a question, a technical
+            issue or simply want to know more about Train2Conquer,
+            we'd love to hear from you.
+        </p>
 
-            <p>
-                Have a question about Train2Conquer,
-                your workout plan or anything else?
-                Send us a message and we'll get back to you.
-            </p>
+    </div>
 
-        </div>
-
-    </section>
+</section>
 
 
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
+<!-- =========================
+     CONTACT SECTION
+========================= -->
 
-    <main class="t2c-contact-main">
+<section class="contact-section">
 
-        <div class="t2c-contact-grid">
+    <div class="container">
 
+        <div class="row g-5 align-items-start">
 
-            <!-- =================================================
-                 CONTACT INFORMATION
-            ================================================== -->
+            <!-- =========================
+                 LEFT SIDE
+            ========================= -->
 
-            <section class="t2c-contact-info">
+            <div class="col-lg-5">
 
-                <div class="t2c-section-label">
-                    Get In Touch
-                </div>
+                <div class="contact-info-card">
 
-                <h2>
-                    Talk To
-                    <span>Us.</span>
-                </h2>
+                    <span class="small-label">
+                        CONTACT
+                    </span>
 
-                <p>
-                    Whether you have feedback, a question,
-                    a technical issue or simply want to know
-                    more about Train2Conquer, we'd love to hear
-                    from you.
-                </p>
+                    <h2>
+                        Let's build<br>
+                        something <span>strong.</span>
+                    </h2>
 
-
-                <div class="t2c-contact-details">
+                    <p>
+                        Have feedback about Train2Conquer?
+                        Found a bug? Need help?
+                        Send us a message and we'll get back to you.
+                    </p>
 
 
                     <!-- EMAIL -->
 
-                    <a
-                        href="mailto:syedmatheen2910@gmail.com"
-                        class="t2c-contact-detail"
-                    >
+                    <div class="contact-info-item">
 
-                        <div class="t2c-contact-icon">
+                        <div class="contact-icon">
                             @
                         </div>
 
-                        <div class="t2c-contact-detail-text">
-
-                            <small>
-                                Email
-                            </small>
+                        <div>
+                            <small>EMAIL</small>
 
                             <strong>
                                 syedmatheen2910@gmail.com
                             </strong>
-
                         </div>
 
-                    </a>
+                    </div>
 
 
-                    <!-- RESPONSE -->
+                    <!-- RESPONSE TIME -->
 
-                    <div class="t2c-contact-detail">
+                    <div class="contact-info-item">
 
-                        <div class="t2c-contact-icon">
-                            ✓
+                        <div class="contact-icon">
+                            ⚡
                         </div>
 
-                        <div class="t2c-contact-detail-text">
-
-                            <small>
-                                Response Time
-                            </small>
+                        <div>
+                            <small>RESPONSE TIME</small>
 
                             <strong>
                                 Usually within 24 hours
                             </strong>
-
                         </div>
 
                     </div>
 
 
-                    <!-- SUPPORT -->
+                    <!-- SECURITY -->
 
-                    <div class="t2c-contact-detail">
+                    <div class="contact-security">
 
-                        <div class="t2c-contact-icon">
-                            +
-                        </div>
+                        <span>🔒</span>
 
-                        <div class="t2c-contact-detail-text">
-
-                            <small>
-                                Support
-                            </small>
-
+                        <div>
                             <strong>
-                                Fitness & Platform Support
+                                Your privacy matters
                             </strong>
 
+                            <p>
+                                We verify email addresses before
+                                accepting messages from visitors.
+                            </p>
                         </div>
 
                     </div>
 
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 RIGHT SIDE FORM
+            ========================= -->
+
+            <div class="col-lg-7">
+
+                <div class="contact-form-card">
+
+                    {% with messages =
+                        get_flashed_messages(with_categories=true) %}
+
+                        {% if messages %}
+
+                            {% for category, message in messages %}
+
+                                <div class="alert alert-{{ category }}">
+                                    {{ message }}
+                                </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    {% endwith %}
+
+
+                    <!-- =================================
+                         LOGGED-IN USER
+                    ================================= -->
+
+                    {% if current_user.is_authenticated %}
+
+                        <div class="form-header">
+
+                            <span class="small-label">
+                                SEND A MESSAGE
+                            </span>
+
+                            <h2>
+                                Welcome back,
+                                <span>{{ current_user.name }}</span>
+                            </h2>
+
+                            <p>
+                                You're already verified, so you don't
+                                need to enter your name or email again.
+                            </p>
+
+                        </div>
+
+
+                        <form method="POST"
+                              action="{{ url_for('contact') }}">
+
+                            {{ form.hidden_tag() }}
+
+
+                            <!-- Hidden identity fields -->
+
+                            <input type="hidden"
+                                   name="name"
+                                   value="{{ current_user.name }}">
+
+                            <input type="hidden"
+                                   name="email"
+                                   value="{{ current_user.email }}">
+
+
+                            <!-- MESSAGE ONLY -->
+
+                            <div class="mb-4">
+
+                                <label for="message"
+                                       class="form-label">
+                                    Message
+                                </label>
+
+                                {{ form.message(
+                                    class="form-control contact-message",
+                                    id="message",
+                                    placeholder="Write your message here...",
+                                    rows="7"
+                                ) }}
+
+                                {% if form.message.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.message.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- SEND -->
+
+                            <button type="submit"
+                                    class="btn contact-submit">
+
+                                Send Message
+                                <span>→</span>
+
+                            </button>
+
+                        </form>
+
+
+                    <!-- =================================
+                         GUEST USER
+                    ================================= -->
+
+                    {% else %}
+
+                        <div class="form-header">
+
+                            <span class="small-label">
+                                SEND A MESSAGE
+                            </span>
+
+                            <h2>
+                                Tell us what you
+                                <span>think.</span>
+                            </h2>
+
+                            <p>
+                                Enter your details below.
+                                We'll verify your email before
+                                sending your message.
+                            </p>
+
+                        </div>
+
+
+                        <form method="POST"
+                              action="{{ url_for('contact') }}">
+
+                            {{ form.hidden_tag() }}
+
+
+                            <!-- NAME -->
+
+                            <div class="mb-4">
+
+                                {{ form.name.label(
+                                    class="form-label"
+                                ) }}
+
+                                {{ form.name(
+                                    class="form-control",
+                                    placeholder="Enter your name"
+                                ) }}
+
+                                {% if form.name.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.name.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- EMAIL -->
+
+                            <div class="mb-4">
+
+                                {{ form.email.label(
+                                    class="form-label"
+                                ) }}
+
+                                {{ form.email(
+                                    class="form-control",
+                                    type="email",
+                                    placeholder="Enter your email"
+                                ) }}
+
+                                {% if form.email.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.email.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- MESSAGE -->
+
+                            <div class="mb-4">
+
+                                {{ form.message.label(
+                                    class="form-label"
+                                ) }}
+
+                                {{ form.message(
+                                    class="form-control contact-message",
+                                    placeholder="Write your message here...",
+                                    rows="7"
+                                ) }}
+
+                                {% if form.message.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.message.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- VERIFY -->
+
+                            <button type="submit"
+                                    class="btn btn-primary contact-submit">
+
+                                Verify Email
+                                <span>→</span>
+
+                            </button>
+
+                        </form>
+
+                    {% endif %}
 
                 </div>
 
-            </section>
-
-
-            <!-- =================================================
-                 CONTACT FORM
-            ================================================== -->
-
-            <section class="t2c-contact-form">
-
-                <div class="t2c-section-label">
-                    Send A Message
-                </div>
-
-                <h2>
-                    Contact
-                    <span>Us</span>
-                </h2>
-
-                <p class="t2c-contact-form-subtitle">
-                    Fill in the details below and tell us
-                    how we can help.
-                </p>
-
-
-                <form
-                    method="POST"
-                    action=""
-                >
-
-                    <!-- NAME -->
-
-                    <div class="mb-3">
-
-                        <label for="name">
-                            Your Name
-                        </label>
-
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            class="form-control"
-                            placeholder="Enter your name"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- EMAIL -->
-
-                    <div class="mb-3">
-
-                        <label for="email">
-                            Email Address
-                        </label>
-
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            class="form-control"
-                            placeholder="you@example.com"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- SUBJECT -->
-
-                    <div class="mb-3">
-
-                        <label for="subject">
-                            Subject
-                        </label>
-
-                        <select
-                            id="subject"
-                            name="subject"
-                            class="form-select"
-                            required
-                        >
-
-                            <option value="" selected disabled>
-                                Select a topic
-                            </option>
-
-                            <option value="general">
-                                General Question
-                            </option>
-
-                            <option value="workout">
-                                Workout Plan
-                            </option>
-
-                            <option value="technical">
-                                Technical Issue
-                            </option>
-
-                            <option value="feedback">
-                                Feedback
-                            </option>
-
-                            <option value="other">
-                                Other
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- MESSAGE -->
-
-                    <div class="mb-3">
-
-                        <label for="message">
-                            Message
-                        </label>
-
-                        <textarea
-                            id="message"
-                            name="message"
-                            class="form-control"
-                            placeholder="Tell us how we can help..."
-                            required
-                        ></textarea>
-
-                    </div>
-
-
-                    <!-- BUTTON -->
-
-                    <button
-                        type="submit"
-                        class="t2c-send-button"
-                    >
-                        Send Message →
-                    </button>
-
-                </form>
-
-            </section>
-
+            </div>
 
         </div>
 
+    </div>
 
-        <!-- =================================================
-             BOTTOM CTA
-        ================================================== -->
-
-        <section class="t2c-contact-bottom">
-
-            <h2>
-                Keep Training.
-                <span>Keep Conquering.</span>
-            </h2>
-
-            <p>
-                Every question, every workout and every
-                improvement is part of the journey.
-                Stay consistent and keep moving forward.
-            </p>
-
-        </section>
+</section>
 
 
-    </main>
+<!-- =========================
+     FOOTER
+========================= -->
+
+{% include 'footer.html' %}
 
 
-    <!-- =====================================================
-         FOOTER
-    ====================================================== -->
+{{ bootstrap.load_js() }}
 
-    {% include 'footer.html' %}
-
-
-
-    {{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 
 </body>
-
 </html>

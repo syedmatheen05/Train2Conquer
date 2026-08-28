@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{ bootstrap.load_css() }}
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <title>Verify Email | Train2Conquer</title>
+
+    <style>
+        :root {
+            --bg: #090a0d;
+            --card: #111318;
+            --card-2: #181b22;
+            --border: rgba(255,255,255,0.09);
+            --text: #f4f4f4;
+            --muted: #9296a3;
+            --orange: #ff4b26;
+            --gold: #d9a83b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 20% 10%,
+                    rgba(255,75,38,0.10),
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at 80% 90%,
+                    rgba(217,168,59,0.08),
+                    transparent 35%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Arial, sans-serif;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 25px;
+        }
+
+        /* ================================
+           MAIN CONTAINER
+        ================================= */
+
+        .verify-container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        /* ================================
+           BRAND
+        ================================= */
+
+        .brand {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .brand a {
+            text-decoration: none;
+            color: white;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+
+        .brand .orange {
+            color: var(--orange);
+        }
+
+        /* ================================
+           CARD
+        ================================= */
+
+        .verify-card {
+            background: rgba(17,19,24,0.96);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+
+            padding: 42px 38px;
+
+            box-shadow:
+                0 30px 80px rgba(0,0,0,0.55);
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verify-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+
+            background: linear-gradient(
+                90deg,
+                var(--orange),
+                var(--gold)
+            );
+        }
+
+        /* ================================
+           ICON
+        ================================= */
+
+        .verify-icon {
+            width: 72px;
+            height: 72px;
+
+            margin: 0 auto 22px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--orange),
+                    var(--gold)
+                );
+
+            color: #111;
+
+            font-size: 30px;
+            font-weight: 900;
+
+            box-shadow:
+                0 12px 35px rgba(255,75,38,0.25);
+        }
+
+        /* ================================
+           TITLE
+        ================================= */
+
+        .verify-title {
+            text-align: center;
+
+            font-size: 28px;
+            font-weight: 800;
+
+            margin: 0 0 10px;
+        }
+
+        .verify-subtitle {
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 14px;
+
+            line-height: 1.7;
+
+            margin: 0 auto 28px;
+
+            max-width: 360px;
+        }
+
+        .email {
+            color: var(--orange);
+            font-weight: 700;
+
+            word-break: break-word;
+        }
+
+        /* ================================
+           FORM
+        ================================= */
+
+        form {
+            width: 100%;
+        }
+
+        form label {
+            display: block;
+
+            color: #aeb2bd;
+
+            font-size: 12px;
+            font-weight: 800;
+
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+
+            margin-bottom: 8px;
+        }
+
+        form input,
+        form .form-control {
+            width: 100%;
+
+            background: var(--card-2);
+
+            border: 1px solid var(--border);
+
+            color: white;
+
+            border-radius: 11px;
+
+            padding: 14px 15px;
+
+            font-size: 16px;
+
+            outline: none;
+
+            transition: 0.2s ease;
+        }
+
+        form input:focus,
+        form .form-control:focus {
+            background: var(--card-2);
+
+            color: white;
+
+            border-color: var(--orange);
+
+            box-shadow:
+                0 0 0 3px rgba(255,75,38,0.13);
+        }
+
+        form input::placeholder {
+            color: #606570;
+        }
+
+        /* OTP INPUT */
+
+        input[name="otp"] {
+            text-align: center;
+
+            font-size: 25px !important;
+
+            font-weight: 800;
+
+            letter-spacing: 8px;
+        }
+
+        /* ================================
+           VERIFY BUTTON
+        ================================= */
+
+        form button[type="submit"] {
+            width: 100%;
+
+            border: none;
+
+            border-radius: 11px;
+
+            padding: 14px 20px;
+
+            margin-top: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--orange),
+                    #ff633f
+                );
+
+            color: #111;
+
+            font-size: 14px;
+            font-weight: 900;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        form button[type="submit"]:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 30px rgba(255,75,38,0.25);
+        }
+
+        form button[type="submit"]:active {
+            transform: scale(0.98);
+        }
+
+        /* ================================
+           TIMER
+        ================================= */
+
+        .timer {
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 13px;
+
+            margin-top: 22px;
+        }
+
+        #countdown {
+            color: var(--gold);
+
+            font-weight: 900;
+        }
+
+        /* ================================
+           RESEND
+        ================================= */
+
+        .resend-btn {
+            display: none;
+
+            width: 100%;
+
+            margin-top: 14px;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            text-align: center;
+
+            text-decoration: none;
+
+            color: white;
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            background: transparent;
+
+            font-size: 13px;
+
+            font-weight: 800;
+
+            transition: 0.2s ease;
+        }
+
+        .resend-btn:hover {
+            color: white;
+
+            border-color: var(--orange);
+
+            background: rgba(255,75,38,0.08);
+        }
+
+        /* ================================
+           BACK LINK
+        ================================= */
+
+        .back-link {
+            display: block;
+
+            text-align: center;
+
+            margin-top: 22px;
+
+            color: #777c88;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            transition: 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--orange);
+        }
+
+        /* ================================
+           SECURITY MESSAGE
+        ================================= */
+
+        .security-note {
+            text-align: center;
+
+            color: #666b76;
+
+            font-size: 11px;
+
+            margin-top: 25px;
+
+            line-height: 1.6;
+        }
+
+        /* ================================
+           MOBILE
+        ================================= */
+
+        @media (max-width: 576px) {
+
+            body {
+                padding: 16px;
+            }
+
+            .verify-card {
+                padding: 34px 22px;
+
+                border-radius: 18px;
+            }
+
+            .verify-title {
+                font-size: 24px;
+            }
+
+            .verify-icon {
+                width: 64px;
+                height: 64px;
+
+                font-size: 26px;
+            }
+
+            input[name="otp"] {
+                font-size: 22px !important;
+
+                letter-spacing: 6px;
+            }
+        }
+
+        @media (max-width: 360px) {
+
+            .verify-card {
+                padding: 28px 17px;
+            }
+
+            .verify-title {
+                font-size: 22px;
+            }
+
+            input[name="otp"] {
+                font-size: 20px !important;
+
+                letter-spacing: 4px;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+     {% from 'bootstrap5/form.html' import render_form %}
+<div class="verify-container">
+
+    <!-- BRAND -->
+    <div class="brand">
+
+        <a href="{{ url_for('home') }}">
+            TRAIN2<span class="orange">CONQUER</span>
+        </a>
+
+    </div>
+
+
+    <!-- CARD -->
+    <div class="verify-card">
+
+        <!-- ICON -->
+        <div class="verify-icon">
+            ✓
+        </div>
+
+
+        <!-- TITLE -->
+        <h1 class="verify-title">
+            Verify Your Email
+        </h1>
+
+
+        <p class="verify-subtitle">
+
+            We've sent a 6-digit verification code to
+
+            <br>
+
+            <span class="email">
+                {{ email }}
+            </span>
+
+        </p>
+
+
+        <!-- OTP FORM -->
+        {{ render_form(form) }}
+
+
+        <!-- TIMER -->
+        <div id="timer" class="timer">
+
+            Resend code in
+
+            <span id="countdown">
+                {{ remaining }}
+            </span>
+
+            seconds
+
+        </div>
+
+
+        <!-- RESEND -->
+        <a
+            id="resend-btn"
+            href="{{ url_for('resend_otp') }}"
+            class="resend-btn"
+        >
+            ↻ Resend Verification Code
+        </a>
+
+
+        <!-- BACK -->
+        <a
+            href="{{ url_for('contact') }}"
+            class="back-link"
+        >
+            ← Back to Contact
+        </a>
+
+
+        <!-- SECURITY -->
+        <div class="security-note">
+
+            🔒 Your email is only used to verify this contact request.
+            <br>
+            We don't store your contact information in the database.
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{{ bootstrap.load_js() }}
+
+
+<script>
+
+    let seconds = {{ remaining | tojson }};
+
+    const timer =
+        document.getElementById("timer");
+
+    const countdown =
+        document.getElementById("countdown");
+
+    const resendButton =
+        document.getElementById("resend-btn");
+
+
+    function startTimer() {
+
+        if (seconds <= 0) {
+
+            timer.style.display = "none";
+
+            resendButton.style.display = "block";
+
+            return;
+        }
+
+
+        countdown.textContent = seconds;
+
+        seconds--;
+
+
+        setTimeout(startTimer, 1000);
+    }
+
+
+    startTimer();
+
+
+</script>
+
+</body>
+</html>

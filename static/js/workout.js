@@ -686,6 +686,18 @@ nextButton.addEventListener(
 
             if (completeWorkoutForm) {
 
+                // form.submit() does NOT fire the submit event, so the global
+                // loader cannot detect it automatically. Show it explicitly.
+                if (window.T2CLoader) {
+                    window.T2CLoader.show("Saving your workout...");
+                }
+
+                const finishButton = completeWorkoutForm.querySelector("button[type=\"button\"]");
+                if (finishButton) {
+                    finishButton.disabled = true;
+                    finishButton.textContent = "Saving...";
+                }
+
                 completeWorkoutForm.submit();
 
             } else {

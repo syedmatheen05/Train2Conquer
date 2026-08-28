@@ -280,11 +280,21 @@ def generate_otp(email, purpose="login"):
 
 
 def otp_remaining():
+    """Server-side OTP lifetime. Kept separate from the resend countdown."""
     created = session.get("otp_created")
     if not created:
         return 0
     elapsed = max(0, int(time.time() - float(created)))
     return max(0, OTP_EXPIRY_SECONDS - elapsed)
+
+
+def otp_resend_remaining():
+    """Seconds until another OTP may be requested (always max 30 seconds)."""
+    created = session.get("otp_created")
+    if not created:
+        return 0
+    elapsed = max(0, int(time.time() - float(created)))
+    return max(0, OTP_RESEND_COOLDOWN - elapsed)
 
 
 def otp_is_expired():
@@ -349,6 +359,7 @@ def verify_otp():
 
     verify_otp_form = OTPform()
     remaining = otp_remaining()
+    resend_remaining = otp_resend_remaining()
 
     if verify_otp_form.validate_on_submit():
         if otp_is_expired():
@@ -388,6 +399,7 @@ def verify_otp():
         "verify_otp.html",
         form=verify_otp_form,
         remaining=remaining,
+        resend_remaining=resend_remaining,
         email=email,
     )
 

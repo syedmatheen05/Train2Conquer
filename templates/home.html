@@ -136,7 +136,7 @@
            FLASH MESSAGE
         ===================================================== */
 
-        #flash-messages{
+        [data-flash-message]{
 
             max-width: 1120px;
 
@@ -1045,7 +1045,7 @@
                 {% for category, message in messages %}
 
                     <div
-                        id="flash-messages"
+                        data-flash-message
                         class="alert alert-{{ category }}"
                     >
                         {{ message }}
@@ -1335,23 +1335,7 @@
     /* =========================================================
        FLASH MESSAGE
     ========================================================= */
-
-    setTimeout(function(){
-
-        let flash =
-            document.getElementById("flash-messages");
-
-        if(flash){
-
-            flash.remove();
-
-        }
-
-    }, 2000);
-
-
-
-    /* =========================================================
+/* =========================================================
        WORKOUT PROGRESS
     ========================================================= */
 

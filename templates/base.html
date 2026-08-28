@@ -23,7 +23,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category,message in messages %}
-                        <div id="flash-messages" class="alert alert-{{category}}">
+                        <div data-flash-message class="alert alert-{{category}}">
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -38,12 +38,6 @@
 {% include "footer.html" %}
     {{ bootstrap.load_js() }}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script>
-        setTimeout(function(){let flash=document.getElementById("flash-messages");
-                if(flash){
-                    flash.remove();
-                }} ,2000);
-    </script>
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 </body>
 </html>

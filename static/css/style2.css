@@ -8,3 +8,19 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
 .loader-text{color:#8E929D;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
 @keyframes t2cLoaderSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){#page-loader{transition:none}.loader-spinner{animation-duration:1.5s}}
+
+
+/* Global flash-message dismissal */
+[data-flash-message]{
+    transition: opacity .35s ease, transform .35s ease, max-height .35s ease, margin .35s ease, padding .35s ease;
+}
+[data-flash-message].t2c-flash-hide{
+    opacity:0 !important;
+    transform:translateY(-6px);
+    max-height:0 !important;
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+    padding-top:0 !important;
+    padding-bottom:0 !important;
+    overflow:hidden !important;
+}

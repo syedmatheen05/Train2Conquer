@@ -748,7 +748,7 @@
        FLASH MESSAGES
     ========================================================= */
 
-    #flash-messages {
+    [data-flash-message] {
 
         margin-bottom: 20px;
 
@@ -1531,7 +1531,7 @@
                 {% for category, message in messages %}
 
                     <div
-                        id="flash-messages"
+                        data-flash-message
                         class="alert alert-{{ category }}"
                         role="alert"
                     >
@@ -1603,12 +1603,6 @@
 </div>
 
 {{ bootstrap.load_js() }}
- <script>
-        setTimeout(function(){let flash=document.getElementById("flash-messages");
-                if(flash){
-                    flash.remove();
-                }} ,2000);
-    </script>
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 </body>
 </html>

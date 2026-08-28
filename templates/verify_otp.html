@@ -449,7 +449,7 @@
        FLASH MESSAGES
     ========================================================= */
 
-    #flash-messages {
+    [data-flash-message] {
 
         margin-bottom: 20px;
 
@@ -915,7 +915,7 @@
             {% for category, message in messages %}
 
                 <div
-                    id="flash-messages"
+                    data-flash-message
                     class="alert alert-{{ category }}"
                     role="alert"
                 >
@@ -1007,12 +1007,12 @@
     </div>
 
     <p id="otp-timer" class="t2c-otp-timer">
-        Resend code in <span id="otp-countdown" class="t2c-otp-countdown">{{ remaining }}</span> seconds
+        Resend code in <span id="otp-countdown" class="t2c-otp-countdown">{{ resend_remaining }}</span> seconds
     </p>
 
     <form method="POST" action="{{ url_for('resend_otp') }}" class="t2c-resend-form" data-loader-message="Sending a new verification code...">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" id="otp-resend-btn" class="t2c-resend-btn">↻ &nbsp; Resend verification code</button>
+        <button type="submit" id="otp-resend-btn" class="t2c-resend-btn" {% if resend_remaining > 0 %}disabled style="display:none"{% endif %}>↻ &nbsp; Resend verification code</button>
     </form>
 
 
@@ -1058,7 +1058,9 @@
 {{ bootstrap.load_js() }}
 <script>
 (() => {
-    let seconds = {{ remaining | tojson }};
+    // This countdown is ONLY for resending the OTP.
+    // OTP expiry is handled independently on the server.
+    let seconds = {{ resend_remaining | tojson }};
     const timer = document.getElementById("otp-timer");
     const countdown = document.getElementById("otp-countdown");
     const resend = document.getElementById("otp-resend-btn");
@@ -1066,7 +1068,10 @@
     const tick = () => {
         if (seconds <= 0) {
             if (timer) timer.style.display = "none";
-            if (resend) resend.style.display = "inline-flex";
+            if (resend) {
+                resend.disabled = false;
+                resend.style.display = "inline-flex";
+            }
             return;
         }
         if (countdown) countdown.textContent = seconds;
@@ -1075,10 +1080,6 @@
     };
     tick();
 
-    window.setTimeout(() => {
-        const flash = document.getElementById("flash-messages");
-        if (flash) flash.remove();
-    }, 4000);
 })();
 </script>
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>

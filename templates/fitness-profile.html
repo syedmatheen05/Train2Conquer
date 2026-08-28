@@ -231,6 +231,61 @@
 
 
     /* =====================================================
+       EQUIPMENT CHECKBOXES
+       WTForms ListWidget renders these as a <ul><li> list.
+       Reset the browser list styling and keep each checkbox +
+       label aligned on one clean row.
+    ===================================================== */
+
+    .t2c-profile-card #equipment {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 24px;
+        display: grid;
+        gap: 10px;
+    }
+
+    .t2c-profile-card #equipment > li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        margin: 0;
+        padding: 9px 12px;
+        background: var(--t2c-panel-2);
+        border: 1px solid var(--t2c-border);
+        border-radius: 10px;
+        transition: border-color .15s ease, background .15s ease;
+    }
+
+    .t2c-profile-card #equipment > li:hover {
+        border-color: var(--t2c-border-hover);
+        background: var(--t2c-panel-3);
+    }
+
+    .t2c-profile-card #equipment input[type="checkbox"] {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        accent-color: var(--t2c-orange);
+        cursor: pointer;
+    }
+
+    .t2c-profile-card #equipment label {
+        display: inline-flex;
+        align-items: center;
+        margin: 0;
+        color: var(--t2c-text);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: .02em;
+        text-transform: none;
+        cursor: pointer;
+    }
+
+
+    /* =====================================================
        FORM LABELS
     ===================================================== */
 
@@ -626,7 +681,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category,message in messages %}
-                        <div id="flash-messages" class="alert alert-{{category}}">
+                        <div data-flash-message class="alert alert-{{category}}">
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -678,13 +733,6 @@
 </div>
 {% include "footer.html" %}
 {{ bootstrap.load_js() }}
-    <script>
-        setTimeout(function(){let flash=document.getElementById("flash-messages");
-                if(flash){
-                    flash.remove();
-                }} ,2000);
-    </script>
-    
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>

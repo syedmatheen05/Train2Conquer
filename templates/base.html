@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>{% block title %} {% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head> 
 <body class="d-flex flex-column min-vh-100">
+{% include "loader.html" %}
 {% include 'navbar.html' %}
 
 <main class="flex-grow-1 d-flex align-items-center">
@@ -31,12 +37,13 @@
 </main>
 {% include "footer.html" %}
     {{ bootstrap.load_js() }}
-    <script src="{{url_for('static',filename='js/script.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
         setTimeout(function(){let flash=document.getElementById("flash-messages");
                 if(flash){
                     flash.remove();
                 }} ,2000);
     </script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 </body>
 </html>

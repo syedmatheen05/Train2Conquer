@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition | Train2Conquer</title>
+    {{ bootstrap.load_css() }}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <style>
+      body{margin:0;background:#08090C;color:#F5F5F3;font-family:Manrope,sans-serif}.t2c-info-page{max-width:1050px;margin:0 auto;padding:90px 24px}.t2c-info-page h1{font-family:Anton,sans-serif;font-size:clamp(48px,8vw,88px);line-height:.95}.t2c-info-page .accent{color:#FF512F}.t2c-info-page .lead{max-width:720px;color:#9a9eaa;font-size:18px;line-height:1.8}.t2c-nutrition-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:48px}.t2c-info-card{background:#101217;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}.t2c-info-card h2{font-size:20px;margin-bottom:10px}.t2c-info-card p{color:#8E929D;line-height:1.7;margin:0}@media(max-width:700px){.t2c-nutrition-grid{grid-template-columns:1fr}.t2c-info-page{padding:60px 18px}}
+    </style>
+</head>
+<body>
+{% include "loader.html" %}
+{% include "navbar.html" %}
+<main class="t2c-info-page">
+  <p style="color:#D7AA48;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Fuel the climb</p>
+  <h1>Nutrition, <span class="accent">made simple.</span></h1>
+  <p class="lead">Train consistently, eat enough to support your goal, and keep your meals simple enough to follow every day.</p>
+  <div class="t2c-nutrition-grid">
+    <article class="t2c-info-card"><h2>Protein</h2><p>Include a reliable protein source in your meals such as eggs, dairy, fish, chicken, lean meat, beans, or other suitable options.</p></article>
+    <article class="t2c-info-card"><h2>Carbohydrates</h2><p>Rice, oats, potatoes, fruit, and other carbohydrate sources can support training energy. Choose portions that fit your overall goal.</p></article>
+    <article class="t2c-info-card"><h2>Hydration</h2><p>Drink water regularly throughout the day and pay extra attention to fluids around demanding workouts or hot weather.</p></article>
+    <article class="t2c-info-card"><h2>Consistency</h2><p>You do not need a perfect diet. Build meals around minimally processed foods, vegetables or fruit, protein, and an appropriate energy intake.</p></article>
+  </div>
+  <p style="margin-top:30px;color:#666B76;font-size:12px">General fitness guidance only. Individual nutrition needs vary; consult a qualified professional for personalized dietary advice.</p>
+</main>
+{% include "footer.html" %}
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -3,7 +3,6 @@
 <html lang="en">
 <head>
 
-```
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -744,6 +743,10 @@
 
         text-decoration: none;
 
+        font-family: inherit;
+        cursor: pointer;
+        appearance: none;
+
         transition:
             background .18s ease,
             border-color .18s ease,
@@ -946,24 +949,25 @@
         }
     }
 
-</style>
-```
 
+    /* Navbar is a normal page element; the auth shell handles centering. */
+    body {
+        display: block;
+        padding: 0;
+    }
+
+</style>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 
 <body>
         {% include 'navbar.html'%}
-    <div id="page-loader">
-    <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Train2Conquer</div>
-    </div>
-</div>
+    {% include "loader.html" %}
 {% from 'bootstrap5/form.html' import render_form %}
 
 <div class="t2c-auth">
 
-```
 <div class="t2c-auth-card">
 
 
@@ -1086,7 +1090,7 @@
         We've sent a 6-digit verification code to
 
         <span class="t2c-email">
-            {{ email }}
+            {{ session.get("email", "") }}
         </span>
 
         Enter the code below to continue securely.
@@ -1129,15 +1133,10 @@
          RESEND
     ====================================================== -->
 
-    <a
-        id="resend-btn"
-        class="t2c-resend-btn"
-        href="{{ url_for('resend_otp') }}"
-    >
-
-        ↻ &nbsp; Resend verification code
-
-    </a>
+    <form method="POST" action="{{ url_for('resend_otp') }}" data-loader-message="Sending a new verification code...">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" id="resend-btn" class="t2c-resend-btn">↻ &nbsp; Resend verification code</button>
+    </form>
 
 
     <!-- =====================================================
@@ -1177,7 +1176,6 @@
 
 
 </div>
-```
 
 </div>
 
@@ -1240,7 +1238,8 @@
                 }} ,2000);
 
 </script>
-<script src="{{url_for('static',filename='js/script2.js')}}"></script>
 
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

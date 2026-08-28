@@ -200,16 +200,12 @@
             .t2c-feature-card, .t2c-category-card, .t2c-trainer-card, .hero-btn{ transition: none; }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 <body>
     {% include 'navbar.html'%}
     <!-- Page Loader -->
-<div id="page-loader">
-    <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Train2Conquer</div>
-    </div>
-</div>
+{% include "loader.html" %}
      {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category,message in messages %}
@@ -237,8 +233,8 @@
             <h1>Train2<span class="accent">Conquer</span></h1>
             <p>Your home workout &amp; fitness companion — build strength, track progress, and conquer every session, wherever you are.</p>
             <div class="hero-actions">
-                <a href="#" class="hero-btn hero-btn-solid">Start training</a>
-                <a href="#" class="hero-btn hero-btn-ghost">Browse workouts</a>
+                <a href="{{ url_for('register') }}" class="hero-btn hero-btn-solid">Start training</a>
+                <a href="#programs" class="hero-btn hero-btn-ghost">Browse workouts</a>
             </div>
         </div>
     </section>
@@ -284,17 +280,17 @@
     </section>
 
     <!-- ================= WORKOUT CATEGORIES ================= -->
-    <section class="t2c-section">
+    <section class="t2c-section" id="programs">
         <div class="t2c-section-inner">
             <p class="t2c-kicker">Programs</p>
             <h2 class="t2c-section-title">Pick your climb</h2>
             <p class="t2c-section-sub">Four ways in — mix and match as your goals change.</p>
 
             <div class="t2c-category-grid">
-                <a href="#" class="t2c-category-card"><span>28 sessions</span><h3>Strength</h3></a>
-                <a href="#" class="t2c-category-card"><span>21 sessions</span><h3>HIIT</h3></a>
-                <a href="#" class="t2c-category-card"><span>16 sessions</span><h3>Mobility</h3></a>
-                <a href="#" class="t2c-category-card"><span>12 sessions</span><h3>Recovery</h3></a>
+                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>28 sessions</span><h3>Strength</h3></a>
+                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>21 sessions</span><h3>HIIT</h3></a>
+                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>16 sessions</span><h3>Mobility</h3></a>
+                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>12 sessions</span><h3>Recovery</h3></a>
             </div>
         </div>
     </section>
@@ -327,7 +323,7 @@
                         <li>Direct messaging for form checks and questions</li>
                         <li>Switch or cancel anytime, no lock-in</li>
                     </ul>
-                    <a href="#" class="hero-btn hero-btn-solid">Find your trainer</a>
+                    <a href="{{ url_for('contact') }}" class="hero-btn hero-btn-solid">Find your trainer</a>
                 </div>
 
                 <div class="t2c-trainer-cards">
@@ -337,7 +333,7 @@
                             <h4>Aisha R.</h4>
                             <p>Strength &amp; conditioning</p>
                         </div>
-                        <a href="#" class="t2c-trainer-card-cta">View →</a>
+                        <a href="{{ url_for('contact') }}" class="t2c-trainer-card-cta">Contact →</a>
                     </div>
                     <div class="t2c-trainer-card">
                         <div class="t2c-trainer-avatar">M</div>
@@ -345,7 +341,7 @@
                             <h4>Marcus T.</h4>
                             <p>HIIT &amp; fat loss</p>
                         </div>
-                        <a href="#" class="t2c-trainer-card-cta">View →</a>
+                        <a href="{{ url_for('contact') }}" class="t2c-trainer-card-cta">Contact →</a>
                     </div>
                     <div class="t2c-trainer-card">
                         <div class="t2c-trainer-avatar">P</div>
@@ -353,7 +349,7 @@
                             <h4>Priya N.</h4>
                             <p>Mobility &amp; recovery</p>
                         </div>
-                        <a href="#" class="t2c-trainer-card-cta">View →</a>
+                        <a href="{{ url_for('contact') }}" class="t2c-trainer-card-cta">Contact →</a>
                     </div>
                 </div>
             </div>
@@ -399,13 +395,14 @@
             <h2 class="t2c-section-title">Ready to conquer your first session?</h2>
             <p class="t2c-section-sub" style="margin-left:auto;margin-right:auto;">No equipment, no excuses — just press start.</p>
             <div class="hero-actions">
-                <a href="#" class="hero-btn hero-btn-solid">Start training</a>
+                <a href="{{ url_for('register') }}" class="hero-btn hero-btn-solid">Start training</a>
                 <a href="#hire-a-trainer" class="hero-btn hero-btn-ghost">Hire a trainer</a>
             </div>
         </div>
     </section>
 
     {% include 'footer.html' %}
-    <script src="{{url_for('static',filename='js/script2.js')}}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

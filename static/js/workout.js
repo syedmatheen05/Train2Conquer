@@ -233,20 +233,28 @@ function loadWorkout(index) {
        VIDEO
     ----------------------------------------- */
 
+    const videoWrapper =
+        video ? video.closest(".t2c-video-wrapper") : null;
+
     if (workout.video) {
 
+        if (videoWrapper) videoWrapper.style.display = "block";
         videoSource.src = workout.video;
-
         video.load();
 
         video.play().catch(function(error) {
-
-            console.log(
-                "Video autoplay blocked:",
-                error
-            );
-
+            console.log("Video autoplay blocked:", error);
         });
+
+    } else {
+
+        // Prevent the previous exercise's video from remaining on screen.
+        if (video) {
+            video.pause();
+            video.removeAttribute("src");
+        }
+        if (videoSource) videoSource.removeAttribute("src");
+        if (videoWrapper) videoWrapper.style.display = "none";
     }
 
 

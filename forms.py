@@ -1,21 +1,22 @@
 from flask_wtf import FlaskForm
 from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
-from wtforms.validators import DataRequired, Email, Length, NumberRange
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Regexp
 from wtforms.widgets import ListWidget, CheckboxInput
 class Loginform(FlaskForm):
-    email=EmailField("E-mail",validators=[DataRequired(),Email()])
+    email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
     submit=SubmitField("verify")
 
 class OTPform(FlaskForm):
     verification_code=StringField("Verification code",
+                                      render_kw={"autocomplete": "one-time-code", "inputmode": "numeric", "maxlength": 6},
                                       validators=[DataRequired(),
-                                                  Length(min=6,max=6,
-                                                         message="Verification code must be exactly 6 digits.")])
-    submit=SubmitField("Login")
+                                                  Length(min=6,max=6, message="Verification code must be exactly 6 digits."),
+                                                      Regexp(r"^\d{6}$", message="Verification code must contain exactly 6 digits.")])
+    submit=SubmitField("Verify & Continue")
 
 class Registerform(FlaskForm):
-    name=StringField("Full Name",validators=[DataRequired()])
-    email=EmailField("E-mail",validators=[DataRequired(),Email()])
+    name=StringField("Full Name",validators=[DataRequired()], render_kw={"autocomplete": "name"})
+    email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
     submit=SubmitField("verify")
 
 class FitnessProfileform(FlaskForm):
@@ -57,6 +58,7 @@ class FitnessProfileform(FlaskForm):
 class ContactForm(FlaskForm):
     name = StringField(
         "Name",
+        render_kw={"autocomplete": "name"},
         validators=[
             DataRequired(),
             Length(min=2, max=100)
@@ -65,6 +67,7 @@ class ContactForm(FlaskForm):
 
     email = StringField(
         "Email",
+        render_kw={"autocomplete": "email"},
         validators=[
             DataRequired(),
             Email()
@@ -73,9 +76,10 @@ class ContactForm(FlaskForm):
 
     message = TextAreaField(
         "Message",
+        render_kw={"maxlength": 1200},
         validators=[
             DataRequired(),
-            Length(min=10, max=2000)
+            Length(min=10, max=1200)
         ]
     )
 
@@ -83,8 +87,9 @@ class ContactForm(FlaskForm):
 
 class ContactOTPForm(FlaskForm):
     verification_code=StringField("Verification code",
+                                      render_kw={"autocomplete": "one-time-code", "inputmode": "numeric", "maxlength": 6},
                                           validators=[DataRequired(),
-                                                      Length(min=6,max=6,
-                                                             message="Verification code must be exactly 6 digits.")])
+                                                      Length(min=6,max=6, message="Verification code must be exactly 6 digits."),
+                                                      Regexp(r"^\d{6}$", message="Verification code must contain exactly 6 digits.")])
     submit=SubmitField("Verify")
 

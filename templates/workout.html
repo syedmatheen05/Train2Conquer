@@ -687,16 +687,12 @@
 
     </style>
 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 
 
 <body>
-    <div id="page-loader">
-    <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Train2Conquer</div>
-    </div>
-</div>
+    {% include "loader.html" %}
 
 <div class="t2c-workout-page">
 
@@ -808,11 +804,14 @@
         <form
             id="completeWorkoutForm"
             method="POST"
+            data-loader-message="Saving your workout..."
             action="{{ url_for(
                 'complete_workout',
                 day=day_number
             ) }}"
         >
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <button
                 id="next-button"
@@ -886,14 +885,8 @@
 </script>
 
 
-<script
-    src="{{ url_for(
-        'static',
-        filename='js/script2.js'
-    ) }}"
-></script>
-
-
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/workout.js') }}"></script>
 </body>
 
 </html>

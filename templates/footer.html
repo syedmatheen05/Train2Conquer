@@ -1,158 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-        :root{
-            --t2c-ink:        #0B0C0F;
-            --t2c-line:       rgba(255,255,255,0.09);
-            --t2c-text:       #F4F3EF;
-            --t2c-text-dim:   #9496A1;
-            --t2c-flame:      #FF4B26;
-            --t2c-gold:       #D9A83B;
-        }
-
-        .t2c-footer *{ box-sizing: border-box; }
-
-        .t2c-footer{
-            background: var(--t2c-ink);
-            border-top: 1px solid var(--t2c-line);
-            font-family: 'Manrope', system-ui, sans-serif;
-            color: var(--t2c-text-dim);
-            padding: 40px 0 24px;
-        }
-
-        .t2c-footer-inner{
-            width: 100%;
-            max-width: 1240px;
-            margin: 0 auto;
-            padding: 0 28px;
-        }
-
-        /* ---------- top row: brand + links ---------- */
-        .t2c-footer-top{
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 28px;
-            padding-bottom: 24px;
-        }
-
-        .t2c-footer-brand{
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--t2c-text);
-        }
-        .t2c-footer-mark{
-            width: 26px;
-            height: 26px;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-        }
-        .t2c-footer-mark svg{ width: 100%; height: 100%; display: block; }
-        .t2c-footer-word{
-            font-family: 'Anton', sans-serif;
-            font-weight: 400;
-            font-size: 17px;
-            letter-spacing: 0.03em;
-            line-height: 1;
-            white-space: nowrap;
-        }
-        .t2c-footer-word span{ color: var(--t2c-flame); }
-
-        .t2c-footer-tagline{
-            font-size: 13px;
-            color: var(--t2c-text-dim);
-            margin: 8px 0 0;
-            max-width: 260px;
-            line-height: 1.5;
-        }
-
-        .t2c-footer-links{
-            display: flex;
-            gap: 28px;
-            list-style: none;
-            margin: 4px 0 0;
-            padding: 0;
-            flex-wrap: wrap;
-        }
-        .t2c-footer-link{
-            position: relative;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            color: var(--t2c-text-dim);
-            text-decoration: none;
-            transition: color .18s ease;
-        }
-        .t2c-footer-link::after{
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -6px;
-            height: 2px;
-            border-radius: 2px;
-            background: var(--t2c-flame);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform .22s cubic-bezier(.4,0,.2,1);
-        }
-        .t2c-footer-link:hover{ color: var(--t2c-text); }
-        .t2c-footer-link:hover::after{ transform: scaleX(1); }
-
-        /* ---------- bottom row ---------- */
-        .t2c-footer-bottom{
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            padding-top: 20px;
-            border-top: 1px solid var(--t2c-line);
-        }
-        .t2c-footer-copy{
-            font-size: 12px;
-            color: var(--t2c-text-dim);
-            margin: 0;
-        }
-        .t2c-footer-signature{
-            font-size: 12px;
-            color: var(--t2c-text-dim);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin: 0;
-        }
-        .t2c-footer-signature .dot{
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--t2c-gold);
-            display: inline-block;
-        }
-
-        @media (max-width: 640px){
-            .t2c-footer-top{ flex-direction: column; }
-            .t2c-footer-links{ gap: 18px; }
-            .t2c-footer-bottom{ flex-direction: column; align-items: flex-start; }
-        }
-    </style>
-</head>
-<body>
-
 <footer class="t2c-footer">
     <div class="t2c-footer-inner">
 
@@ -172,22 +17,16 @@
 
             <ul class="t2c-footer-links">
                 <li><a class="t2c-footer-link" href="{{ url_for('home') }}">Home</a></li>
-                <li><a class="t2c-footer-link" href="#">Workouts</a></li>
+                <li><a class="t2c-footer-link" href="{{ url_for('home') }}">Workouts</a></li>
                 <li><a class="t2c-footer-link" href="{{ url_for('about') }}">About</a></li>
                 <li><a class="t2c-footer-link" href="{{ url_for('contact') }}">Contact</a></li>
             </ul>
         </div>
 
         <div class="t2c-footer-bottom">
-            <p class="t2c-footer-copy">© 2025 Train2Conquer. All rights reserved.</p>
+            <p class="t2c-footer-copy">© {{ current_year }} Train2Conquer. All rights reserved.</p>
             <p class="t2c-footer-signature"><span class="dot"></span> Built to conquer, one rep at a time.</p>
         </div>
 
     </div>
 </footer>
-
-{{ bootstrap.load_js() }}
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
-</body>
-</html>

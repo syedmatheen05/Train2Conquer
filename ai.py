@@ -2,7 +2,12 @@ import os, json, time
 from google import genai
 from dotenv import load_dotenv
 load_dotenv()
-client=genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
+def get_client():
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY environment variable is not set")
+    return genai.Client(api_key=api_key)
 exercise_keys=["jumping-jacks","high-knees",
                "push-ups","pull-ups","side-lunges",
                "hindu-push-ups","military-push-ups","calf-raises","single-leg-calf-raises", "lying-leg-raises","reverse-crunches",
@@ -15,7 +20,7 @@ exercise_keys=["jumping-jacks","high-knees",
                "cat-cow-pose","floor-y-raises","reverse-snow-angels","child-pose","explosive-push-ups",
                "flutter-kicks","bear-crawl","tuck-jumps","shadow-boxing","downward-dog","worlds-greatest-stretch",
                "pigeon-pose","seated-forward-fold","hamstring-stretch-left","hamstring-stretch-right","quad-stretch-left",
-               "quad-stretch-right","hip-flexor-stretch-left","hip-flexor-stretch-left","butterfly-stretch","childs-pose",
+               "quad-stretch-right","hip-flexor-stretch-left","hip-flexor-stretch-right","butterfly-stretch","childs-pose",
                "barbell-back-squat","barbell-bent-over-row","barbell-overhead-press","barbell-skull-crushers"]
 image_keys=["chest.jpg","arms2.jpg","back2.jpg","mobility.jpg","arms.jpg","legs.jpg","abs.jpg","yoga.jpg","shoulders.jpg","back.jpg","cardio.jpg"]
 main_prompt=""""
@@ -861,21 +866,44 @@ Therefore the returned text MUST parse successfully into a Python dictionary, an
 workout_plan_data.items()
 
 MUST work correctly."""
-def generate_fitness_plan(profile,previous_plan):
-    prompt=f"""{main_prompt}
+def generate_fitness_plan(profile, previous_plan):
+    prompt = f"""{main_prompt}
     USER PROFILE:
     {json.dumps(profile, indent=2)}
     AVAILABLE EXERCISE KEYS: {exercise_keys}
     Image keys: {image_keys}
-    Previous Plan:{previous_plan}"""
+    Previous Plan: {previous_plan}"""
+
+    try:
+        client = get_client()
+    except Exception as exc:
+        print("GEMINI CONFIG ERROR:", exc)
+        return None
+
+    response = None
     for attempt in range(3):
         try:
-            response=client.models.generate_content(model="gemini-3.1-flash-lite", contents=prompt, 
-                                            config={"response_mime_type": "application/json"})
+            response = client.models.generate_content(
+                model="gemini-3.1-flash-lite",
+                contents=prompt,
+                config={"response_mime_type": "application/json"},
+            )
             break
-        except Exception:
-            if attempt==2:
-                return None
-        time.sleep(2)
-    ai_result=json.loads(response.text)
+        except Exception as exc:
+            print(f"GEMINI ATTEMPT {attempt + 1} ERROR:", exc)
+            if attempt < 2:
+                time.sleep(2)
+
+    if response is None:
+        return None
+
+    try:
+        ai_result = json.loads(response.text)
+    except (TypeError, json.JSONDecodeError) as exc:
+        print("GEMINI JSON ERROR:", exc)
+        return None
+
+    if not isinstance(ai_result, dict):
+        return None
+
     return json.dumps(ai_result)

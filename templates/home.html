@@ -1015,6 +1015,7 @@
 
     </style>
 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 
 
@@ -1022,12 +1023,7 @@
 
 
 {% include 'navbar.html' %}
-    <div id="page-loader">
-    <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Train2Conquer</div>
-    </div>
-</div>
+    {% include "loader.html" %}
 
 <!-- =========================================================
      DASHBOARD
@@ -1148,6 +1144,7 @@
 
             {% for day_key, day in workout_plan_data.items() %}
 
+                {% set day_number = day_key.replace('day_', '') | int %}
 
                 <div class="workout-row">
 
@@ -1170,12 +1167,12 @@
                     <div class="workout-info">
 
                         <span class="workout-day">
-                            Day {{ loop.index }}
+                            Day {{ day_number }}
                         </span>
 
 
                         <h2>
-                            Day {{ loop.index }}
+                            Day {{ day_number }}
                         </h2>
 
 
@@ -1196,7 +1193,7 @@
                     <div class="workout-action">
 
 
-                        {% if loop.index in completed_days %}
+                        {% if day_number in completed_days %}
 
                             <button
                                 class="btn btn-success"
@@ -1211,7 +1208,7 @@
                             <a
                                 href="{{ url_for(
                                     'start_workout',
-                                    day=loop.index
+                                    day=day_number
                                 ) }}"
                                 class="btn btn-primary"
                             >
@@ -1255,7 +1252,10 @@
             <form
                 method="POST"
                 action="{{ url_for('load_next_week') }}"
+                data-loader-message="Generating your next week..."
             >
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <button
                     type="submit"
@@ -1328,9 +1328,6 @@
 
 
 {{ bootstrap.load_js() }}
-
-
-<script src="{{ url_for('static', filename='js/script2.js') }}"></script>
 
 
 <script>
@@ -1413,6 +1410,8 @@
 </script>
 
 
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 
 </html>

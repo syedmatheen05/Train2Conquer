@@ -3,7 +3,6 @@
 <html lang="en">
 <head>
 
-```
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -1295,16 +1294,16 @@
     }
 
 </style>
-```
 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 
 <body>
+{% include "loader.html" %}
 {% from 'bootstrap5/form.html' import render_form %}
 
 <div class="t2c-auth">
 
-```
 <div class="t2c-auth-shell">
 
 
@@ -1600,7 +1599,6 @@
 
 
 </div>
-```
 
 </div>
 
@@ -1611,6 +1609,6 @@
                     flash.remove();
                 }} ,2000);
     </script>
-    <script src="{{url_for('static',filename='js/script2.js')}}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 </body>
 </html>

@@ -3,7 +3,6 @@
 <html lang="en">
 <head>
 
-```
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -819,25 +818,45 @@
         }
     }
 
-</style>
-```
 
+    /* Navbar is a normal page element; the auth shell handles centering. */
+    body {
+        display: block;
+        padding: 0;
+    }
+
+
+    .t2c-otp-timer {
+        margin: 18px 0 0;
+        color: var(--t2c-muted-2);
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .t2c-otp-countdown { color: var(--t2c-orange); font-variant-numeric: tabular-nums; }
+    .t2c-resend-form { text-align: center; margin-top: 14px; }
+    .t2c-resend-btn {
+        display: none; align-items: center; justify-content: center;
+        min-height: 42px; padding: 9px 22px;
+        border: 1px solid rgba(215,170,72,.25); border-radius: 10px;
+        background: rgba(215,170,72,.07); color: var(--t2c-gold);
+        font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .t2c-resend-btn:hover { background: rgba(215,170,72,.12); }
+
+</style>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 
 <body>
         {% include 'navbar.html'%}
-    <div id="page-loader">
-    <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Train2Conquer</div>
-    </div>
-</div>
+    {% include "loader.html" %}
 {% from 'bootstrap5/form.html' import render_form %}
 
 
 <div class="t2c-auth">
 
-```
 <div class="t2c-auth-card">
 
 
@@ -964,14 +983,15 @@
     ====================================================== -->
 
     <h1>
-        Login to Train2Conquer
+        Verify Your Email
     </h1>
 
 
     <p class="t2c-description">
 
-        Enter your email address and we'll send you
-        a secure verification code to continue.
+        Enter the 6-digit verification code we sent to
+        <span class="t2c-email">{{ email }}</span>
+        to continue securely.
 
     </p>
 
@@ -985,6 +1005,15 @@
         {{ render_form(form) }}
 
     </div>
+
+    <p id="otp-timer" class="t2c-otp-timer">
+        Resend code in <span id="otp-countdown" class="t2c-otp-countdown">{{ remaining }}</span> seconds
+    </p>
+
+    <form method="POST" action="{{ url_for('resend_otp') }}" class="t2c-resend-form" data-loader-message="Sending a new verification code...">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" id="otp-resend-btn" class="t2c-resend-btn">↻ &nbsp; Resend verification code</button>
+    </form>
 
 
     <!-- =====================================================
@@ -1023,16 +1052,36 @@
 
 
 </div>
-```
 
 </div>
 
 {{ bootstrap.load_js() }}
-<script>  setTimeout(function(){let flash=document.getElementById("flash-messages");
-                if(flash){
-                    flash.remove();
-                }} ,2000);</script>
-<script src="{{url_for('static',filename='js/script2.js')}}"></script>
+<script>
+(() => {
+    let seconds = {{ remaining | tojson }};
+    const timer = document.getElementById("otp-timer");
+    const countdown = document.getElementById("otp-countdown");
+    const resend = document.getElementById("otp-resend-btn");
 
+    const tick = () => {
+        if (seconds <= 0) {
+            if (timer) timer.style.display = "none";
+            if (resend) resend.style.display = "inline-flex";
+            return;
+        }
+        if (countdown) countdown.textContent = seconds;
+        seconds -= 1;
+        window.setTimeout(tick, 1000);
+    };
+    tick();
+
+    window.setTimeout(() => {
+        const flash = document.getElementById("flash-messages");
+        if (flash) flash.remove();
+    }, 4000);
+})();
+</script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

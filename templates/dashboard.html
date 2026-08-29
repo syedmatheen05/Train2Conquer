@@ -1,408 +1,3067 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{url_for('static',filename='css/style2.css')}}">
-    <link rel="icon" href="{{url_for('static',filename='assets/img/logo.png')}}">
-    <title>Train2Conquer</title>
 
+    {{ bootstrap.load_css() }}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+    <title>Train2Conquer — Train. Track. Conquer.</title>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
     <style>
-        :root{
-            --t2c-ink:        #0B0C0F;
-            --t2c-surface:    #17191F;
-            --t2c-surface-2:  #1F222A;
-            --t2c-line:       rgba(255,255,255,0.09);
-            --t2c-text:       #F4F3EF;
-            --t2c-text-dim:   #9496A1;
-            --t2c-flame:      #FF4B26;
-            --t2c-gold:       #D9A83B;
+
+        /* =========================================================
+           TRAIN2CONQUER — PREMIUM LANDING PAGE
+           ========================================================= */
+
+        :root {
+            --t2c-bg: #07080b;
+            --t2c-bg-soft: #0b0d11;
+
+            --t2c-surface: #111319;
+            --t2c-surface-2: #171a21;
+            --t2c-surface-3: #1d2028;
+
+            --t2c-text: #f5f4ef;
+            --t2c-muted: #969aa7;
+            --t2c-muted-2: #676c79;
+
+            --t2c-orange: #ff4b26;
+            --t2c-orange-light: #ff6847;
+            --t2c-gold: #d9a83b;
+
+            --t2c-green: #48d99b;
+
+            --t2c-border: rgba(255,255,255,.08);
+            --t2c-border-hover: rgba(255,255,255,.16);
+
+            --t2c-radius: 18px;
+            --t2c-radius-sm: 12px;
+
+            --t2c-shadow:
+                0 25px 70px rgba(0,0,0,.30);
         }
 
-        body{ background: var(--t2c-ink); }
 
-        section[class^="t2c-"] *, .hero *{ box-sizing: border-box; }
+        /* =========================================================
+           RESET
+           ========================================================= */
 
-        /* ================= HERO ================= */
-        .hero{
-            position: relative;
-            background: var(--t2c-ink);
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--t2c-bg);
             color: var(--t2c-text);
             font-family: 'Manrope', system-ui, sans-serif;
-            padding: 120px 28px 140px;
-            overflow: hidden;
-            isolation: isolate;
+            overflow-x: hidden;
         }
-        .hero::before{
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
+        /* =========================================================
+           GLOBAL BACKGROUND
+           ========================================================= */
+
+        .t2c-page {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .t2c-page::before {
             content: "";
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            top: -300px;
+            right: -250px;
+            border-radius: 50%;
+            background: rgba(255, 75, 38, .055);
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: -5;
+        }
+
+        .t2c-page::after {
+            content: "";
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            bottom: -300px;
+            left: -250px;
+            border-radius: 50%;
+            background: rgba(217, 168, 59, .035);
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: -5;
+        }
+
+
+        /* =========================================================
+           SHARED
+           ========================================================= */
+
+        .t2c-container {
+            width: min(1160px, calc(100% - 48px));
+            margin: 0 auto;
+        }
+
+        .t2c-section {
+            position: relative;
+            padding: 110px 0;
+            border-top: 1px solid var(--t2c-border);
+        }
+
+        .t2c-section-heading {
+            max-width: 650px;
+            margin-bottom: 52px;
+        }
+
+        .t2c-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+
+            margin: 0 0 14px;
+
+            color: var(--t2c-gold);
+
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        .t2c-kicker::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--t2c-orange);
+            box-shadow: 0 0 18px rgba(255,75,38,.55);
+        }
+
+        .t2c-title {
+            margin: 0;
+
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(2.3rem, 5vw, 4rem);
+            font-weight: 400;
+            line-height: .98;
+            letter-spacing: .01em;
+            text-transform: uppercase;
+        }
+
+        .t2c-description {
+            margin: 18px 0 0;
+
+            max-width: 580px;
+
+            color: var(--t2c-muted);
+
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+
+        /* =========================================================
+           BUTTONS
+           ========================================================= */
+
+        .t2c-btn {
+            position: relative;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+
+            min-height: 50px;
+            padding: 0 24px;
+
+            border: 1px solid transparent;
+            border-radius: 11px;
+
+            font-family: 'Manrope', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+
+            text-decoration: none;
+            cursor: pointer;
+
+            transition:
+                transform .2s ease,
+                background .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .t2c-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .t2c-btn:active {
+            transform: translateY(0) scale(.98);
+        }
+
+        .t2c-btn-primary {
+            color: #160e0a;
+            background: var(--t2c-orange);
+            box-shadow: 0 12px 35px rgba(255,75,38,.18);
+        }
+
+        .t2c-btn-primary:hover {
+            background: var(--t2c-orange-light);
+            box-shadow: 0 16px 40px rgba(255,75,38,.25);
+        }
+
+        .t2c-btn-secondary {
+            color: var(--t2c-text);
+            background: rgba(255,255,255,.025);
+            border-color: var(--t2c-border);
+        }
+
+        .t2c-btn-secondary:hover {
+            background: rgba(255,255,255,.055);
+            border-color: var(--t2c-border-hover);
+        }
+
+        .t2c-arrow {
+            font-size: 17px;
+            transition: transform .2s ease;
+        }
+
+        .t2c-btn:hover .t2c-arrow {
+            transform: translateX(3px);
+        }
+
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .t2c-hero {
+            position: relative;
+            min-height: 720px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 110px 0 90px;
+
+            overflow: hidden;
+        }
+
+        .t2c-hero-bg {
             position: absolute;
             inset: 0;
-            z-index: -2;
+            pointer-events: none;
+        }
+
+        .t2c-hero-glow {
+            position: absolute;
+
+            width: 700px;
+            height: 700px;
+
+            top: -260px;
+            right: -150px;
+
+            border-radius: 50%;
+
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(255,75,38,.18) 0%,
+                    rgba(255,75,38,.06) 35%,
+                    transparent 70%
+                );
+
+            filter: blur(20px);
+        }
+
+        .t2c-hero-grid {
+            position: absolute;
+            inset: 0;
+
+            opacity: .25;
+
             background-image:
-                radial-gradient(60% 55% at 82% 8%, rgba(255,75,38,0.16), transparent 70%),
-                radial-gradient(45% 40% at 12% 100%, rgba(217,168,59,0.10), transparent 70%);
-        }
-        .hero-climb{ position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; opacity: 0.5; }
-        .hero-content{ position: relative; max-width: 720px; margin: 0 auto; text-align: center; }
-        .hero-eyebrow{
-            display: inline-flex; align-items: center; gap: 8px;
-            font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-            color: var(--t2c-gold); margin: 0 0 18px;
-        }
-        .hero-eyebrow::before{ content:""; width:6px; height:6px; border-radius:50%; background: var(--t2c-flame); display:inline-block; }
-        .hero h1{
-            font-family: 'Anton', sans-serif; font-weight: 400;
-            font-size: clamp(2.75rem, 7vw, 5rem); line-height: 0.98; letter-spacing: 0.01em;
-            margin: 0 0 20px; text-transform: uppercase;
-        }
-        .hero h1 .accent{
-            background: linear-gradient(120deg, var(--t2c-gold), var(--t2c-flame));
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-        .hero p{ font-size: clamp(1rem, 1.6vw, 1.15rem); color: var(--t2c-text-dim); line-height: 1.6; margin: 0 auto 36px; max-width: 480px; }
-        .hero-actions{ display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
-        .hero-btn{
-            font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
-            text-decoration: none; padding: 14px 28px; border-radius: 9px; border: 1px solid transparent;
-            cursor: pointer; transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
-            display: inline-flex; align-items: center;
-        }
-        .hero-btn:active{ transform: scale(0.97); }
-        .hero-btn-solid{ color: #17110C; background: var(--t2c-flame); }
-        .hero-btn-solid:hover{ background: #ff5f3d; }
-        .hero-btn-ghost{ color: var(--t2c-text); border-color: var(--t2c-line); background: transparent; }
-        .hero-btn-ghost:hover{ border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.04); }
+                linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
 
-        /* ================= SHARED SECTION SHELL ================= */
-        .t2c-section{
-            font-family: 'Manrope', system-ui, sans-serif;
+            background-size: 70px 70px;
+
+            mask-image: linear-gradient(
+                to bottom,
+                black,
+                transparent 85%
+            );
+        }
+
+        .t2c-hero-content {
+            position: relative;
+            z-index: 2;
+
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+
+            align-items: center;
+            gap: 80px;
+        }
+
+        .t2c-hero-copy {
+            max-width: 650px;
+        }
+
+        .t2c-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+
+            margin-bottom: 22px;
+            padding: 8px 12px;
+
+            color: var(--t2c-muted);
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 100px;
+
+            background: rgba(255,255,255,.025);
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .t2c-hero-badge span {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: var(--t2c-green);
+
+            box-shadow: 0 0 12px rgba(72,217,155,.7);
+        }
+
+        .t2c-hero-title {
+            margin: 0;
+
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(4.5rem, 9vw, 8rem);
+            font-weight: 400;
+
+            line-height: .84;
+            letter-spacing: -.015em;
+
+            text-transform: uppercase;
+        }
+
+        .t2c-hero-title .accent {
+            display: block;
+
+            background:
+                linear-gradient(
+                    120deg,
+                    var(--t2c-gold),
+                    var(--t2c-orange)
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .t2c-hero-text {
+            max-width: 540px;
+
+            margin: 28px 0 34px;
+
+            color: var(--t2c-muted);
+
+            font-size: 16px;
+            line-height: 1.75;
+        }
+
+        .t2c-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .t2c-hero-note {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            margin-top: 22px;
+
+            color: var(--t2c-muted-2);
+
+            font-size: 11px;
+        }
+
+        .t2c-hero-note svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+
+        /* =========================================================
+           HERO DASHBOARD MOCKUP
+           ========================================================= */
+
+        .t2c-dashboard-wrap {
+            position: relative;
+
+            display: flex;
+            justify-content: center;
+        }
+
+        .t2c-dashboard-glow {
+            position: absolute;
+
+            width: 420px;
+            height: 420px;
+
+            border-radius: 50%;
+
+            background: rgba(255,75,38,.12);
+            filter: blur(80px);
+        }
+
+        .t2c-dashboard {
+            position: relative;
+            width: min(100%, 440px);
+
+            padding: 20px;
+
+            border: 1px solid rgba(255,255,255,.11);
+            border-radius: 22px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(31,34,42,.97),
+                    rgba(13,15,20,.97)
+                );
+
+            box-shadow:
+                0 40px 100px rgba(0,0,0,.55),
+                inset 0 1px 0 rgba(255,255,255,.04);
+
+            transform: rotate(1.5deg);
+
+            animation: t2cFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes t2cFloat {
+            0%, 100% {
+                transform: rotate(1.5deg) translateY(0);
+            }
+
+            50% {
+                transform: rotate(1.5deg) translateY(-10px);
+            }
+        }
+
+        .t2c-dashboard-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 20px;
+        }
+
+        .t2c-dashboard-brand {
+            font-family: 'Anton', sans-serif;
+            font-size: 18px;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+        }
+
+        .t2c-dashboard-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 6px 9px;
+
+            border: 1px solid rgba(72,217,155,.15);
+            border-radius: 8px;
+
+            color: var(--t2c-green);
+
+            background: rgba(72,217,155,.06);
+
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .t2c-dashboard-status::before {
+            content: "";
+
+            width: 5px;
+            height: 5px;
+
+            border-radius: 50%;
+
+            background: var(--t2c-green);
+        }
+
+        .t2c-progress-card {
+            padding: 18px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 15px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .t2c-progress-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 13px;
+
+            color: var(--t2c-muted);
+
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+        }
+
+        .t2c-progress-label strong {
             color: var(--t2c-text);
-            padding: 88px 28px;
-            border-top: 1px solid var(--t2c-line);
         }
-        .t2c-section-inner{ max-width: 1140px; margin: 0 auto; }
-        .t2c-kicker{
-            font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-            color: var(--t2c-gold); margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
-        }
-        .t2c-kicker::before{ content:""; width:6px; height:6px; border-radius:50%; background: var(--t2c-flame); display:inline-block; }
-        .t2c-section-title{
-            font-family: 'Anton', sans-serif; font-weight: 400; text-transform: uppercase;
-            font-size: clamp(1.75rem, 3.5vw, 2.5rem); line-height: 1.05; margin: 0 0 14px; letter-spacing: 0.01em;
-        }
-        .t2c-section-sub{ color: var(--t2c-text-dim); max-width: 560px; line-height: 1.6; margin: 0 0 44px; font-size: 15.5px; }
 
-        /* ---------- Features ---------- */
-        .t2c-features-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-        .t2c-feature-card{
-            background: var(--t2c-surface); border: 1px solid var(--t2c-line); border-radius: 14px;
-            padding: 26px 22px; transition: border-color .18s ease, transform .18s ease;
-        }
-        .t2c-feature-card:hover{ border-color: rgba(255,75,38,0.35); transform: translateY(-3px); }
-        .t2c-feature-icon{
-            width: 40px; height: 40px; border-radius: 10px; margin-bottom: 18px;
-            display: grid; place-items: center;
-            background: linear-gradient(140deg, rgba(217,168,59,0.18), rgba(255,75,38,0.18));
-        }
-        .t2c-feature-icon svg{ width: 20px; height: 20px; }
-        .t2c-feature-card h3{ font-size: 15.5px; font-weight: 700; margin: 0 0 8px; }
-        .t2c-feature-card p{ font-size: 13.5px; color: var(--t2c-text-dim); line-height: 1.55; margin: 0; }
+        .t2c-progress-bar {
+            height: 7px;
 
-        /* ---------- Workout categories ---------- */
-        .t2c-category-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-        .t2c-category-card{
-            position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--t2c-line);
-            background: var(--t2c-surface-2); padding: 24px 20px; min-height: 150px;
-            display: flex; flex-direction: column; justify-content: flex-end;
-            text-decoration: none; color: var(--t2c-text); transition: transform .18s ease, border-color .18s ease;
-        }
-        .t2c-category-card:hover{ transform: translateY(-3px); border-color: rgba(217,168,59,0.4); }
-        .t2c-category-card::before{
-            content: ""; position: absolute; inset: 0; z-index: 0;
-            background: radial-gradient(120% 90% at 100% 0%, rgba(255,75,38,0.16), transparent 60%);
-        }
-        .t2c-category-card span{ position: relative; z-index: 1; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t2c-gold); margin-bottom: 6px; }
-        .t2c-category-card h3{ position: relative; z-index: 1; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 20px; text-transform: uppercase; margin: 0; letter-spacing: 0.01em; }
+            overflow: hidden;
 
-        /* ---------- Stats strip ---------- */
-        .t2c-stats{ background: var(--t2c-surface); border-top: 1px solid var(--t2c-line); border-bottom: 1px solid var(--t2c-line); }
-        .t2c-stats-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
-        .t2c-stat-num{ font-family: 'Anton', sans-serif; font-weight: 400; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1; }
-        .t2c-stat-num .u{ color: var(--t2c-flame); }
-        .t2c-stat-label{ font-size: 12.5px; color: var(--t2c-text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+            border-radius: 100px;
 
-        /* ---------- Hire a trainer ---------- */
-        .t2c-trainer-wrap{ display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
-        .t2c-trainer-list{ list-style: none; margin: 28px 0 32px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-        .t2c-trainer-list li{ display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--t2c-text-dim); line-height: 1.5; }
-        .t2c-trainer-list li::before{
-            content: "✓"; color: var(--t2c-gold); font-weight: 700; flex-shrink: 0;
-            width: 20px; height: 20px; border-radius: 50%; background: rgba(217,168,59,0.12);
-            display: grid; place-items: center; font-size: 11px; margin-top: 1px;
+            background: rgba(255,255,255,.07);
         }
-        .t2c-trainer-cards{ display: flex; flex-direction: column; gap: 14px; }
-        .t2c-trainer-card{
-            background: var(--t2c-surface); border: 1px solid var(--t2c-line); border-radius: 14px;
-            padding: 18px 20px; display: flex; align-items: center; gap: 14px;
-            transition: border-color .18s ease, transform .18s ease;
-        }
-        .t2c-trainer-card:hover{ border-color: rgba(255,75,38,0.35); transform: translateY(-2px); }
-        .t2c-trainer-avatar{
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(140deg, var(--t2c-gold), var(--t2c-flame));
-            display: grid; place-items: center;
-            font-family: 'Anton', sans-serif; font-size: 17px; color: #17110C;
-        }
-        .t2c-trainer-card-body h4{ font-size: 14.5px; font-weight: 700; margin: 0 0 3px; }
-        .t2c-trainer-card-body p{ font-size: 12.5px; color: var(--t2c-text-dim); margin: 0; }
-        .t2c-trainer-card-cta{ margin-left: auto; font-size: 12.5px; font-weight: 700; color: var(--t2c-flame); text-decoration: none; white-space: nowrap; }
-        .t2c-trainer-card-cta:hover{ text-decoration: underline; }
 
-        /* ---------- Testimonials ---------- */
-        .t2c-testimonial-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-        .t2c-testimonial-card{ background: var(--t2c-surface); border: 1px solid var(--t2c-line); border-radius: 14px; padding: 26px 22px; }
-        .t2c-testimonial-quote{ font-size: 14.5px; line-height: 1.6; color: var(--t2c-text); margin: 0 0 20px; }
-        .t2c-testimonial-person{ display: flex; align-items: center; gap: 10px; }
-        .t2c-testimonial-avatar{
-            width: 34px; height: 34px; border-radius: 50%;
-            background: var(--t2c-surface-2); border: 1px solid var(--t2c-line);
-            display: grid; place-items: center; font-family:'Anton',sans-serif; font-size: 13px; color: var(--t2c-gold);
-        }
-        .t2c-testimonial-person h5{ font-size: 13px; font-weight: 700; margin: 0; }
-        .t2c-testimonial-person span{ font-size: 11.5px; color: var(--t2c-text-dim); }
+        .t2c-progress-fill {
+            width: 72%;
+            height: 100%;
 
-        /* ---------- Final CTA ---------- */
-        .t2c-final-cta{
-            text-align: center; border-top: 1px solid var(--t2c-line);
-            background: radial-gradient(60% 120% at 50% 0%, rgba(255,75,38,0.12), transparent 70%);
-        }
-        .t2c-final-cta h2{ max-width: 620px; margin-left: auto; margin-right: auto; }
-        .t2c-final-cta p{ max-width: 480px; margin-left: auto; margin-right: auto; }
+            border-radius: inherit;
 
-        @media (max-width: 980px){
-            .t2c-features-grid, .t2c-category-grid, .t2c-stats-grid{ grid-template-columns: repeat(2, 1fr); }
-            .t2c-testimonial-grid{ grid-template-columns: 1fr; }
-            .t2c-trainer-wrap{ grid-template-columns: 1fr; }
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--t2c-gold),
+                    var(--t2c-orange)
+                );
+
+            animation: t2cProgress 1.4s ease-out;
         }
-        @media (max-width: 560px){
-            .t2c-section{ padding: 64px 20px; }
-            .t2c-features-grid, .t2c-category-grid, .t2c-stats-grid{ grid-template-columns: 1fr; }
-            .hero{ padding: 90px 20px 100px; }
-            .hero-actions{ flex-direction: column; align-items: stretch; }
-            .hero-btn{ justify-content: center; }
+
+        @keyframes t2cProgress {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 72%;
+            }
         }
-        @media (prefers-reduced-motion: reduce){
-            .t2c-feature-card, .t2c-category-card, .t2c-trainer-card, .hero-btn{ transition: none; }
+
+        .t2c-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+
+            margin-top: 10px;
         }
+
+        .t2c-mini-stat {
+            padding: 14px 10px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 13px;
+
+            background: rgba(255,255,255,.02);
+        }
+
+        .t2c-mini-stat-number {
+            display: block;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 23px;
+            line-height: 1;
+        }
+
+        .t2c-mini-stat-label {
+            display: block;
+
+            margin-top: 6px;
+
+            color: var(--t2c-muted-2);
+
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .t2c-workout-preview {
+            margin-top: 10px;
+
+            padding: 17px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 15px;
+
+            background: rgba(255,255,255,.025);
+        }
+
+        .t2c-workout-preview-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 14px;
+        }
+
+        .t2c-workout-preview-top span {
+            color: var(--t2c-muted);
+
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .t2c-day {
+            color: var(--t2c-gold) !important;
+        }
+
+        .t2c-exercise {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 10px 0;
+
+            border-top: 1px solid var(--t2c-border);
+        }
+
+        .t2c-exercise-icon {
+            width: 32px;
+            height: 32px;
+
+            display: grid;
+            place-items: center;
+
+            flex-shrink: 0;
+
+            border-radius: 9px;
+
+            color: var(--t2c-orange);
+
+            background: rgba(255,75,38,.08);
+        }
+
+        .t2c-exercise-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .t2c-exercise-info {
+            flex: 1;
+        }
+
+        .t2c-exercise-name {
+            display: block;
+
+            color: var(--t2c-text);
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .t2c-exercise-meta {
+            display: block;
+
+            margin-top: 2px;
+
+            color: var(--t2c-muted-2);
+
+            font-size: 9px;
+        }
+
+        .t2c-check {
+            width: 20px;
+            height: 20px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            color: var(--t2c-green);
+
+            background: rgba(72,217,155,.08);
+
+            font-size: 10px;
+        }
+
+
+        /* =========================================================
+           TRUST STRIP
+           ========================================================= */
+
+        .t2c-trust {
+            padding: 25px 0;
+
+            border-top: 1px solid var(--t2c-border);
+            border-bottom: 1px solid var(--t2c-border);
+
+            background: rgba(255,255,255,.015);
+        }
+
+        .t2c-trust-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        .t2c-trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            color: var(--t2c-muted);
+
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .t2c-trust-icon {
+            width: 30px;
+            height: 30px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 9px;
+
+            color: var(--t2c-gold);
+
+            background: rgba(255,255,255,.02);
+        }
+
+        .t2c-trust-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+
+        /* =========================================================
+           HOW IT WORKS
+           ========================================================= */
+
+        .t2c-how-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .t2c-how-card {
+            position: relative;
+
+            padding: 28px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: var(--t2c-radius);
+
+            background: var(--t2c-surface);
+
+            overflow: hidden;
+
+            transition:
+                transform .25s ease,
+                border-color .25s ease;
+        }
+
+        .t2c-how-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,75,38,.28);
+        }
+
+        .t2c-how-number {
+            position: absolute;
+
+            top: 13px;
+            right: 18px;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 70px;
+
+            line-height: 1;
+
+            color: rgba(255,255,255,.025);
+        }
+
+        .t2c-how-icon {
+            width: 45px;
+            height: 45px;
+
+            display: grid;
+            place-items: center;
+
+            margin-bottom: 22px;
+
+            border-radius: 12px;
+
+            color: var(--t2c-orange);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(217,168,59,.13),
+                    rgba(255,75,38,.13)
+                );
+        }
+
+        .t2c-how-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .t2c-how-card h3 {
+            margin: 0 0 9px;
+
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .t2c-how-card p {
+            margin: 0;
+
+            color: var(--t2c-muted);
+
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+
+        /* =========================================================
+           PROGRAMS
+           ========================================================= */
+
+        .t2c-program-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .t2c-program-card {
+            position: relative;
+
+            min-height: 220px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+
+            padding: 22px;
+
+            overflow: hidden;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: var(--t2c-radius);
+
+            background:
+                linear-gradient(
+                    160deg,
+                    var(--t2c-surface-2),
+                    var(--t2c-surface)
+                );
+
+            color: var(--t2c-text);
+
+            text-decoration: none;
+
+            transition:
+                transform .25s ease,
+                border-color .25s ease;
+        }
+
+        .t2c-program-card::before {
+            content: "";
+
+            position: absolute;
+            inset: 0;
+
+            background:
+                radial-gradient(
+                    90% 70% at 100% 0%,
+                    rgba(255,75,38,.20),
+                    transparent 65%
+                );
+        }
+
+        .t2c-program-card::after {
+            content: "→";
+
+            position: absolute;
+
+            top: 18px;
+            right: 20px;
+
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 50%;
+
+            color: var(--t2c-muted);
+
+            background: rgba(255,255,255,.025);
+
+            transition:
+                transform .25s ease,
+                color .25s ease,
+                background .25s ease;
+        }
+
+        .t2c-program-card:hover {
+            transform: translateY(-5px);
+
+            border-color: rgba(217,168,59,.30);
+        }
+
+        .t2c-program-card:hover::after {
+            transform: translateX(3px);
+
+            color: #fff;
+
+            background: rgba(255,75,38,.15);
+        }
+
+        .t2c-program-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .t2c-program-tag {
+            display: inline-block;
+
+            margin-bottom: 9px;
+
+            color: var(--t2c-gold);
+
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .t2c-program-card h3 {
+            margin: 0;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+
+            text-transform: uppercase;
+        }
+
+        .t2c-program-card p {
+            margin: 7px 0 0;
+
+            color: var(--t2c-muted);
+
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+
+        /* =========================================================
+           PROGRESS / PHILOSOPHY
+           ========================================================= */
+
+        .t2c-progress-section {
+            background:
+                radial-gradient(
+                    60% 100% at 0% 50%,
+                    rgba(217,168,59,.07),
+                    transparent 70%
+                );
+        }
+
+        .t2c-progress-layout {
+            display: grid;
+            grid-template-columns: .9fr 1.1fr;
+            gap: 70px;
+            align-items: center;
+        }
+
+        .t2c-progress-panel {
+            padding: 25px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 20px;
+
+            background: var(--t2c-surface);
+
+            box-shadow: var(--t2c-shadow);
+        }
+
+        .t2c-progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 25px;
+        }
+
+        .t2c-progress-header h3 {
+            margin: 0;
+
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .t2c-week {
+            color: var(--t2c-gold);
+
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .t2c-progress-circle {
+            width: 180px;
+            height: 180px;
+
+            margin: 10px auto 28px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background:
+                conic-gradient(
+                    var(--t2c-orange) 0deg 262deg,
+                    rgba(255,255,255,.06) 262deg 360deg
+                );
+
+            position: relative;
+        }
+
+        .t2c-progress-circle::before {
+            content: "";
+
+            position: absolute;
+
+            width: 145px;
+            height: 145px;
+
+            border-radius: 50%;
+
+            background: var(--t2c-surface);
+        }
+
+        .t2c-progress-circle-content {
+            position: relative;
+
+            text-align: center;
+        }
+
+        .t2c-progress-percent {
+            display: block;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 42px;
+            line-height: 1;
+        }
+
+        .t2c-progress-small {
+            display: block;
+
+            margin-top: 6px;
+
+            color: var(--t2c-muted);
+
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .t2c-progress-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 9px;
+        }
+
+        .t2c-detail {
+            padding: 12px 8px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 11px;
+
+            text-align: center;
+        }
+
+        .t2c-detail strong {
+            display: block;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 20px;
+        }
+
+        .t2c-detail span {
+            display: block;
+
+            margin-top: 3px;
+
+            color: var(--t2c-muted-2);
+
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+
+        /* =========================================================
+           BENEFITS
+           ========================================================= */
+
+        .t2c-benefits {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+
+            margin: 30px 0 34px;
+        }
+
+        .t2c-benefit {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+        }
+
+        .t2c-benefit-check {
+            width: 25px;
+            height: 25px;
+
+            display: grid;
+            place-items: center;
+
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            color: var(--t2c-gold);
+
+            background: rgba(217,168,59,.10);
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .t2c-benefit h4 {
+            margin: 0 0 4px;
+
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .t2c-benefit p {
+            margin: 0;
+
+            color: var(--t2c-muted);
+
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+
+        /* =========================================================
+           TRAINER
+           ========================================================= */
+
+        .t2c-trainer-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .t2c-trainer-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .t2c-trainer-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+
+            padding: 17px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 15px;
+
+            background: var(--t2c-surface);
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease;
+        }
+
+        .t2c-trainer-card:hover {
+            transform: translateX(4px);
+            border-color: rgba(255,75,38,.25);
+        }
+
+        .t2c-trainer-avatar {
+            width: 48px;
+            height: 48px;
+
+            display: grid;
+            place-items: center;
+
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--t2c-gold),
+                    var(--t2c-orange)
+                );
+
+            color: #17110c;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 17px;
+        }
+
+        .t2c-trainer-info {
+            flex: 1;
+        }
+
+        .t2c-trainer-info h4 {
+            margin: 0 0 3px;
+
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .t2c-trainer-info p {
+            margin: 0;
+
+            color: var(--t2c-muted);
+
+            font-size: 10px;
+        }
+
+        .t2c-trainer-rating {
+            color: var(--t2c-gold);
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+
+        /* =========================================================
+           ACHIEVEMENTS
+           ========================================================= */
+
+        .t2c-achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .t2c-achievement {
+            padding: 24px 18px;
+
+            border: 1px solid var(--t2c-border);
+            border-radius: 15px;
+
+            background: var(--t2c-surface);
+
+            text-align: center;
+        }
+
+        .t2c-achievement-icon {
+            width: 45px;
+            height: 45px;
+
+            display: grid;
+            place-items: center;
+
+            margin: 0 auto 13px;
+
+            border-radius: 13px;
+
+            color: var(--t2c-gold);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(217,168,59,.14),
+                    rgba(255,75,38,.08)
+                );
+        }
+
+        .t2c-achievement-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .t2c-achievement strong {
+            display: block;
+
+            font-family: 'Anton', sans-serif;
+            font-size: 26px;
+            font-weight: 400;
+        }
+
+        .t2c-achievement span {
+            display: block;
+
+            margin-top: 5px;
+
+            color: var(--t2c-muted);
+
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+
+        /* =========================================================
+           FINAL CTA
+           ========================================================= */
+
+        .t2c-final {
+            padding: 130px 0;
+
+            text-align: center;
+
+            background:
+                radial-gradient(
+                    55% 90% at 50% 0%,
+                    rgba(255,75,38,.15),
+                    transparent 70%
+                );
+        }
+
+        .t2c-final-inner {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .t2c-final-title {
+            margin: 0;
+
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 400;
+            line-height: .9;
+
+            text-transform: uppercase;
+        }
+
+        .t2c-final-title span {
+            background:
+                linear-gradient(
+                    120deg,
+                    var(--t2c-gold),
+                    var(--t2c-orange)
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .t2c-final-text {
+            max-width: 500px;
+
+            margin: 22px auto 32px;
+
+            color: var(--t2c-muted);
+
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .t2c-final-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+
+        /* =========================================================
+           SCROLL REVEAL
+           ========================================================= */
+
+        .t2c-reveal {
+            opacity: 0;
+            transform: translateY(24px);
+
+            transition:
+                opacity .7s ease,
+                transform .7s ease;
+        }
+
+        .t2c-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 1050px) {
+
+            .t2c-hero-content {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .t2c-hero-copy {
+                max-width: 700px;
+                text-align: center;
+                margin: 0 auto;
+            }
+
+            .t2c-hero-text {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .t2c-hero-actions {
+                justify-content: center;
+            }
+
+            .t2c-hero-note {
+                justify-content: center;
+            }
+
+            .t2c-dashboard-wrap {
+                max-width: 480px;
+                width: 100%;
+                margin: auto;
+            }
+
+            .t2c-program-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .t2c-achievement-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+
+        @media (max-width: 850px) {
+
+            .t2c-section {
+                padding: 85px 0;
+            }
+
+            .t2c-progress-layout,
+            .t2c-trainer-layout {
+                grid-template-columns: 1fr;
+                gap: 45px;
+            }
+
+            .t2c-how-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .t2c-trust-inner {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
+
+        @media (max-width: 600px) {
+
+            .t2c-container {
+                width: min(100% - 32px, 1160px);
+            }
+
+            .t2c-hero {
+                min-height: auto;
+                padding: 80px 0 70px;
+            }
+
+            .t2c-hero-title {
+                font-size: clamp(4rem, 19vw, 6rem);
+            }
+
+            .t2c-hero-text {
+                font-size: 14px;
+            }
+
+            .t2c-hero-actions {
+                flex-direction: column;
+            }
+
+            .t2c-btn {
+                width: 100%;
+            }
+
+            .t2c-dashboard {
+                padding: 14px;
+            }
+
+            .t2c-section {
+                padding: 70px 0;
+            }
+
+            .t2c-title {
+                font-size: 2.5rem;
+            }
+
+            .t2c-description {
+                font-size: 13px;
+            }
+
+            .t2c-program-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .t2c-program-card {
+                min-height: 185px;
+            }
+
+            .t2c-achievement-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .t2c-progress-details {
+                grid-template-columns: 1fr;
+            }
+
+            .t2c-final {
+                padding: 90px 0;
+            }
+
+            .t2c-final-title {
+                font-size: 3.5rem;
+            }
+
+            .t2c-final-actions {
+                flex-direction: column;
+            }
+
+            .t2c-trust-item {
+                font-size: 10px;
+            }
+        }
+
+
+        /* =========================================================
+           ACCESSIBILITY
+           ========================================================= */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+
+            .t2c-reveal {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
+
+
 <body>
-    {% include 'navbar.html'%}
-    <!-- Page Loader -->
-{% include "loader.html" %}
-     {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category,message in messages %}
-                        <div data-flash-message class="alert alert-{{category}}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
 
-    <!-- ================= HERO ================= -->
-    <section class="hero">
-        <svg class="hero-climb" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0,340 L220,340 L340,180 L430,260 L620,60 L760,150 L1000,20 L1200,90"
-                  fill="none" stroke="url(#t2cClimbGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <defs>
-                <linearGradient id="t2cClimbGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#D9A83B" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#FF4B26" stop-opacity="0.35"/>
-                </linearGradient>
-            </defs>
-        </svg>
-        <div class="hero-content">
-            <p class="hero-eyebrow">Home workouts, real results</p>
-            <h1>Train2<span class="accent">Conquer</span></h1>
-            <p>Your home workout &amp; fitness companion — build strength, track progress, and conquer every session, wherever you are.</p>
-            <div class="hero-actions">
-                <a href="{{ url_for('register') }}" class="hero-btn hero-btn-solid">Start training</a>
-                <a href="#programs" class="hero-btn hero-btn-ghost">Browse workouts</a>
-            </div>
-        </div>
-    </section>
+<div class="t2c-page">
 
-    <!-- ================= FEATURES ================= -->
-    <section class="t2c-section">
-        <div class="t2c-section-inner">
-            <p class="t2c-kicker">Why Train2Conquer</p>
-            <h2 class="t2c-section-title">Everything you need, nothing you don't</h2>
-            <p class="t2c-section-sub">No gym, no gimmicks — just a clear path from your first rep to your next personal best.</p>
+    {% include 'navbar.html' %}
 
-            <div class="t2c-features-grid">
-                <div class="t2c-feature-card">
-                    <div class="t2c-feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16M4 12a2 2 0 100-4 2 2 0 000 4zm16 0a2 2 0 100-4 2 2 0 000 4zM4 16a2 2 0 100-4M20 16a2 2 0 100-4" stroke="#FF4B26" stroke-width="1.6" stroke-linecap="round"/></svg>
-                    </div>
-                    <h3>Zero equipment needed</h3>
-                    <p>Every program is built around bodyweight and household basics — a mat and some floor space is enough.</p>
+    <!-- =========================================================
+         LOADER
+         ========================================================= -->
+
+    {% include "loader.html" %}
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+         ========================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    data-flash-message
+                    class="alert alert-{{ category }}"
+                >
+                    {{ message }}
                 </div>
-                <div class="t2c-feature-card">
-                    <div class="t2c-feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 19V5m6 14V9m6 10V13" stroke="#D9A83B" stroke-width="1.6" stroke-linecap="round"/></svg>
-                    </div>
-                    <h3>Track every rep</h3>
-                    <p>Log sets, streaks, and personal bests automatically, so progress is visible, not just felt.</p>
-                </div>
-                <div class="t2c-feature-card">
-                    <div class="t2c-feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2m0 14v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="#FF4B26" stroke-width="1.6" stroke-linecap="round"/></svg>
-                    </div>
-                    <h3>Nutrition, built in</h3>
-                    <p>Simple meal guidance that matches your training load, not a generic calorie chart.</p>
-                </div>
-                <div class="t2c-feature-card">
-                    <div class="t2c-feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 21c4.97-3.2 8-7 8-11a8 8 0 10-16 0c0 4 3.03 7.8 8 11z" stroke="#D9A83B" stroke-width="1.6" stroke-linejoin="round"/></svg>
-                    </div>
-                    <h3>Coached by real trainers</h3>
-                    <p>Every plan is designed by certified trainers — and you can bring one in 1:1 whenever you want.</p>
-                </div>
-            </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+
+    <header class="t2c-hero">
+
+        <div class="t2c-hero-bg">
+            <div class="t2c-hero-glow"></div>
+            <div class="t2c-hero-grid"></div>
         </div>
-    </section>
 
-    <!-- ================= WORKOUT CATEGORIES ================= -->
-    <section class="t2c-section" id="programs">
-        <div class="t2c-section-inner">
-            <p class="t2c-kicker">Programs</p>
-            <h2 class="t2c-section-title">Pick your climb</h2>
-            <p class="t2c-section-sub">Four ways in — mix and match as your goals change.</p>
 
-            <div class="t2c-category-grid">
-                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>28 sessions</span><h3>Strength</h3></a>
-                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>21 sessions</span><h3>HIIT</h3></a>
-                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>16 sessions</span><h3>Mobility</h3></a>
-                <a href="{{ url_for('register') }}" class="t2c-category-card" data-loader-message="Create your profile to unlock this program..."><span>12 sessions</span><h3>Recovery</h3></a>
-            </div>
-        </div>
-    </section>
+        <div class="t2c-container">
 
-    <!-- ================= STATS STRIP ================= -->
-    <section class="t2c-section t2c-stats">
-        <div class="t2c-section-inner">
-            <div class="t2c-stats-grid">
-                <div><div class="t2c-stat-num"><span class="u">10K</span>+</div><div class="t2c-stat-label">Workouts logged</div></div>
-                <div><div class="t2c-stat-num">50<span class="u">+</span></div><div class="t2c-stat-label">Programs</div></div>
-                <div><div class="t2c-stat-num"><span class="u">30</span>+</div><div class="t2c-stat-label">Certified trainers</div></div>
-                <div><div class="t2c-stat-num">4.9<span class="u">★</span></div><div class="t2c-stat-label">Average rating</div></div>
-            </div>
-        </div>
-    </section>
+            <div class="t2c-hero-content">
 
-    <!-- ================= HIRE A TRAINER ================= -->
-    <section class="t2c-section" id="hire-a-trainer">
-        <div class="t2c-section-inner">
-            <div class="t2c-trainer-wrap">
-                <div>
-                    <p class="t2c-kicker">1:1 coaching</p>
-                    <h2 class="t2c-section-title">Hire a trainer</h2>
-                    <p class="t2c-section-sub" style="margin-bottom: 18px;">
-                        Prefer a program built around you? Match with a certified trainer for personalized plans, form checks, and direct accountability.
+                <!-- HERO COPY -->
+
+                <div class="t2c-hero-copy t2c-reveal">
+
+                    <div class="t2c-hero-badge">
+                        <span></span>
+                        Your fitness journey starts here
+                    </div>
+
+                    <h1 class="t2c-hero-title">
+                        Train
+                        <span class="accent">2Conquer</span>
+                    </h1>
+
+                    <p class="t2c-hero-text">
+                        A smarter way to train at home. Get personalized
+                        workouts, track your progress, build consistency,
+                        and turn every session into another step forward.
                     </p>
-                    <ul class="t2c-trainer-list">
-                        <li>1:1 video sessions on your schedule</li>
-                        <li>A plan built around your goals and equipment</li>
-                        <li>Direct messaging for form checks and questions</li>
-                        <li>Switch or cancel anytime, no lock-in</li>
-                    </ul>
-                    <a href="{{ url_for('contact') }}" class="hero-btn hero-btn-solid">Find your trainer</a>
+
+                    <div class="t2c-hero-actions">
+
+                        <a
+                            href="{{ url_for('register') }}"
+                            class="t2c-btn t2c-btn-primary"
+                            data-loader-message="Preparing your training journey..."
+                        >
+                            Start training
+                            <span class="t2c-arrow">→</span>
+                        </a>
+
+                        <a
+                            href="#programs"
+                            class="t2c-btn t2c-btn-secondary"
+                        >
+                            Explore workouts
+                        </a>
+
+                    </div>
+
+                    <div class="t2c-hero-note">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M12 3l7 3v5c0 4.6-2.8 8.5-7 10-4.2-1.5-7-5.4-7-10V6l7-3z"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M9 12l2 2 4-4"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                        Built for consistency, not perfection.
+
+                    </div>
+
                 </div>
 
-                <div class="t2c-trainer-cards">
-                    <div class="t2c-trainer-card">
-                        <div class="t2c-trainer-avatar">A</div>
-                        <div class="t2c-trainer-card-body">
-                            <h4>Aisha R.</h4>
-                            <p>Strength &amp; conditioning</p>
+
+                <!-- DASHBOARD VISUAL -->
+
+                <div class="t2c-dashboard-wrap t2c-reveal">
+
+                    <div class="t2c-dashboard-glow"></div>
+
+                    <div class="t2c-dashboard">
+
+                        <div class="t2c-dashboard-top">
+
+                            <div class="t2c-dashboard-brand">
+                                Train2Conquer
+                            </div>
+
+                            <div class="t2c-dashboard-status">
+                                Active
+                            </div>
+
                         </div>
-                        <a href="{{ url_for('contact') }}" class="t2c-trainer-card-cta">Contact →</a>
-                    </div>
-                    <div class="t2c-trainer-card">
-                        <div class="t2c-trainer-avatar">M</div>
-                        <div class="t2c-trainer-card-body">
-                            <h4>Marcus T.</h4>
-                            <p>HIIT &amp; fat loss</p>
+
+
+                        <div class="t2c-progress-card">
+
+                            <div class="t2c-progress-label">
+
+                                <span>Weekly progress</span>
+
+                                <strong>72%</strong>
+
+                            </div>
+
+                            <div class="t2c-progress-bar">
+                                <div class="t2c-progress-fill"></div>
+                            </div>
+
                         </div>
-                        <a href="{{ url_for('contact') }}" class="t2c-trainer-card-cta">Contact →</a>
-                    </div>
-                    <div class="t2c-trainer-card">
-                        <div class="t2c-trainer-avatar">P</div>
-                        <div class="t2c-trainer-card-body">
-                            <h4>Priya N.</h4>
-                            <p>Mobility &amp; recovery</p>
+
+
+                        <div class="t2c-dashboard-stats">
+
+                            <div class="t2c-mini-stat">
+
+                                <span class="t2c-mini-stat-number">
+                                    05
+                                </span>
+
+                                <span class="t2c-mini-stat-label">
+                                    Sessions
+                                </span>
+
+                            </div>
+
+                            <div class="t2c-mini-stat">
+
+                                <span class="t2c-mini-stat-number">
+                                    18
+                                </span>
+
+                                <span class="t2c-mini-stat-label">
+                                    Day streak
+                                </span>
+
+                            </div>
+
+                            <div class="t2c-mini-stat">
+
+                                <span class="t2c-mini-stat-number">
+                                    4.2K
+                                </span>
+
+                                <span class="t2c-mini-stat-label">
+                                    Calories
+                                </span>
+
+                            </div>
+
                         </div>
-                        <a href="{{ url_for('contact') }}" class="t2c-trainer-card-cta">Contact →</a>
+
+
+                        <div class="t2c-workout-preview">
+
+                            <div class="t2c-workout-preview-top">
+
+                                <span>Today's workout</span>
+
+                                <span class="t2c-day">
+                                    DAY 04
+                                </span>
+
+                            </div>
+
+
+                            <div class="t2c-exercise">
+
+                                <div class="t2c-exercise-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M6 10v4M9 8v8M15 8v8M18 10v4M9 12h6"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div class="t2c-exercise-info">
+
+                                    <span class="t2c-exercise-name">
+                                        Push Ups
+                                    </span>
+
+                                    <span class="t2c-exercise-meta">
+                                        3 sets × 12 reps
+                                    </span>
+
+                                </div>
+
+                                <div class="t2c-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+
+                            <div class="t2c-exercise">
+
+                                <div class="t2c-exercise-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M6 19l3-7 3 3 3-7 3 4"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div class="t2c-exercise-info">
+
+                                    <span class="t2c-exercise-name">
+                                        Squats
+                                    </span>
+
+                                    <span class="t2c-exercise-meta">
+                                        4 sets × 15 reps
+                                    </span>
+
+                                </div>
+
+                                <div class="t2c-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+
+                            <div class="t2c-exercise">
+
+                                <div class="t2c-exercise-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="8"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                        />
+                                        <path
+                                            d="M12 8v4l3 2"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div class="t2c-exercise-info">
+
+                                    <span class="t2c-exercise-name">
+                                        Plank
+                                    </span>
+
+                                    <span class="t2c-exercise-meta">
+                                        3 sets × 45 sec
+                                    </span>
+
+                                </div>
+
+                                <div class="t2c-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         TRUST / BENEFIT STRIP
+         ========================================================= -->
+
+    <section class="t2c-trust">
+
+        <div class="t2c-container">
+
+            <div class="t2c-trust-inner">
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ✓
+                    </div>
+
+                    Personalized plans
+
+                </div>
+
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ◷
+                    </div>
+
+                    Train anywhere
+
+                </div>
+
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ↗
+                    </div>
+
+                    Track your progress
+
+                </div>
+
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ★
+                    </div>
+
+                    Build your streak
+
+                </div>
+
+            </div>
+
+        </div>
+
     </section>
 
-    <!-- ================= TESTIMONIALS ================= -->
+
+    <!-- =========================================================
+         HOW IT WORKS
+         ========================================================= -->
+
     <section class="t2c-section">
-        <div class="t2c-section-inner">
-            <p class="t2c-kicker">From the community</p>
-            <h2 class="t2c-section-title">Conquered, not quit</h2>
-            <p class="t2c-section-sub">Real people, real sessions logged.</p>
 
-            <div class="t2c-testimonial-grid">
-                <div class="t2c-testimonial-card">
-                    <p class="t2c-testimonial-quote">"I stopped needing a gym membership after two weeks. The strength program alone rebuilt my routine."</p>
-                    <div class="t2c-testimonial-person">
-                        <div class="t2c-testimonial-avatar">R</div>
-                        <div><h5>Rahul K.</h5><span>Strength program, 4 months</span></div>
-                    </div>
-                </div>
-                <div class="t2c-testimonial-card">
-                    <p class="t2c-testimonial-quote">"Hiring a trainer through the app made all the difference — someone actually checking my form each week."</p>
-                    <div class="t2c-testimonial-person">
-                        <div class="t2c-testimonial-avatar">S</div>
-                        <div><h5>Sara D.</h5><span>1:1 coaching, 2 months</span></div>
-                    </div>
-                </div>
-                <div class="t2c-testimonial-card">
-                    <p class="t2c-testimonial-quote">"The streak tracking is what kept me consistent. Small thing, but it works."</p>
-                    <div class="t2c-testimonial-person">
-                        <div class="t2c-testimonial-avatar">J</div>
-                        <div><h5>Jordan P.</h5><span>HIIT program, 6 months</span></div>
-                    </div>
-                </div>
+        <div class="t2c-container">
+
+            <div class="t2c-section-heading t2c-reveal">
+
+                <p class="t2c-kicker">
+                    Simple by design
+                </p>
+
+                <h2 class="t2c-title">
+                    From zero to consistent
+                </h2>
+
+                <p class="t2c-description">
+                    Stop wondering what to do next. Train2Conquer gives
+                    you a clear path so you can spend less time planning
+                    and more time moving.
+                </p>
+
             </div>
+
+
+            <div class="t2c-how-grid">
+
+                <div class="t2c-how-card t2c-reveal">
+
+                    <span class="t2c-how-number">
+                        01
+                    </span>
+
+                    <div class="t2c-how-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M12 3v18M3 12h18"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <h3>
+                        Build your profile
+                    </h3>
+
+                    <p>
+                        Tell us about your goals, fitness level,
+                        available equipment, and training preferences.
+                    </p>
+
+                </div>
+
+
+                <div class="t2c-how-card t2c-reveal">
+
+                    <span class="t2c-how-number">
+                        02
+                    </span>
+
+                    <div class="t2c-how-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M5 4h14v16H5z"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M8 8h8M8 12h8M8 16h5"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <h3>
+                        Get your plan
+                    </h3>
+
+                    <p>
+                        Follow a structured workout routine designed
+                        around your goals and the way you want to train.
+                    </p>
+
+                </div>
+
+
+                <div class="t2c-how-card t2c-reveal">
+
+                    <span class="t2c-how-number">
+                        03
+                    </span>
+
+                    <div class="t2c-how-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M4 17l5-5 3 3 7-8"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M15 7h4v4"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <h3>
+                        Train & conquer
+                    </h3>
+
+                    <p>
+                        Complete sessions, maintain your streak,
+                        measure progress, and keep pushing forward.
+                    </p>
+
+                </div>
+
+            </div>
+
         </div>
+
     </section>
 
-    <!-- ================= FINAL CTA ================= -->
-    <section class="t2c-section t2c-final-cta">
-        <div class="t2c-section-inner">
-            <h2 class="t2c-section-title">Ready to conquer your first session?</h2>
-            <p class="t2c-section-sub" style="margin-left:auto;margin-right:auto;">No equipment, no excuses — just press start.</p>
-            <div class="hero-actions">
-                <a href="{{ url_for('register') }}" class="hero-btn hero-btn-solid">Start training</a>
-                <a href="#hire-a-trainer" class="hero-btn hero-btn-ghost">Hire a trainer</a>
+
+    <!-- =========================================================
+         PROGRAMS
+         ========================================================= -->
+
+    <section
+        class="t2c-section"
+        id="programs"
+    >
+
+        <div class="t2c-container">
+
+            <div class="t2c-section-heading t2c-reveal">
+
+                <p class="t2c-kicker">
+                    Training library
+                </p>
+
+                <h2 class="t2c-title">
+                    Choose your challenge
+                </h2>
+
+                <p class="t2c-description">
+                    Whether you're building strength, improving
+                    conditioning, or simply trying to move better,
+                    start where you are and progress from there.
+                </p>
+
             </div>
+
+
+            <div class="t2c-program-grid">
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Creating your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Build power
+                        </span>
+
+                        <h3>
+                            Strength
+                        </h3>
+
+                        <p>
+                            Build muscle, strength and control.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Preparing your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Push limits
+                        </span>
+
+                        <h3>
+                            HIIT
+                        </h3>
+
+                        <p>
+                            Short, intense sessions that keep you moving.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Preparing your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Move better
+                        </span>
+
+                        <h3>
+                            Mobility
+                        </h3>
+
+                        <p>
+                            Improve movement, flexibility and control.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Preparing your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Recover
+                        </span>
+
+                        <h3>
+                            Recovery
+                        </h3>
+
+                        <p>
+                            Give your body the recovery it deserves.
+                        </p>
+
+                    </div>
+
+                </a>
+
+            </div>
+
         </div>
+
     </section>
+
+
+    <!-- =========================================================
+         PROGRESS
+         ========================================================= -->
+
+    <section class="t2c-section t2c-progress-section">
+
+        <div class="t2c-container">
+
+            <div class="t2c-progress-layout">
+
+
+                <!-- LEFT -->
+
+                <div class="t2c-progress-panel t2c-reveal">
+
+                    <div class="t2c-progress-header">
+
+                        <h3>
+                            Your weekly progress
+                        </h3>
+
+                        <span class="t2c-week">
+                            Week 04
+                        </span>
+
+                    </div>
+
+
+                    <div class="t2c-progress-circle">
+
+                        <div class="t2c-progress-circle-content">
+
+                            <span class="t2c-progress-percent">
+                                73%
+                            </span>
+
+                            <span class="t2c-progress-small">
+                                Completed
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-progress-details">
+
+                        <div class="t2c-detail">
+
+                            <strong>
+                                05
+                            </strong>
+
+                            <span>
+                                Workouts
+                            </span>
+
+                        </div>
+
+
+                        <div class="t2c-detail">
+
+                            <strong>
+                                18
+                            </strong>
+
+                            <span>
+                                Day streak
+                            </span>
+
+                        </div>
+
+
+                        <div class="t2c-detail">
+
+                            <strong>
+                                12
+                            </strong>
+
+                            <span>
+                                PRs
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RIGHT -->
+
+                <div class="t2c-reveal">
+
+                    <p class="t2c-kicker">
+                        Progress over perfection
+                    </p>
+
+                    <h2 class="t2c-title">
+                        Every session counts
+                    </h2>
+
+                    <p class="t2c-description">
+                        Motivation comes and goes. Progress is built by
+                        showing up. Train2Conquer helps you turn individual
+                        workouts into a habit you can actually maintain.
+                    </p>
+
+
+                    <div class="t2c-benefits">
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Know what you're doing
+                                </h4>
+
+                                <p>
+                                    Follow a structured routine instead
+                                    of guessing your next exercise.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    See your progress
+                                </h4>
+
+                                <p>
+                                    Track completed workouts and build
+                                    momentum through consistency.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Keep moving forward
+                                </h4>
+
+                                <p>
+                                    Missed a day? Reset, continue and
+                                    keep working toward your next goal.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('register') }}"
+                        class="t2c-btn t2c-btn-primary"
+                        data-loader-message="Setting up your profile..."
+                    >
+                        Build my plan
+                        <span class="t2c-arrow">→</span>
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         TRAINERS
+         ========================================================= -->
+
+    <section
+        class="t2c-section"
+        id="hire-a-trainer"
+    >
+
+        <div class="t2c-container">
+
+            <div class="t2c-trainer-layout">
+
+
+                <div class="t2c-reveal">
+
+                    <p class="t2c-kicker">
+                        Extra support
+                    </p>
+
+                    <h2 class="t2c-title">
+                        Never train alone
+                    </h2>
+
+                    <p class="t2c-description">
+                        Want more accountability? Connect with a trainer
+                        for guidance, form checks, personalized plans,
+                        and support when you need it.
+                    </p>
+
+
+                    <div class="t2c-benefits">
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Personalized guidance
+                                </h4>
+
+                                <p>
+                                    Training can be adapted around your
+                                    goals and experience.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Form & technique feedback
+                                </h4>
+
+                                <p>
+                                    Get help making your movements safer
+                                    and more effective.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Accountability
+                                </h4>
+
+                                <p>
+                                    Someone in your corner when motivation
+                                    starts getting low.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('contact') }}"
+                        class="t2c-btn t2c-btn-secondary"
+                    >
+                        Find a trainer
+                        <span class="t2c-arrow">→</span>
+                    </a>
+
+                </div>
+
+
+                <div class="t2c-trainer-cards t2c-reveal">
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            A
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Aisha R.
+                            </h4>
+
+                            <p>
+                                Strength & conditioning
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.9
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            M
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Marcus T.
+                            </h4>
+
+                            <p>
+                                HIIT & conditioning
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.8
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            P
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Priya N.
+                            </h4>
+
+                            <p>
+                                Mobility & recovery
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.9
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            D
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Daniel K.
+                            </h4>
+
+                            <p>
+                                Functional fitness
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.7
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ACHIEVEMENTS
+         ========================================================= -->
+
+    <section class="t2c-section">
+
+        <div class="t2c-container">
+
+            <div class="t2c-section-heading t2c-reveal">
+
+                <p class="t2c-kicker">
+                    The goal
+                </p>
+
+                <h2 class="t2c-title">
+                    Become stronger than yesterday
+                </h2>
+
+                <p class="t2c-description">
+                    The best transformation isn't just what you see
+                    in the mirror. It's becoming the person who keeps
+                    showing up.
+                </p>
+
+            </div>
+
+
+            <div class="t2c-achievement-grid">
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        🔥
+                    </div>
+
+                    <strong>
+                        Streak
+                    </strong>
+
+                    <span>
+                        Build consistency
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        ↗
+                    </div>
+
+                    <strong>
+                        Progress
+                    </strong>
+
+                    <span>
+                        Beat yesterday
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        ★
+                    </div>
+
+                    <strong>
+                        Goals
+                    </strong>
+
+                    <span>
+                        Reach milestones
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        ✓
+                    </div>
+
+                    <strong>
+                        Complete
+                    </strong>
+
+                    <span>
+                        Finish strong
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         FINAL CTA
+         ========================================================= -->
+
+    <section class="t2c-section t2c-final">
+
+        <div class="t2c-container">
+
+            <div class="t2c-final-inner t2c-reveal">
+
+                <p class="t2c-kicker">
+                    Your next session starts now
+                </p>
+
+                <h2 class="t2c-final-title">
+                    Train hard.
+                    <br>
+                    <span>Conquer more.</span>
+                </h2>
+
+                <p class="t2c-final-text">
+                    No complicated equipment. No endless planning.
+                    Just a clear path, a workout, and the decision
+                    to show up.
+                </p>
+
+
+                <div class="t2c-final-actions">
+
+                    <a
+                        href="{{ url_for('register') }}"
+                        class="t2c-btn t2c-btn-primary"
+                        data-loader-message="Starting your Train2Conquer journey..."
+                    >
+                        Start training
+                        <span class="t2c-arrow">→</span>
+                    </a>
+
+                    <a
+                        href="#programs"
+                        class="t2c-btn t2c-btn-secondary"
+                    >
+                        View programs
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
 
     {% include 'footer.html' %}
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+<script>
+
+    /* =========================================================
+       TRAIN2CONQUER — SCROLL REVEAL
+       ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const revealElements =
+            document.querySelectorAll(".t2c-reveal");
+
+        if (!("IntersectionObserver" in window)) {
+
+            revealElements.forEach(function (element) {
+                element.classList.add("visible");
+            });
+
+            return;
+        }
+
+
+        const observer =
+            new IntersectionObserver(
+                function (entries, observer) {
+
+                    entries.forEach(function (entry) {
+
+                        if (entry.isIntersecting) {
+
+                            entry.target.classList.add("visible");
+
+                            observer.unobserve(entry.target);
+
+                        }
+
+                    });
+
+                },
+                {
+                    threshold: 0.12,
+                    rootMargin: "0px 0px -35px 0px"
+                }
+            );
+
+
+        revealElements.forEach(function (element) {
+
+            observer.observe(element);
+
+        });
+
+    });
+
+
+    /* =========================================================
+       STAGGER CARDS
+       ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const groups = [
+            ".t2c-how-grid",
+            ".t2c-program-grid",
+            ".t2c-achievement-grid",
+            ".t2c-trainer-cards"
+        ];
+
+        groups.forEach(function (selector) {
+
+            const container =
+                document.querySelector(selector);
+
+            if (!container) return;
+
+            const children =
+                container.querySelectorAll(".t2c-reveal");
+
+            children.forEach(function (child, index) {
+
+                child.style.transitionDelay =
+                    (index * 70) + "ms";
+
+            });
+
+        });
+
+    });
+
+
+    /* =========================================================
+       SMOOTH ANCHOR SCROLL
+       ========================================================= */
+
+    document.addEventListener("click", function (event) {
+
+        const link =
+            event.target.closest('a[href^="#"]');
+
+        if (!link) return;
+
+        const targetId =
+            link.getAttribute("href");
+
+        if (!targetId || targetId === "#") return;
+
+        const target =
+            document.querySelector(targetId);
+
+        if (!target) return;
+
+        event.preventDefault();
+
+        target.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    });
+
+
+    /* =========================================================
+       BUTTON LOADING STATE
+       ========================================================= */
+
+    document.addEventListener("click", function (event) {
+
+        const button =
+            event.target.closest(
+                ".t2c-btn[data-loader-message]"
+            );
+
+        if (!button) return;
+
+        /*
+         * loader.js can handle the actual page transition.
+         * This only gives the button a small visual response.
+         */
+
+        button.style.pointerEvents = "none";
+
+    });
+
+</script>
+
 </body>
 </html>

@@ -93,3 +93,35 @@ class ContactOTPForm(FlaskForm):
                                                       Regexp(r"^\d{6}$", message="Verification code must contain exactly 6 digits.")])
     submit=SubmitField("Verify")
 
+from flask_wtf import FlaskForm
+from wtforms import SelectField, StringField, SubmitField
+from wtforms.validators import DataRequired
+
+
+class TrainerSearchForm(FlaskForm):
+
+    gender = SelectField(
+        "Gender",
+        choices=[
+            ("male", "Male"),
+            ("female", "Female"),
+            ("other","Other")
+        ],
+        validators=[DataRequired()]
+    )
+
+    location = StringField(
+        "Location",
+        validators=[DataRequired()]
+    )
+
+    mode = SelectField(
+        "Training Mode",
+        choices=[
+            ("online", "Online"),
+            ("offline", "Offline")
+        ],
+        validators=[DataRequired()]
+    )
+
+    submit = SubmitField("Find Trainer")

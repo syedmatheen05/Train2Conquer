@@ -22,7 +22,7 @@ from flask_login import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
-from sqlalchemy import Date, ForeignKey, Integer, String, Text, inspect, text
+from sqlalchemy import Date, ForeignKey, Integer, String, Text, inspect, text, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.pool import NullPool
 
@@ -33,6 +33,7 @@ from forms import (
     Loginform,
     OTPform,
     Registerform,
+    TrainerSearchForm
 )
 from ai import generate_fitness_plan
 
@@ -100,6 +101,39 @@ class User(UserMixin, db.Model):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
 
+class Trainer(UserMixin, db.Model):
+    __tablename__ = "trainers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+
+    gender: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False
+    )
+
+    location: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+
+    latitude: Mapped[float] = mapped_column(
+        Float,
+        nullable=False
+    )
+
+    longitude: Mapped[float] = mapped_column(
+        Float,
+        nullable=False
+    )
+    about: Mapped[str] = mapped_column(
+        String(300),
+        nullable=True
+    )
 
 class FitnessProfile(db.Model):
     __tablename__ = "profiles"
@@ -189,6 +223,8 @@ def logged_in_users_only(function):
 OTP_EXPIRY_SECONDS = 10 * 60
 OTP_RESEND_COOLDOWN = 30
 
+with app.app_context():
+    db.create_all()
 
 def send_verification_code(email, otp):
     sender_email = os.environ.get("EMAIL")
@@ -321,7 +357,8 @@ def clear_otp_session():
     ):
         session.pop(key, None)
 
-
+def calculate_distance(user_location,trainer_location):
+    return 4
 # =========================================================
 # LOGIN / REGISTRATION
 # =========================================================
@@ -995,6 +1032,123 @@ def verify_contact():
         form=form,
         remaining=remaining,
         email=email,
+    )
+
+@app.route("/find-trainer", methods=["GET", "POST"])
+def find_trainer():
+
+    # --------------------------------------------------
+    # 1. USER MUST BE LOGGED IN
+    # --------------------------------------------------
+
+    if not current_user.is_authenticated:
+        flash(
+            "Please log in or register to find a personal trainer.",
+            "warning"
+        )
+        return redirect(url_for("register"))
+
+    # --------------------------------------------------
+    # 2. CHECK FITNESS PROFILE
+    # --------------------------------------------------
+
+    profile = FitnessProfile.query.filter_by(
+        user_id=current_user.id
+    ).first()
+
+    form = TrainerSearchForm()
+
+    # --------------------------------------------------
+    # 3. IF PROFILE EXISTS
+    #    DON'T ASK GENDER
+    # --------------------------------------------------
+
+    if profile:
+
+        # Use gender from existing profile
+        user_gender = profile.gender
+
+        # Remove gender field from the form visually
+        del form.gender
+
+    # --------------------------------------------------
+    # 4. IF PROFILE DOESN'T EXIST
+    #    USER MUST ENTER GENDER
+    # --------------------------------------------------
+
+    else:
+
+        user_gender = None
+
+    # --------------------------------------------------
+    # 5. FORM SUBMISSION
+    # --------------------------------------------------
+
+    if form.validate_on_submit():
+
+        # Profile already contains gender
+        if profile:
+            gender = profile.gender
+
+        # No profile → gender came from form
+        else:
+            gender = form.gender.data
+
+        location = form.location.data.strip()
+        mode = form.mode.data
+
+        # --------------------------------------------------
+        # FIND TRAINERS
+        # --------------------------------------------------
+
+        trainers = Trainer.query.filter_by(
+            gender=gender
+        ).all()
+
+        # --------------------------------------------------
+        # ONLINE
+        # --------------------------------------------------
+
+        if mode == "online":
+
+            # No distance checking
+            pass
+
+        # --------------------------------------------------
+        # OFFLINE
+        # --------------------------------------------------
+
+        elif mode == "offline":
+
+            nearby_trainers = []
+
+            for trainer in trainers:
+
+                distance = calculate_distance(
+                    location,
+                    trainer.location
+                )
+
+                if distance <= 5:
+                    nearby_trainers.append(trainer)
+
+            trainers = nearby_trainers
+
+        # --------------------------------------------------
+        # RESULTS
+        # --------------------------------------------------
+
+        return render_template(
+            "trainer_results.html",
+            trainers=trainers,
+            mode=mode,
+            location=location
+        )
+
+    return render_template(
+        "find_trainer.html",
+        form=form,
+        profile=profile
     )
 
 

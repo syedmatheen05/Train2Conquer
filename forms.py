@@ -125,3 +125,58 @@ class TrainerSearchForm(FlaskForm):
     )
 
     submit = SubmitField("Find Trainer")
+
+class TrainerForm(FlaskForm):
+
+    about = TextAreaField(
+        "About Yourself",
+        validators=[
+            DataRequired(message="Please tell us something about yourself."),
+            Length(min=20, max=1000)
+        ],
+        render_kw={
+            "placeholder": "Tell users about yourself, your experience, training style, etc.",
+            "rows": 6
+        }
+    )
+
+    location = StringField(
+        "Location",
+        validators=[
+            DataRequired(message="Please enter your location."),
+            Length(max=100)
+        ],
+        render_kw={
+            "placeholder": "e.g. Bengaluru, Karnataka"
+        }
+    )
+
+    gender = SelectField(
+        "Gender",
+        choices=[
+            ("", "Select Gender"),
+            ("Male", "Male"),
+            ("Female", "Female"),
+            ("Other", "Other")
+        ],
+        validators=[
+            DataRequired(message="Please select your gender.")
+        ]
+    )
+    phone_number = StringField(
+        "Phone Number",
+        validators=[
+            DataRequired(message="Please enter your phone number."),
+            Regexp(
+                r"^\d{10}$",
+                message="Phone number must contain exactly 10 digits."
+            )
+        ],
+        render_kw={
+            "placeholder": "10-digit phone number",
+            "maxlength": "10",
+            "inputmode": "numeric"
+        }
+    )
+
+    submit = SubmitField("Become a Trainer")

@@ -33,7 +33,8 @@ from forms import (
     Loginform,
     OTPform,
     Registerform,
-    TrainerSearchForm
+    TrainerSearchForm,
+    TrainerForm
 )
 from ai import generate_fitness_plan
 
@@ -103,29 +104,23 @@ class User(UserMixin, db.Model):
 
 class Trainer(UserMixin, db.Model):
     __tablename__ = "trainers"
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-
     name: Mapped[str] = mapped_column(
         String(100),
         nullable=False
     )
-
     gender: Mapped[str] = mapped_column(
         String(20),
         nullable=False
     )
-
     location: Mapped[str] = mapped_column(
         String(200),
         nullable=False
     )
-
     latitude: Mapped[float] = mapped_column(
         Float,
         nullable=False
     )
-
     longitude: Mapped[float] = mapped_column(
         Float,
         nullable=False
@@ -134,6 +129,7 @@ class Trainer(UserMixin, db.Model):
         String(300),
         nullable=True
     )
+    phone_number: Mapped[int]= mapped_column(Integer)
 
 class FitnessProfile(db.Model):
     __tablename__ = "profiles"
@@ -215,6 +211,97 @@ def logged_in_users_only(function):
 
     return decorator_function
 
+def send_trainer_application(email,name,about,location,gender,phone_number):
+    """Send trainer application to the site owner/admin."""
+    sender_email = os.environ.get("EMAIL")
+    sender_password = os.environ.get("PASSWORD")
+
+    if not sender_email or not sender_password:
+        raise RuntimeError(
+            "EMAIL and PASSWORD environment variables are required"
+        )
+
+    safe_email = html.escape(email or "")
+    safe_name = html.escape(name or "")
+    safe_about = html.escape(about or "").replace("\n", "<br>")
+    safe_location = html.escape(location or "")
+    safe_gender = html.escape(gender or "")
+    safe_phone_number=html.escape(phone_number or "")
+
+    mail = MIMEMultipart()
+
+    mail["From"] = sender_email
+    mail["To"] = sender_email
+    mail["Reply-To"] = email
+    mail["Subject"] = "Train2Conquer - Trainer Application"
+
+    body = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
+            <h2>🏋️ New Trainer Application</h2>
+
+            <hr>
+
+            <p>
+                <strong>Name:</strong><br>
+                {safe_name}
+            </p>
+
+            <p>
+                <strong>Email:</strong><br>
+                {safe_email}
+            </p>
+
+            <p>
+                <strong>Location:</strong><br>
+                {safe_location}
+            </p>
+
+            <p>
+                <strong>Gender:</strong><br>
+                {safe_gender}
+            </p>
+            <p>
+                <strong>Phone Number: </strong><br>
+                            {safe_phone_number}
+                        </p>
+
+            <p>
+                <strong>About Yourself:</strong><br>
+                {safe_about}
+            </p>
+
+            <hr>
+
+            <p style="color: #777;">
+                This application was submitted through Train2Conquer.
+            </p>
+
+        </body>
+    </html>
+    """
+
+    mail.attach(MIMEText(body, "html"))
+
+    with smtplib.SMTP(
+        "smtp.gmail.com",
+        587,
+        timeout=20
+    ) as server:
+
+        server.starttls()
+
+        server.login(
+            sender_email,
+            sender_password
+        )
+
+        server.sendmail(
+            sender_email,
+            [sender_email],
+            mail.as_string()
+        )
 
 # =========================================================
 # EMAIL / OTP
@@ -222,9 +309,6 @@ def logged_in_users_only(function):
 
 OTP_EXPIRY_SECONDS = 10 * 60
 OTP_RESEND_COOLDOWN = 30
-
-with app.app_context():
-    db.create_all()
 
 def send_verification_code(email, otp):
     sender_email = os.environ.get("EMAIL")
@@ -1151,7 +1235,38 @@ def find_trainer():
         profile=profile
     )
 
+@app.route("/become-trainer", methods=["GET", "POST"])
+@login_required
+def become_trainer():
+    form = TrainerForm()
+    # Check whether user already has a fitness profile
+    profile = db.session.scalar(db.select(FitnessProfile).where(FitnessProfile.user_id == current_user.id))
+    # If profile exists, don't require gender from this form
+    if profile:
+        form.gender.validators = []
+        # Remove gender from validation
+        form.gender.data = profile.gender
+    else:
+        gender = None
+    if form.validate_on_submit():
+        # If there is no profile, get gender from form
+        if not profile:
+            gender = form.gender.data
+        try:
+            send_trainer_application(email=current_user.email,
+                                 name=current_user.name,
+                                 about=form.about.data,
+                                 location=form.location.data,
+                                 gender=gender,
+                                 phone_number=form.phone_number.data)
+            flash("Your trainer application has been sent successfully!","success")
+            return redirect(url_for('home'))
+        except Exception as e:
+            print("Trainer email error:", e)
 
+            flash("Something went wrong while sending your application. Please try again.","danger")
+    return render_template("become_trainer.html",form=form,profile=profile)
+        
 @app.route("/nutrition")
 def nutrition():
     return render_template("nutrition.html")

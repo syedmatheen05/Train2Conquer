@@ -1012,13 +1012,235 @@
                 transition: none;
             }
         }
+        /* ================================
+   DELETE ACCOUNT CONFIRMATION
+================================ */
 
+.t2c-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+
+    z-index: 99999;
+}
+
+.t2c-confirm-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+
+/* Modal box */
+
+.t2c-confirm-box {
+    width: 100%;
+    max-width: 420px;
+
+    background: #ffffff;
+    border-radius: 20px;
+
+    padding: 30px 28px;
+
+    text-align: center;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.25);
+
+    transform: translateY(20px) scale(0.96);
+
+    transition: transform 0.25s ease;
+}
+
+.t2c-confirm-overlay.active .t2c-confirm-box {
+    transform: translateY(0) scale(1);
+}
+
+
+/* Icon */
+
+.t2c-confirm-icon {
+    width: 64px;
+    height: 64px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #fff1f1;
+
+    font-size: 28px;
+}
+
+
+/* Heading */
+
+.t2c-confirm-box h3 {
+    margin: 0 0 10px;
+
+    font-size: 22px;
+    font-weight: 700;
+
+    color: #1f1f1f;
+}
+
+
+/* Description */
+
+.t2c-confirm-box p {
+    margin: 0 auto 8px;
+
+    max-width: 340px;
+
+    font-size: 14px;
+    line-height: 1.6;
+
+    color: #666;
+}
+
+.t2c-confirm-warning {
+    font-weight: 600;
+    color: #d64545 !important;
+}
+
+
+/* Buttons */
+
+.t2c-confirm-actions {
+    display: flex;
+    gap: 12px;
+
+    margin-top: 25px;
+}
+
+.t2c-confirm-actions button {
+    flex: 1;
+
+    height: 46px;
+
+    border: none;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.t2c-confirm-actions button:hover {
+    transform: translateY(-1px);
+}
+
+.t2c-confirm-actions button:active {
+    transform: translateY(0);
+}
+
+
+/* Cancel */
+
+.t2c-confirm-cancel {
+    background: #f1f1f1;
+    color: #333;
+}
+
+.t2c-confirm-cancel:hover {
+    background: #e7e7e7;
+}
+
+
+/* Delete */
+
+.t2c-confirm-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.t2c-confirm-delete:hover {
+    background: #c82333;
+}
+
+
+/* Mobile */
+
+@media (max-width: 480px) {
+
+    .t2c-confirm-box {
+        padding: 26px 20px;
+        border-radius: 18px;
+    }
+
+    .t2c-confirm-box h3 {
+        font-size: 20px;
+    }
+
+    .t2c-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .t2c-confirm-actions button {
+        width: 100%;
+    }
+}
     </style>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 
+<!-- Delete Account Confirmation Modal -->
+<div class="t2c-confirm-overlay" id="deleteConfirmModal">
+    <div class="t2c-confirm-box">
 
+        <div class="t2c-confirm-icon">
+            🗑️
+        </div>
+
+        <h3>Delete your account?</h3>
+
+        <p>
+            Are you sure you want to permanently delete your
+            Train2Conquer account?
+        </p>
+
+        <p class="t2c-confirm-warning">
+            This action cannot be undone.
+        </p>
+
+        <div class="t2c-confirm-actions">
+            <button type="button" class="t2c-confirm-cancel" id="cancelDelete">
+                Cancel
+            </button>
+
+            <button type="button" class="t2c-confirm-delete" id="confirmDelete">
+                Yes, Delete
+            </button>
+        </div>
+
+    </div>
+</div>
 <body class="d-flex flex-column min-vh-100">
 
 
@@ -1390,6 +1612,55 @@
         nextWeekButton.disabled = false;
 
     }
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const deleteBtn = document.getElementById("deleteAccountBtn");
+    const modal = document.getElementById("deleteConfirmModal");
+    const cancelBtn = document.getElementById("cancelDelete");
+    const confirmBtn = document.getElementById("confirmDelete");
+    const deleteForm = document.getElementById("deleteAccountForm");
+
+    if (!deleteBtn || !modal || !cancelBtn || !confirmBtn || !deleteForm) {
+        return;
+    }
+
+    // Open confirmation popup
+    deleteBtn.addEventListener("click", function () {
+        modal.classList.add("active");
+    });
+
+    // Cancel deletion
+    cancelBtn.addEventListener("click", function () {
+        modal.classList.remove("active");
+    });
+
+    // Confirm deletion
+    confirmBtn.addEventListener("click", function () {
+
+        // Prevent accidental double click
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Deleting...";
+
+        // Submit the actual Flask form
+        deleteForm.submit();
+    });
+
+    // Close when clicking outside the popup
+    modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+            modal.classList.remove("active");
+        }
+    });
+
+    // Close with Escape key
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            modal.classList.remove("active");
+        }
+    });
+
+});
 
 </script>
 

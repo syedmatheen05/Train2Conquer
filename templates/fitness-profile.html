@@ -668,6 +668,33 @@
         }
 
     }
+/* =====================================================
+   SKIP PROFILE
+===================================================== */
+
+.t2c-skip-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    margin-bottom: 18px;
+
+    color: var(--t2c-orange);
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: .05em;
+    text-decoration: none;
+
+    transition:
+        color .2s ease,
+        transform .2s ease;
+}
+
+.t2c-skip-profile:hover {
+    color: var(--t2c-orange-light);
+    transform: translateX(3px);
+}
 
 </style>
 
@@ -722,6 +749,7 @@
         ================================================== -->
 
         <div class="t2c-profile-card">
+            <a href="{{ url_for('home') }}" class="t2c-skip-profile">Skip →</a>
 
             {{ render_form(form) }}
 

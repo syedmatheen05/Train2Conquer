@@ -50,10 +50,17 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="t2c-dropdown-item" type="submit">🚪 Log out</button>
                     </form>
-                    <form action="{{ url_for('delete_account') }}" method="POST" data-loader-message="Deleting your account..." onsubmit="return confirm('Delete your Train2Conquer account permanently? This cannot be undone.');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="t2c-dropdown-item danger" type="submit">🗑️ Delete account</button>
-                    </form>
+                    <form id="deleteAccountForm"
+      action="{{ url_for('delete_account') }}"
+      method="POST"
+      data-loader-message="Deleting your account...">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <button class="t2c-dropdown-item danger" type="button" id="deleteAccountBtn">
+        🗑️ Delete account
+    </button>
+</form>
                 </div>
             </div>
             {% else %}

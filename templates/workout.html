@@ -220,53 +220,239 @@
         /* =====================================================
            VIDEO
         ===================================================== */
+        /* =====================================================
+   RESPONSIVE VIDEO FRAME
+===================================================== */
 
-        .t2c-video-wrapper{
+.t2c-video-wrapper {
+    position: relative;
 
-            position: relative;
+    width: 100%;
 
-            width: 100%;
+    /*
+     * Always maintain a proper landscape frame.
+     */
+    aspect-ratio: 16 / 9;
 
-            aspect-ratio: 16 / 9;
+    background: #050608;
 
-            background: #050608;
+    overflow: hidden;
 
-            overflow: hidden;
-        }
+    /*
+     * Prevent the video from becoming
+     * ridiculously tall on large screens.
+     */
+    max-height: min(70vh, 620px);
 
-
-        .t2c-video-wrapper::after{
-
-            content: "";
-
-            position: absolute;
-
-            inset: 0;
-
-            pointer-events: none;
-
-            background:
-
-                linear-gradient(
-                    to top,
-                    rgba(0,0,0,.45),
-                    transparent 35%
-                );
-        }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 
-        #workout-video{
+/*
+ * IMPORTANT:
+ * contain = NEVER crop the exercise video.
+ */
 
-            width: 100%;
+#workout-video {
+    display: block;
 
-            height: 100%;
+    width: 100%;
+    height: 100%;
 
-            display: block;
+    max-width: 100%;
+    max-height: 100%;
 
-            object-fit: cover;
+    /*
+     * Keep the complete video visible.
+     */
+    object-fit: contain;
 
-            background: #050608;
-        }
+    object-position: center center;
+
+    background: #050608;
+
+    /*
+     * Prevent mobile browser from
+     * treating the video as a separate page.
+     */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+
+/* =====================================================
+   PAUSE BUTTON
+===================================================== */
+
+.t2c-pause-wrapper {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 14px 18px 18px;
+
+    background: var(--t2c-panel);
+}
+
+
+#pause-exercise {
+    width: min(220px, 100%);
+
+    min-height: 48px;
+
+    border: 1px solid var(--t2c-border);
+
+    border-radius: 12px;
+
+    background: var(--t2c-panel-2);
+
+    color: var(--t2c-text);
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: .06em;
+
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    transition:
+        transform .15s ease,
+        background .15s ease,
+        border-color .15s ease;
+}
+
+
+#pause-exercise:hover {
+    transform: translateY(-1px);
+
+    background: var(--t2c-panel-3);
+
+    border-color:
+        var(--t2c-border-hover);
+}
+
+
+#pause-exercise:active {
+    transform: scale(.98);
+}
+
+
+/*
+ * When paused, make the resume state
+ * visually obvious.
+ */
+
+#pause-exercise.is-paused {
+    background:
+        linear-gradient(
+            135deg,
+            var(--t2c-orange),
+            var(--t2c-orange-light)
+        );
+
+    border-color: transparent;
+
+    color: #170E0A;
+}
+
+
+/* =====================================================
+   MOBILE VIDEO
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .t2c-video-wrapper {
+
+        /*
+         * Full available width.
+         */
+        width: 100%;
+
+        aspect-ratio: 16 / 9;
+
+        max-height: none;
+
+        border-radius: 0;
+    }
+
+
+    #workout-video {
+
+        width: 100%;
+        height: 100%;
+
+        object-fit: contain;
+    }
+
+
+    .t2c-pause-wrapper {
+
+        padding:
+            12px 14px 16px;
+    }
+
+
+    #pause-exercise {
+
+        width: 100%;
+
+        max-width: 320px;
+
+        min-height: 50px;
+    }
+}
+
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media (max-width: 480px) {
+
+    .t2c-video-wrapper {
+
+        aspect-ratio: 16 / 9;
+    }
+
+
+    #pause-exercise {
+
+        min-height: 48px;
+
+        font-size: 11px;
+    }
+}
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 360px) {
+
+    .t2c-video-wrapper {
+
+        aspect-ratio: 16 / 9;
+    }
+
+
+    #pause-exercise {
+
+        min-height: 46px;
+
+        padding:
+            10px 14px;
+    }
+}
 
 
         /* =====================================================
@@ -618,6 +804,77 @@
 
 
 /* =====================================================
+   +20 SEC REST BUTTON
+===================================================== */
+
+.t2c-timer-controls {
+    display: flex;
+
+    justify-content: center;
+
+    margin: 0 0 14px;
+}
+
+
+#add-rest-time {
+    min-width: 120px;
+
+    min-height: 40px;
+
+    padding: 9px 20px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--t2c-border);
+
+    background: transparent;
+
+    color: var(--t2c-gold);
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+
+    text-align: center;
+
+    cursor: pointer;
+
+    transition:
+        transform .15s ease,
+        background .15s ease,
+        border-color .15s ease,
+        color .15s ease;
+}
+
+
+#add-rest-time::before {
+    content: "+ ";
+}
+
+
+#add-rest-time:hover {
+    color: var(--t2c-text);
+
+    border-color: var(--t2c-gold);
+
+    background: rgba(215,170,72,.1);
+
+    transform: translateY(-1px);
+}
+
+
+#add-rest-time:active {
+    transform: scale(.97);
+}
+
+
+/* =====================================================
    MOBILE
 ===================================================== */
 
@@ -645,6 +902,12 @@
     #rest-timer {
         font-size: 3.2rem !important;
         margin: 8px 0 25px !important;
+    }
+
+    #add-rest-time {
+        min-width: 110px;
+        min-height: 42px;
+        font-size: 10px;
     }
 
 }
@@ -733,53 +996,75 @@
          WORKOUT CARD
     ====================================================== -->
 
-    <div class="t2c-workout-card workout-card">
 
 
-        <!-- VIDEO -->
+<div class="t2c-workout-card workout-card">
 
-        <div class="t2c-video-wrapper">
+    <!-- =================================================
+         VIDEO
+    ================================================== -->
 
-            <video
-                id="workout-video"
-                autoplay
-                muted
-                loop
-                playsinline
+    <div class="t2c-video-wrapper">
+
+        <video
+            id="workout-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            webkit-playsinline
+            preload="metadata"
+        >
+
+            <source
+                id="video-source"
+                src=""
+                type="video/mp4"
             >
 
-                <source
-                    id="video-source"
-                    src=""
-                    type="video/mp4"
-                >
-
-            </video>
-
-        </div>
-
-
-        <!-- EXERCISE INFORMATION -->
-
-        <div class="t2c-exercise-info">
-
-            <div class="t2c-exercise-label">
-                Next movement
-            </div>
-
-
-            <h3 id="exercise-name">
-            </h3>
-
-
-            <h4 id="reps">
-            </h4>
-
-        </div>
-
+        </video>
 
     </div>
 
+
+    <!-- =================================================
+         PAUSE BUTTON
+         Only appears for timed exercises.
+    ================================================== -->
+
+    <div class="t2c-pause-wrapper">
+
+        <button
+            id="pause-exercise"
+            type="button"
+            class="d-none"
+            aria-label="Pause workout"
+        >
+            Ⅱ PAUSE
+        </button>
+
+    </div>
+
+
+    <!-- =================================================
+         EXERCISE INFORMATION
+    ================================================== -->
+
+    <div class="t2c-exercise-info">
+
+        <div class="t2c-exercise-label">
+            Next movement
+        </div>
+
+
+        <h3 id="exercise-name"></h3>
+
+
+        <h4 id="reps"></h4>
+
+    </div>
+
+</div>
 
 
     <!-- =====================================================
@@ -859,8 +1144,20 @@
         </div>
 
 
+        <div class="t2c-timer-controls">
+            <button
+                id="add-rest-time"
+                class="t2c-plus20"
+                type="button"
+                aria-label="Add 20 seconds to rest timer"
+            >
+                20 SEC
+            </button>
+        </div>
+
         <button
             id="skip-rest"
+            type="button"
             class="btn"
         >
             Skip Rest

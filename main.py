@@ -1,6 +1,7 @@
 import html
 import json
 import os
+import requests
 import secrets
 import smtplib
 import time
@@ -8,7 +9,7 @@ from datetime import date, datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import wraps
-
+from math import radians, sin, cos, sqrt, atan2
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, session, url_for
 from flask_bootstrap import Bootstrap5
@@ -129,7 +130,6 @@ class Trainer(UserMixin, db.Model):
         String(300),
         nullable=True
     )
-    phone_number: Mapped[int]= mapped_column(Integer)
 
 class FitnessProfile(db.Model):
     __tablename__ = "profiles"
@@ -378,6 +378,7 @@ def send_contact_info(email, name, contact_message):
         server.sendmail(sender_email, [sender_email], mail.as_string())
 
 
+
 def generate_otp(email, purpose="login"):
     """Generate an OTP after enforcing the server-side resend cooldown."""
     if not email:
@@ -441,8 +442,59 @@ def clear_otp_session():
     ):
         session.pop(key, None)
 
-def calculate_distance(user_location,trainer_location):
-    return 4
+def get_coordinates(location):
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": f"{location}, Bengaluru, Karnataka, India",
+        "format": "json",
+        "limit": 1
+    }
+    headers = {
+        "User-Agent": "Train2Conquer/1.0"
+    }
+    response = requests.get(
+        url,
+        params=params,
+        headers=headers,
+        timeout=10
+    )
+    data = response.json()
+    if not data:
+        return None
+    latitude = float(data[0]["lat"])
+    longitude = float(data[0]["lon"])
+    return latitude, longitude
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    R = 6371  # Earth radius in km
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = (sin(dlat / 2) ** 2+cos(lat1)* cos(lat2)* sin(dlon / 2) ** 2)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c
+
+def find_nearby_trainers(location,gender,radius=5):
+    coordinates = get_coordinates(location)
+    if not coordinates:
+        return []
+    user_lat, user_lon = coordinates
+    trainers = trainers = Trainer.query.filter_by(gender=gender).all()
+    nearby = []
+    for trainer in trainers:
+        distance = calculate_distance(
+            user_lat,
+            user_lon,
+            trainer.latitude,
+            trainer.longitude
+        )
+        if distance <= radius:
+            nearby.append(trainer)
+    return nearby
+
 # =========================================================
 # LOGIN / REGISTRATION
 # =========================================================
@@ -1204,19 +1256,8 @@ def find_trainer():
 
         elif mode == "offline":
 
-            nearby_trainers = []
 
-            for trainer in trainers:
-
-                distance = calculate_distance(
-                    location,
-                    trainer.location
-                )
-
-                if distance <= 5:
-                    nearby_trainers.append(trainer)
-
-            trainers = nearby_trainers
+            trainers = find_nearby_trainers(location=location,gender=gender)
 
         # --------------------------------------------------
         # RESULTS
@@ -1306,6 +1347,11 @@ def internal_server_error(error):
 @app.context_processor
 def inject_template_globals():
     return {"current_year": datetime.now().year}
+
+# with app.app_context():
+#     trainer= db.session.scalar(db.select(Trainer).where(Trainer.name =="Syed Mohammed Haneef"))
+#     db.session.delete(trainer)
+#     db.session.commit()
 
 
 if __name__ == "__main__":

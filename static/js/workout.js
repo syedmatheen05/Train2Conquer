@@ -1,44 +1,107 @@
+"use strict";
 
 /* =========================================================
-   STATE
+   TRAIN2CONQUER WORKOUT ENGINE
+   =========================================================
+   FEATURES
+   ---------------------------------------------------------
+   ✓ 10 second Get Ready countdown
+   ✓ Timed exercises
+   ✓ PAUSE / RESUME for timed exercises
+   ✓ Accurate timer using timestamps
+   ✓ Mobile-safe timer
+   ✓ Landscape / portrait video support
+   ✓ Previous button
+   ✓ Done button
+   ✓ Finish button
+   ✓ Rest timer
+   ✓ Skip Rest
+   ✓ Speech countdown
+   ✓ Prevents duplicate timers
+   ✓ Handles mobile tab switching
+========================================================= */
+
+
+/* =========================================================
+   WORKOUT DATA
 ========================================================= */
 
 let currentWorkout = 0;
 
-let exerciseTime = 0;
-let restTime = 0;
-let readyCountdown = 10;
+let currentScreen = "ready";
 
+/*
+ * Exercise timer
+ */
+let exerciseTime = 0;
+let exerciseEndAt = null;
 let exerciseInterval = null;
+
+/*
+ * Rest timer
+ */
+let restTime = 0;
+let restEndAt = null;
 let restInterval = null;
+
+/*
+ * Get ready timer
+ */
+let readyCountdown = 10;
+let readyEndAt = null;
 let readyInterval = null;
 
-let currentScreen = "ready";
+/*
+ * Pause state
+ */
+let exercisePaused = false;
+let exercisePausedRemaining = 0;
+
+/*
+ * Prevent multiple submissions
+ */
+let isFinishing = false;
 
 
 /* =========================================================
    ELEMENTS
 ========================================================= */
 
-const video = document.getElementById("workout-video");
-const videoSource = document.getElementById("video-source");
+const video =
+    document.getElementById("workout-video");
 
-const workoutNumber = document.getElementById("workout-number");
+const videoSource =
+    document.getElementById("video-source");
 
-const restTitle = document.getElementById("rest-title");
-const restMessage = document.getElementById("rest-message");
+const workoutNumber =
+    document.getElementById("workout-number");
 
-const exerciseName = document.getElementById("exercise-name");
-const reps = document.getElementById("reps");
+const exerciseName =
+    document.getElementById("exercise-name");
 
-const previousButton = document.getElementById("previous-button");
-const nextButton = document.getElementById("next-button");
+const reps =
+    document.getElementById("reps");
+
+const previousButton =
+    document.getElementById("previous-button");
+
+const nextButton =
+    document.getElementById("next-button");
 
 const navigationButtons =
     document.getElementById("navigation-buttons");
 
+const workoutCard =
+    document.querySelector(".workout-card");
+
 const restScreen =
     document.getElementById("rest-screen");
+
+const restTitle =
+    document.getElementById("rest-title");
+
+const restMessage =
+    document.getElementById("rest-message");
 
 const restTimer =
     document.getElementById("rest-timer");
@@ -49,11 +112,50 @@ const nextExercise =
 const skipRest =
     document.getElementById("skip-rest");
 
+const addRestTimeButton =
+    document.getElementById("add-rest-time");
+
 const completeWorkoutForm =
     document.getElementById("completeWorkoutForm");
 
-const workoutCard =
-    document.querySelector(".workout-card");
+/*
+ * New pause button.
+ */
+const pauseExerciseButton =
+    document.getElementById("pause-exercise");
+
+
+/* =========================================================
+   BASIC HELPERS
+========================================================= */
+
+function safeNumber(value, fallback = 0) {
+
+    const number = Number(value);
+
+    if (
+        !Number.isFinite(number) ||
+        number < 0
+    ) {
+        return fallback;
+    }
+
+    return number;
+}
+
+
+function formatSeconds(seconds) {
+
+    const value =
+        Math.max(
+            0,
+            Math.ceil(
+                Number(seconds) || 0
+            )
+        );
+
+    return `${value} seconds`;
+}
 
 
 /* =========================================================
@@ -62,100 +164,488 @@ const workoutCard =
 
 function speak(text) {
 
+    if (
+        !("speechSynthesis" in window)
+    ) {
+        return;
+    }
+
     window.speechSynthesis.cancel();
 
-    const speech = new SpeechSynthesisUtterance(text);
+    const speech =
+        new SpeechSynthesisUtterance(
+            String(text)
+        );
 
     speech.rate = 0.9;
     speech.pitch = 1;
     speech.volume = 1;
 
-    window.speechSynthesis.speak(speech);
+    window.speechSynthesis.speak(
+        speech
+    );
 }
 
 
 function speakCountdown(number) {
 
+    if (
+        !("speechSynthesis" in window)
+    ) {
+        return;
+    }
+
     window.speechSynthesis.cancel();
 
     const speech =
-        new SpeechSynthesisUtterance(String(number));
+        new SpeechSynthesisUtterance(
+            String(number)
+        );
 
     speech.rate = 1.2;
     speech.pitch = 1;
     speech.volume = 1;
 
-    window.speechSynthesis.speak(speech);
+    window.speechSynthesis.speak(
+        speech
+    );
 }
 
 
 /* =========================================================
-   STOP ALL TIMERS
+   TIMER CLEANUP
 ========================================================= */
 
-function stopAllTimers() {
+function clearExerciseTimer() {
 
-    if (exerciseInterval !== null) {
+    if (
+        exerciseInterval !== null
+    ) {
 
-        clearInterval(exerciseInterval);
+        clearInterval(
+            exerciseInterval
+        );
+
         exerciseInterval = null;
     }
 
-    if (restInterval !== null) {
-
-        clearInterval(restInterval);
-        restInterval = null;
-    }
-
-    if (readyInterval !== null) {
-
-        clearInterval(readyInterval);
-        readyInterval = null;
-    }
+    exerciseEndAt = null;
 }
 
 
-/* =========================================================
-   STOP EVERYTHING
-========================================================= */
+function clearRestTimer() {
+
+    if (
+        restInterval !== null
+    ) {
+
+        clearInterval(
+            restInterval
+        );
+
+        restInterval = null;
+    }
+
+    restEndAt = null;
+}
+
+
+function clearReadyTimer() {
+
+    if (
+        readyInterval !== null
+    ) {
+
+        clearInterval(
+            readyInterval
+        );
+
+        readyInterval = null;
+    }
+
+    readyEndAt = null;
+}
+
+
+function stopAllTimers() {
+
+    clearExerciseTimer();
+    clearRestTimer();
+    clearReadyTimer();
+}
+
 
 function stopEverything() {
 
     stopAllTimers();
 
-    window.speechSynthesis.cancel();
+    if (
+        "speechSynthesis" in window
+    ) {
+        window.speechSynthesis.cancel();
+    }
 
     if (video) {
         video.pause();
+    }
+
+    exercisePaused = false;
+    exercisePausedRemaining = 0;
+
+    updatePauseButton();
+}
+
+
+/* =========================================================
+   SCREEN CONTROL
+========================================================= */
+
+function showWorkoutScreen() {
+
+    if (workoutCard) {
+
+        workoutCard.classList.remove(
+            "d-none"
+        );
+    }
+
+    if (navigationButtons) {
+
+        navigationButtons.classList.remove(
+            "d-none"
+        );
+    }
+
+    if (restScreen) {
+
+        restScreen.classList.add(
+            "d-none"
+        );
+    }
+}
+
+
+function showRestScreen() {
+
+    if (workoutCard) {
+
+        workoutCard.classList.add(
+            "d-none"
+        );
+    }
+
+    if (navigationButtons) {
+
+        navigationButtons.classList.add(
+            "d-none"
+        );
+    }
+
+    if (restScreen) {
+
+        restScreen.classList.remove(
+            "d-none"
+        );
     }
 }
 
 
 /* =========================================================
-   SHOW WORKOUT SCREEN
+   REST-ONLY CONTROLS (Skip Rest / Add Rest)
+   ---------------------------------------------------------
+   The Get Ready countdown reuses the same #rest-screen markup
+   as the real rest screen (same styling/layout). Skip Rest and
+   Add Rest only make sense once currentScreen === "rest" — if
+   left visible during Get Ready they LOOK clickable but silently
+   no-op, which is the "Skip Rest doesn't work the first time"
+   bug. Keep them hidden until a real rest period starts.
 ========================================================= */
 
-function showWorkoutScreen() {
+function hideRestOnlyControls() {
 
-    restScreen.classList.add("d-none");
+    if (skipRest) {
 
-    workoutCard.classList.remove("d-none");
+        skipRest.classList.add(
+            "d-none"
+        );
+    }
 
-    navigationButtons.classList.remove("d-none");
+    if (addRestTimeButton) {
+
+        addRestTimeButton.classList.add(
+            "d-none"
+        );
+    }
+}
+
+
+function showRestOnlyControls() {
+
+    if (skipRest) {
+
+        skipRest.classList.remove(
+            "d-none"
+        );
+    }
+
+    if (addRestTimeButton) {
+
+        addRestTimeButton.classList.remove(
+            "d-none"
+        );
+    }
 }
 
 
 /* =========================================================
-   SHOW REST SCREEN
+   PAUSE BUTTON
 ========================================================= */
 
-function showRestScreen() {
+function updatePauseButton() {
 
-    workoutCard.classList.add("d-none");
+    if (!pauseExerciseButton) {
+        return;
+    }
 
-    navigationButtons.classList.add("d-none");
+    /*
+     * Pause button is visible only for
+     * timed exercises.
+     */
 
-    restScreen.classList.remove("d-none");
+    const workout =
+        workouts[currentWorkout];
+
+    const isTimed =
+        workout &&
+        safeNumber(
+            workout.seconds,
+            0
+        ) > 0;
+
+    if (
+        currentScreen !== "workout" ||
+        !isTimed ||
+        exerciseTime <= 0
+    ) {
+
+        pauseExerciseButton.classList.add(
+            "d-none"
+        );
+
+        return;
+    }
+
+    pauseExerciseButton.classList.remove(
+        "d-none"
+    );
+
+
+    if (exercisePaused) {
+
+        pauseExerciseButton.textContent =
+            "▶ RESUME";
+
+        pauseExerciseButton.setAttribute(
+            "aria-label",
+            "Resume workout"
+        );
+
+        pauseExerciseButton.classList.add(
+            "is-paused"
+        );
+
+    } else {
+
+        pauseExerciseButton.textContent =
+            "Ⅱ PAUSE";
+
+        pauseExerciseButton.setAttribute(
+            "aria-label",
+            "Pause workout"
+        );
+
+        pauseExerciseButton.classList.remove(
+            "is-paused"
+        );
+    }
+}
+
+
+/* =========================================================
+   EXERCISE TIMER UI
+========================================================= */
+
+function updateExerciseTimerUI(
+    seconds
+) {
+
+    const value =
+        Math.max(
+            0,
+            Math.ceil(
+                Number(seconds) || 0
+            )
+        );
+
+    exerciseTime = value;
+
+    if (reps) {
+
+        reps.textContent =
+            `${value} SEC`;
+    }
+
+    updatePauseButton();
+}
+
+
+/* =========================================================
+   REST TIMER UI
+========================================================= */
+
+function updateRestTimerUI(
+    seconds
+) {
+
+    const value =
+        Math.max(
+            0,
+            Math.ceil(
+                Number(seconds) || 0
+            )
+        );
+
+    restTime = value;
+
+    if (restTimer) {
+
+        restTimer.textContent =
+            formatSeconds(value);
+    }
+}
+
+
+/* =========================================================
+   VIDEO
+========================================================= */
+
+function stopVideo() {
+
+    if (!video) {
+        return;
+    }
+
+    video.pause();
+
+    try {
+
+        video.currentTime = 0;
+
+    } catch (error) {
+
+        console.log(
+            "Could not reset video position."
+        );
+    }
+}
+
+
+function loadExerciseVideo(
+    videoUrl
+) {
+
+    if (
+        !video ||
+        !videoSource
+    ) {
+        return;
+    }
+
+    const wrapper =
+        video.closest(
+            ".t2c-video-wrapper"
+        );
+
+
+    /*
+     * No video.
+     */
+
+    if (!videoUrl) {
+
+        stopVideo();
+
+        videoSource.removeAttribute(
+            "src"
+        );
+
+        video.removeAttribute(
+            "src"
+        );
+
+        if (wrapper) {
+
+            wrapper.style.display =
+                "none";
+        }
+
+        return;
+    }
+
+
+    /*
+     * Show video wrapper.
+     */
+
+    if (wrapper) {
+
+        wrapper.style.display =
+            "block";
+    }
+
+
+    /*
+     * Stop previous video.
+     */
+
+    video.pause();
+
+
+    /*
+     * Load new source.
+     */
+
+    videoSource.src =
+        String(videoUrl);
+
+    video.load();
+
+
+    /*
+     * Try autoplay.
+     * Muted + playsinline allows autoplay
+     * on most mobile browsers.
+     */
+
+    const playPromise =
+        video.play();
+
+    if (
+        playPromise &&
+        typeof playPromise.catch ===
+            "function"
+    ) {
+
+        playPromise.catch(
+            function(error) {
+
+                console.log(
+                    "Autoplay blocked:",
+                    error
+                );
+            }
+        );
+    }
 }
 
 
@@ -165,261 +655,602 @@ function showRestScreen() {
 
 function loadWorkout(index) {
 
-    const workout = workouts[index];
+    const workout =
+        workouts[index];
 
     if (!workout) {
         return;
     }
 
 
-    /* -----------------------------------------
-       STOP EVERYTHING FROM PREVIOUS EXERCISE
-    ----------------------------------------- */
+    /*
+     * Stop previous exercise.
+     */
 
     stopAllTimers();
 
-    window.speechSynthesis.cancel();
+    if (
+        "speechSynthesis" in window
+    ) {
 
-
-    /* -----------------------------------------
-       STATE
-    ----------------------------------------- */
-
-    currentWorkout = index;
-
-    currentScreen = "workout";
-
-
-    /* -----------------------------------------
-       COUNTER
-       
-       IMPORTANT:
-       This produces:
-       Workout 1/10
-       Workout 2/10
-       ...
-       Workout 10/10
-    ----------------------------------------- */
-
-    workoutNumber.textContent =
-        `${index + 1}/${workouts.length}`;
-
-
-    /* -----------------------------------------
-       EXERCISE NAME
-    ----------------------------------------- */
-
-    exerciseName.textContent =
-        workout.exercise;
-
-
-    /* -----------------------------------------
-       REPS / SECONDS
-    ----------------------------------------- */
-
-    if (Number(workout.seconds) > 0) {
-
-        reps.textContent =
-            `${workout.seconds} SEC`;
-
-    } else {
-
-        reps.textContent =
-            workout.reps;
+        window.speechSynthesis.cancel();
     }
 
 
-    /* -----------------------------------------
-       VIDEO
-    ----------------------------------------- */
+    /*
+     * State.
+     */
 
-    const videoWrapper =
-        video ? video.closest(".t2c-video-wrapper") : null;
+    currentWorkout =
+        index;
 
-    if (workout.video) {
+    currentScreen =
+        "workout";
 
-        if (videoWrapper) videoWrapper.style.display = "block";
-        videoSource.src = workout.video;
-        video.load();
+    exercisePaused =
+        false;
 
-        video.play().catch(function(error) {
-            console.log("Video autoplay blocked:", error);
-        });
+    exercisePausedRemaining =
+        0;
+
+
+    /*
+     * Workout counter.
+     */
+
+    if (workoutNumber) {
+
+        workoutNumber.textContent =
+            `${index + 1}/${workouts.length}`;
+    }
+
+
+    /*
+     * Exercise name.
+     */
+
+    if (exerciseName) {
+
+        exerciseName.textContent =
+            workout.exercise ||
+            "Exercise";
+    }
+
+
+    /*
+     * Check whether exercise is timed.
+     */
+
+    const seconds =
+        safeNumber(
+            workout.seconds,
+            0
+        );
+
+
+    if (seconds > 0) {
+
+        updateExerciseTimerUI(
+            seconds
+        );
 
     } else {
 
-        // Prevent the previous exercise's video from remaining on screen.
-        if (video) {
-            video.pause();
-            video.removeAttribute("src");
+        if (reps) {
+
+            reps.textContent =
+                workout.reps || "";
         }
-        if (videoSource) videoSource.removeAttribute("src");
-        if (videoWrapper) videoWrapper.style.display = "none";
+
+        updatePauseButton();
     }
 
 
-    /* -----------------------------------------
-       PREVIOUS BUTTON
-    ----------------------------------------- */
+    /*
+     * Video.
+     */
 
-    previousButton.disabled =
-        index === 0;
+    loadExerciseVideo(
+        workout.video
+    );
 
 
-    /* -----------------------------------------
-       NEXT BUTTON
-    ----------------------------------------- */
+    /*
+     * Previous.
+     */
 
-    if (index === workouts.length - 1) {
+    if (previousButton) {
 
-        nextButton.textContent =
-            "Finish ✓";
-
-        nextButton.classList.remove(
-            "btn-primary"
-        );
-
-        nextButton.classList.add(
-            "btn-success"
-        );
-
-    } else {
-
-        nextButton.textContent =
-            "Done →";
-
-        nextButton.classList.remove(
-            "btn-success"
-        );
-
-        nextButton.classList.add(
-            "btn-primary"
-        );
+        previousButton.disabled =
+            index === 0;
     }
 
 
-    /* -----------------------------------------
-       SHOW WORKOUT
-    ----------------------------------------- */
+    /*
+     * Done / Finish.
+     */
+
+    if (nextButton) {
+
+        if (
+            index ===
+            workouts.length - 1
+        ) {
+
+            nextButton.textContent =
+                "FINISH ✓";
+
+            nextButton.classList.add(
+                "btn-success"
+            );
+
+        } else {
+
+            nextButton.textContent =
+                "DONE →";
+
+            nextButton.classList.remove(
+                "btn-success"
+            );
+        }
+    }
+
+
+    /*
+     * Show workout.
+     */
 
     showWorkoutScreen();
 
 
-    /* -----------------------------------------
-       START TIME-BASED EXERCISE
-    ----------------------------------------- */
+    /*
+     * Start timer only if exercise
+     * is time-based.
+     */
 
-    if (Number(workout.seconds) > 0) {
+    if (seconds > 0) {
 
         startExerciseTimer();
+
+    } else {
+
+        updatePauseButton();
     }
 }
 
 
 /* =========================================================
-   EXERCISE TIMER
+   START EXERCISE TIMER
 ========================================================= */
 
 function startExerciseTimer() {
 
-    stopAllTimers();
+    clearExerciseTimer();
 
-    const workout = workouts[currentWorkout];
+    const workout =
+        workouts[currentWorkout];
 
     if (!workout) {
         return;
     }
 
-    exerciseTime =
-        Number(workout.seconds);
+
+    const seconds =
+        safeNumber(
+            workout.seconds,
+            0
+        );
 
 
-    if (exerciseTime <= 0) {
+    if (seconds <= 0) {
+
+        updatePauseButton();
+
         return;
     }
 
 
-    reps.textContent =
-        `${exerciseTime} SEC`;
+    exercisePaused =
+        false;
+
+    exercisePausedRemaining =
+        0;
+
+
+    exerciseTime =
+        seconds;
+
+
+    exerciseEndAt =
+        Date.now() +
+        seconds * 1000;
+
+
+    updateExerciseTimerUI(
+        seconds
+    );
 
 
     exerciseInterval =
-        setInterval(function() {
-
-            /* -----------------------------------------
-               SAFETY
-            ----------------------------------------- */
-
-            if (currentScreen !== "workout") {
-
-                clearInterval(exerciseInterval);
-                exerciseInterval = null;
-
-                return;
-            }
+        setInterval(
+            updateExerciseTimer,
+            200
+        );
 
 
-            exerciseTime--;
+    updateExerciseTimer();
+}
 
 
-            reps.textContent =
-                `${exerciseTime} SEC`;
+/* =========================================================
+   UPDATE EXERCISE TIMER
+========================================================= */
+
+function updateExerciseTimer() {
+
+    if (
+        currentScreen !==
+        "workout"
+    ) {
+
+        clearExerciseTimer();
+
+        return;
+    }
 
 
-            /* -----------------------------------------
-               COUNTDOWN
-            ----------------------------------------- */
+    /*
+     * If paused, timer must NEVER
+     * continue.
+     */
+
+    if (exercisePaused) {
+        return;
+    }
+
+
+    if (
+        exerciseEndAt === null
+    ) {
+
+        clearExerciseTimer();
+
+        return;
+    }
+
+
+    const remaining =
+        Math.max(
+            0,
+            (
+                exerciseEndAt -
+                Date.now()
+            ) / 1000
+        );
+
+
+    const previousSecond =
+        exerciseTime;
+
+
+    updateExerciseTimerUI(
+        remaining
+    );
+
+
+    const currentSecond =
+        exerciseTime;
+
+
+    /*
+     * Countdown voice.
+     */
+
+    if (
+        previousSecond !==
+            currentSecond &&
+        currentSecond <= 3 &&
+        currentSecond > 0
+    ) {
+
+        speakCountdown(
+            currentSecond
+        );
+    }
+
+
+    /*
+     * Exercise finished.
+     */
+
+    if (
+        remaining <= 0
+    ) {
+
+        finishExercise();
+    }
+}
+
+
+/* =========================================================
+   PAUSE EXERCISE
+========================================================= */
+
+function pauseExercise() {
+
+    if (
+        currentScreen !==
+        "workout"
+    ) {
+        return;
+    }
+
+
+    if (exercisePaused) {
+        return;
+    }
+
+
+    if (
+        exerciseEndAt === null ||
+        exerciseTime <= 0
+    ) {
+        return;
+    }
+
+
+    /*
+     * Calculate EXACT remaining time
+     * before pausing.
+     */
+
+    exercisePausedRemaining =
+        Math.max(
+            0,
+            (
+                exerciseEndAt -
+                Date.now()
+            ) / 1000
+        );
+
+
+    exerciseTime =
+        Math.ceil(
+            exercisePausedRemaining
+        );
+
+
+    /*
+     * Mark paused.
+     */
+
+    exercisePaused =
+        true;
+
+
+    /*
+     * Stop interval.
+     */
+
+    if (
+        exerciseInterval !== null
+    ) {
+
+        clearInterval(
+            exerciseInterval
+        );
+
+        exerciseInterval = null;
+    }
+
+
+    /*
+     * Remove deadline.
+     */
+
+    exerciseEndAt =
+        null;
+
+
+    /*
+     * Pause video.
+     */
+
+    if (video) {
+        video.pause();
+    }
+
+
+    /*
+     * Stop speech.
+     */
+
+    if (
+        "speechSynthesis" in window
+    ) {
+
+        window.speechSynthesis.cancel();
+    }
+
+
+    updateExerciseTimerUI(
+        exercisePausedRemaining
+    );
+
+    updatePauseButton();
+}
+
+
+/* =========================================================
+   RESUME EXERCISE
+========================================================= */
+
+function resumeExercise() {
+
+    if (
+        currentScreen !==
+        "workout"
+    ) {
+        return;
+    }
+
+
+    if (!exercisePaused) {
+        return;
+    }
+
+
+    if (
+        exercisePausedRemaining <= 0
+    ) {
+
+        exercisePaused =
+            false;
+
+        finishExercise();
+
+        return;
+    }
+
+
+    /*
+     * Restart deadline using ONLY
+     * the remaining paused time.
+     */
+
+    exerciseEndAt =
+        Date.now() +
+        exercisePausedRemaining *
+            1000;
+
+
+    exercisePaused =
+        false;
+
+
+    /*
+     * Restart timer.
+     */
+
+    exerciseInterval =
+        setInterval(
+            updateExerciseTimer,
+            200
+        );
+
+
+    /*
+     * Resume video.
+     */
+
+    if (video) {
+
+        const playPromise =
+            video.play();
+
+        if (
+            playPromise &&
+            typeof playPromise.catch ===
+                "function"
+        ) {
+
+            playPromise.catch(
+                function(error) {
+
+                    console.log(
+                        "Video resume blocked:",
+                        error
+                    );
+                }
+            );
+        }
+    }
+
+
+    updateExerciseTimer();
+
+    updatePauseButton();
+}
+
+
+/* =========================================================
+   PAUSE BUTTON CLICK
+========================================================= */
+
+if (pauseExerciseButton) {
+
+    pauseExerciseButton.addEventListener(
+        "click",
+        function(event) {
+
+            event.preventDefault();
 
             if (
-                exerciseTime <= 3 &&
-                exerciseTime > 0
+                exercisePaused
             ) {
 
-                speakCountdown(exerciseTime);
+                resumeExercise();
+
+            } else {
+
+                pauseExercise();
             }
+        }
+    );
+}
 
 
-            /* -----------------------------------------
-               EXERCISE FINISHED
-            ----------------------------------------- */
+/* =========================================================
+   FINISH EXERCISE
+========================================================= */
 
-            if (exerciseTime <= 0) {
+function finishExercise() {
 
-                clearInterval(exerciseInterval);
-                exerciseInterval = null;
+    clearExerciseTimer();
 
-                reps.textContent =
-                    "DONE ✓";
+    exercisePaused =
+        false;
 
-                if (video) {
-                    video.pause();
-                }
+    exercisePausedRemaining =
+        0;
 
-
-                /* -------------------------------------
-                   LAST EXERCISE
-                ------------------------------------- */
-
-                if (
-                    currentWorkout ===
-                    workouts.length - 1
-                ) {
-
-                    nextButton.textContent =
-                        "Finish ✓";
-
-                    return;
-                }
+    updateExerciseTimerUI(
+        0
+    );
 
 
-                /* -------------------------------------
-                   START REST
-                ------------------------------------- */
+    if (video) {
+        video.pause();
+    }
 
-                startRest();
-            }
 
-        }, 1000);
+    updatePauseButton();
+
+
+    /*
+     * Last exercise.
+     */
+
+    if (
+        currentWorkout ===
+        workouts.length - 1
+    ) {
+
+        if (reps) {
+
+            reps.textContent =
+                "DONE ✓";
+        }
+
+        return;
+    }
+
+
+    /*
+     * Automatically enter rest.
+     */
+
+    startRest();
 }
 
 
@@ -429,88 +1260,103 @@ function startExerciseTimer() {
 
 function startRest() {
 
-    /* -----------------------------------------
-       VERY IMPORTANT
-       Kill every old timer first.
-    ----------------------------------------- */
-
     stopAllTimers();
 
-    window.speechSynthesis.cancel();
-
-
-    /* -----------------------------------------
-       CHANGE STATE
-    ----------------------------------------- */
-
-    currentScreen = "rest";
-
-
-    /* -----------------------------------------
-       REST UI
-    ----------------------------------------- */
-
-    restTitle.textContent =
-        "REST";
-
-    restMessage.textContent =
-        "Take a short rest.";
-
-
-    /* -----------------------------------------
-       NEXT EXERCISE
-    ----------------------------------------- */
-
     if (
-        currentWorkout + 1 <
-        workouts.length
+        "speechSynthesis" in window
     ) {
 
-        nextExercise.textContent =
-            `Your next exercise is ${
-                workouts[currentWorkout + 1].exercise
-            }`;
-
-    } else {
-
-        nextExercise.textContent =
-            "Your workout is almost complete!";
+        window.speechSynthesis.cancel();
     }
 
 
-    /* -----------------------------------------
-       REST TIME
-    ----------------------------------------- */
+    currentScreen =
+        "rest";
+
+
+    if (restTitle) {
+
+        restTitle.textContent =
+            "REST";
+    }
+
+
+    if (restMessage) {
+
+        restMessage.textContent =
+            "Take a short break before your next exercise.";
+    }
+
+
+    const nextIndex =
+        currentWorkout + 1;
+
+
+    if (
+        nextExercise
+    ) {
+
+        if (
+            nextIndex <
+            workouts.length
+        ) {
+
+            nextExercise.textContent =
+                `Next movement: ${
+                    workouts[
+                        nextIndex
+                    ].exercise
+                }`;
+
+        } else {
+
+            nextExercise.textContent =
+                "Your workout is almost complete.";
+        }
+    }
+
+
+    /*
+     * Rest duration.
+     */
 
     restTime =
-        Number(
-            workouts[currentWorkout].rest
+        safeNumber(
+            workouts[
+                currentWorkout
+            ].rest,
+            0
         );
 
-
-    restTimer.textContent =
-        `${restTime} seconds`;
-
-
-    /* -----------------------------------------
-       SHOW REST SCREEN
-    ----------------------------------------- */
 
     showRestScreen();
 
 
-    /* -----------------------------------------
-       SPEAK
-    ----------------------------------------- */
+    /*
+     * This is a genuine rest period, so
+     * Skip Rest / Add Rest are usable now.
+     */
 
-    speak("Take a rest");
+    showRestOnlyControls();
 
 
-    /* -----------------------------------------
-       NO REST
-    ----------------------------------------- */
+    updateRestTimerUI(
+        restTime
+    );
 
-    if (restTime <= 0) {
+
+    speak(
+        "Take a rest"
+    );
+
+
+    /*
+     * No rest.
+     */
+
+    if (
+        restTime <= 0
+    ) {
 
         finishRest();
 
@@ -518,77 +1364,122 @@ function startRest() {
     }
 
 
-    /* -----------------------------------------
-       START REST TIMER
-    ----------------------------------------- */
+    restEndAt =
+        Date.now() +
+        restTime * 1000;
+
 
     restInterval =
-        setInterval(function() {
-
-            /* -------------------------------------
-               SAFETY CHECK
-            ------------------------------------- */
-
-            if (currentScreen !== "rest") {
-
-                clearInterval(restInterval);
-                restInterval = null;
-
-                return;
-            }
+        setInterval(
+            updateRestTimer,
+            200
+        );
 
 
-            restTime--;
+    updateRestTimer();
+}
 
 
-            restTimer.textContent =
-                `${restTime} seconds`;
+/* =========================================================
+   UPDATE REST TIMER
+========================================================= */
+
+function updateRestTimer() {
+
+    if (
+        currentScreen !==
+        "rest"
+    ) {
+
+        clearRestTimer();
+
+        return;
+    }
 
 
-            /* -------------------------------------
-               NEXT EXERCISE SPEECH
-            ------------------------------------- */
+    if (
+        restEndAt === null
+    ) {
 
-            if (
-                restTime === 7 &&
-                currentWorkout + 1 <
-                workouts.length
-            ) {
+        clearRestTimer();
 
-                speak(
-                    `Next exercise is ${
-                        workouts[currentWorkout + 1].exercise
-                    }`
-                );
-            }
+        return;
+    }
 
 
-            /* -------------------------------------
-               3, 2, 1
-            ------------------------------------- */
-
-            if (
-                restTime <= 3 &&
-                restTime > 0
-            ) {
-
-                speakCountdown(restTime);
-            }
+    const remaining =
+        Math.max(
+            0,
+            (
+                restEndAt -
+                Date.now()
+            ) / 1000
+        );
 
 
-            /* -------------------------------------
-               REST FINISHED
-            ------------------------------------- */
+    const previousSecond =
+        restTime;
 
-            if (restTime <= 0) {
 
-                clearInterval(restInterval);
-                restInterval = null;
+    updateRestTimerUI(
+        remaining
+    );
 
-                finishRest();
-            }
 
-        }, 1000);
+    const currentSecond =
+        restTime;
+
+
+    /*
+     * Announce next exercise
+     * at 7 seconds.
+     */
+
+    if (
+        previousSecond !==
+            currentSecond &&
+        currentSecond === 7 &&
+        currentWorkout + 1 <
+            workouts.length
+    ) {
+
+        speak(
+            `Next exercise is ${
+                workouts[
+                    currentWorkout + 1
+                ].exercise
+            }`
+        );
+    }
+
+
+    /*
+     * Countdown.
+     */
+
+    if (
+        previousSecond !==
+            currentSecond &&
+        currentSecond <= 3 &&
+        currentSecond > 0
+    ) {
+
+        speakCountdown(
+            currentSecond
+        );
+    }
+
+
+    /*
+     * Rest complete.
+     */
+
+    if (
+        remaining <= 0
+    ) {
+
+        finishRest();
+    }
 }
 
 
@@ -598,183 +1489,218 @@ function startRest() {
 
 function finishRest() {
 
-    /* -----------------------------------------
-       STOP REST TIMER IMMEDIATELY
-    ----------------------------------------- */
+    clearRestTimer();
 
-    if (restInterval !== null) {
+    if (
+        "speechSynthesis" in window
+    ) {
 
-        clearInterval(restInterval);
-        restInterval = null;
+        window.speechSynthesis.cancel();
     }
 
-
-    /* -----------------------------------------
-       STOP SPEECH
-    ----------------------------------------- */
-
-    window.speechSynthesis.cancel();
-
-
-    /* -----------------------------------------
-       MOVE TO NEXT WORKOUT
-    ----------------------------------------- */
 
     const nextIndex =
         currentWorkout + 1;
 
 
-    if (nextIndex >= workouts.length) {
+    if (
+        nextIndex >=
+        workouts.length
+    ) {
 
         return;
     }
 
 
-    /* -----------------------------------------
-       LOAD NEXT WORKOUT
-    ----------------------------------------- */
-
-    currentWorkout = nextIndex;
-
-    loadWorkout(currentWorkout);
+    currentWorkout =
+        nextIndex;
 
 
-    /* -----------------------------------------
-       SPEAK NEXT EXERCISE
-    ----------------------------------------- */
+    loadWorkout(
+        nextIndex
+    );
 
-    setTimeout(function() {
 
-        if (
-            currentScreen === "workout" &&
-            workouts[currentWorkout]
-        ) {
+    /*
+     * Announce exercise.
+     */
 
-            speak(
-                workouts[currentWorkout].exercise
-            );
-        }
+    setTimeout(
+        function() {
 
-    }, 300);
+            if (
+                currentScreen ===
+                    "workout" &&
+                workouts[
+                    currentWorkout
+                ]
+            ) {
+
+                speak(
+                    workouts[
+                        currentWorkout
+                    ].exercise
+                );
+            }
+
+        },
+        300
+    );
 }
 
 
 /* =========================================================
-   NEXT / DONE / FINISH
+   DONE / FINISH BUTTON
 ========================================================= */
 
-nextButton.addEventListener(
-    "click",
-    function(event) {
+if (nextButton) {
 
-        event.preventDefault();
+    nextButton.addEventListener(
+        "click",
+        function(event) {
 
-
-        /* -----------------------------------------
-           LAST WORKOUT
-        ----------------------------------------- */
-
-        if (
-            currentWorkout ===
-            workouts.length - 1
-        ) {
-
-            stopEverything();
-
-            currentScreen = "finished";
+            event.preventDefault();
 
 
-            if (completeWorkoutForm) {
-
-                // form.submit() does NOT fire the submit event, so the global
-                // loader cannot detect it automatically. Show it explicitly.
-                if (window.T2CLoader) {
-                    window.T2CLoader.show("Saving your workout...");
-                }
-
-                const finishButton = completeWorkoutForm.querySelector("button[type=\"button\"]");
-                if (finishButton) {
-                    finishButton.disabled = true;
-                    finishButton.textContent = "Saving...";
-                }
-
-                completeWorkoutForm.submit();
-
-            } else {
-
-                console.error(
-                    "completeWorkoutForm not found."
-                );
+            if (isFinishing) {
+                return;
             }
 
-            return;
+
+            /*
+             * Last workout.
+             */
+
+            if (
+                currentWorkout ===
+                workouts.length - 1
+            ) {
+
+                isFinishing =
+                    true;
+
+                stopEverything();
+
+                currentScreen =
+                    "finished";
+
+
+                if (
+                    completeWorkoutForm
+                ) {
+
+                    /*
+                     * Show your existing loader.
+                     */
+
+                    if (
+                        window.T2CLoader
+                    ) {
+
+                        window.T2CLoader.show(
+                            "Saving your workout..."
+                        );
+                    }
+
+
+                    nextButton.disabled =
+                        true;
+
+                    nextButton.textContent =
+                        "SAVING...";
+
+
+                    /*
+                     * Native Flask form submission.
+                     */
+
+                    completeWorkoutForm.submit();
+
+                } else {
+
+                    console.error(
+                        "completeWorkoutForm not found."
+                    );
+
+                    isFinishing =
+                        false;
+                }
+
+                return;
+            }
+
+
+            /*
+             * Normal Done.
+             */
+
+            if (video) {
+                video.pause();
+            }
+
+
+            startRest();
         }
-
-
-        /* -----------------------------------------
-           NORMAL DONE BUTTON
-        ----------------------------------------- */
-
-        if (video) {
-            video.pause();
-        }
-
-
-        startRest();
-    }
-);
+    );
+}
 
 
 /* =========================================================
-   PREVIOUS
+   PREVIOUS BUTTON
 ========================================================= */
 
-previousButton.addEventListener(
-    "click",
-    function(event) {
+if (previousButton) {
 
-        event.preventDefault();
+    previousButton.addEventListener(
+        "click",
+        function(event) {
 
-
-        if (currentWorkout <= 0) {
-
-            return;
-        }
+            event.preventDefault();
 
 
-        /* -----------------------------------------
-           STOP EVERYTHING
-        ----------------------------------------- */
+            if (
+                currentWorkout <= 0
+            ) {
 
-        stopEverything();
-
-
-        /* -----------------------------------------
-           PREVIOUS WORKOUT
-        ----------------------------------------- */
-
-        currentWorkout--;
-
-
-        loadWorkout(currentWorkout);
-
-
-        /* -----------------------------------------
-           SPEAK
-        ----------------------------------------- */
-
-        setTimeout(function() {
-
-            if (workouts[currentWorkout]) {
-
-                speak(
-                    workouts[currentWorkout].exercise
-                );
+                return;
             }
 
-        }, 300);
-    }
-);
+
+            stopEverything();
+
+
+            currentWorkout--;
+
+
+            loadWorkout(
+                currentWorkout
+            );
+
+
+            setTimeout(
+                function() {
+
+                    if (
+                        currentScreen ===
+                            "workout" &&
+                        workouts[
+                            currentWorkout
+                        ]
+                    ) {
+
+                        speak(
+                            workouts[
+                                currentWorkout
+                            ].exercise
+                        );
+                    }
+
+                },
+                300
+            );
+        }
+    );
+}
 
 
 /* =========================================================
@@ -790,37 +1716,25 @@ if (skipRest) {
             event.preventDefault();
 
 
-            /* -----------------------------------------
-               ONLY SKIP DURING REST
-            ----------------------------------------- */
-
-            if (currentScreen !== "rest") {
+            if (
+                currentScreen !==
+                "rest"
+            ) {
 
                 return;
             }
 
 
-            /* -----------------------------------------
-               STOP REST TIMER FIRST
-            ----------------------------------------- */
+            clearRestTimer();
 
-            if (restInterval !== null) {
 
-                clearInterval(restInterval);
-                restInterval = null;
+            if (
+                "speechSynthesis" in window
+            ) {
+
+                window.speechSynthesis.cancel();
             }
 
-
-            /* -----------------------------------------
-               STOP SPEECH
-            ----------------------------------------- */
-
-            window.speechSynthesis.cancel();
-
-
-            /* -----------------------------------------
-               MOVE IMMEDIATELY
-            ----------------------------------------- */
 
             finishRest();
         }
@@ -829,161 +1743,452 @@ if (skipRest) {
 
 
 /* =========================================================
-   GET READY COUNTDOWN
+   ADD REST TIME (+20 SEC)
+   ---------------------------------------------------------
+   Timestamp-based: extends restEndAt directly rather than
+   restarting the timer, so it works the first time, never
+   resets progress, never spawns a second interval, and stacks
+   correctly on repeated clicks.
 ========================================================= */
 
-function startWorkoutCountdown() {
+if (addRestTimeButton) {
 
-    if (
-        !workouts ||
-        workouts.length === 0
-    ) {
+    addRestTimeButton.addEventListener(
+        "click",
+        function(event) {
 
-        return;
-    }
+            event.preventDefault();
 
 
-    /* -----------------------------------------
-       STOP EVERYTHING
-    ----------------------------------------- */
-
-    stopEverything();
-
-
-    /* -----------------------------------------
-       STATE
-    ----------------------------------------- */
-
-    currentScreen = "ready";
-
-    currentWorkout = 0;
-
-
-    /* -----------------------------------------
-       COUNTER
-    ----------------------------------------- */
-
-    workoutNumber.textContent =
-        `0/${workouts.length}`;
-
-
-    /* -----------------------------------------
-       SHOW READY SCREEN
-    ----------------------------------------- */
-
-    workoutCard.classList.add("d-none");
-
-    navigationButtons.classList.add("d-none");
-
-    restScreen.classList.remove("d-none");
-
-
-    /* -----------------------------------------
-       GET READY
-    ----------------------------------------- */
-
-    restTitle.textContent =
-        "GET READY";
-
-    restMessage.textContent =
-        "";
-
-
-    nextExercise.textContent =
-        `Your first exercise is ${
-            workouts[0].exercise
-        }`;
-
-
-    /* -----------------------------------------
-       TIMER
-    ----------------------------------------- */
-
-    readyCountdown = 10;
-
-    restTimer.textContent =
-        `${readyCountdown} seconds`;
-
-
-    speak("Get ready");
-
-
-    /* -----------------------------------------
-       READY TIMER
-    ----------------------------------------- */
-
-    readyInterval =
-        setInterval(function() {
-
-            if (currentScreen !== "ready") {
-
-                clearInterval(readyInterval);
-                readyInterval = null;
+            if (
+                currentScreen !==
+                "rest"
+            ) {
 
                 return;
             }
 
 
-            readyCountdown--;
-
-
-            restTimer.textContent =
-                `${readyCountdown} seconds`;
-
+            /*
+             * If the rest timer already hit zero
+             * (finishRest is about to fire / has fired),
+             * there's nothing to extend.
+             */
 
             if (
-                readyCountdown <= 3 &&
-                readyCountdown > 0
+                restEndAt === null
             ) {
 
-                speakCountdown(
-                    readyCountdown
-                );
+                return;
             }
 
 
-            /* -------------------------------------
-               READY FINISHED
-            ------------------------------------- */
-
-            if (readyCountdown <= 0) {
-
-                clearInterval(readyInterval);
-                readyInterval = null;
-
-                window.speechSynthesis.cancel();
-
-                currentWorkout = 0;
-
-                loadWorkout(0);
+            restEndAt =
+                restEndAt +
+                20 * 1000;
 
 
-                setTimeout(function() {
+            /*
+             * Reflect the new remaining time immediately;
+             * the existing interval keeps ticking against
+             * the updated deadline, so no duplicate timer
+             * is ever created.
+             */
 
-                    if (
-                        currentScreen === "workout"
-                    ) {
-
-                        speak(
-                            workouts[0].exercise
-                        );
-                    }
-
-                }, 300);
-            }
-
-        }, 1000);
+            updateRestTimer();
+        }
+    );
 }
 
 
 /* =========================================================
-   START
+   GET READY
+========================================================= */
+
+function updateReadyTimerUI(
+    seconds
+) {
+
+    const value =
+        Math.max(
+            0,
+            Math.ceil(
+                Number(seconds) || 0
+            )
+        );
+
+    readyCountdown =
+        value;
+
+    if (restTimer) {
+
+        restTimer.textContent =
+            formatSeconds(value);
+    }
+}
+
+
+function startWorkoutCountdown() {
+
+    if (
+        !Array.isArray(workouts) ||
+        workouts.length === 0
+    ) {
+
+        console.warn(
+            "Train2Conquer: no workouts supplied."
+        );
+
+        return;
+    }
+
+
+    stopEverything();
+
+
+    currentScreen =
+        "ready";
+
+    currentWorkout =
+        0;
+
+
+    /*
+     * Counter.
+     */
+
+    if (workoutNumber) {
+
+        workoutNumber.textContent =
+            `0/${workouts.length}`;
+    }
+
+
+    /*
+     * Show ready screen.
+     */
+
+    if (workoutCard) {
+
+        workoutCard.classList.add(
+            "d-none"
+        );
+    }
+
+
+    if (navigationButtons) {
+
+        navigationButtons.classList.add(
+            "d-none"
+        );
+    }
+
+
+    if (restScreen) {
+
+        restScreen.classList.remove(
+            "d-none"
+        );
+    }
+
+
+    /*
+     * Skip Rest / Add Rest belong to the real
+     * rest screen only, not Get Ready.
+     */
+
+    hideRestOnlyControls();
+
+
+    if (restTitle) {
+
+        restTitle.textContent =
+            "GET READY";
+    }
+
+
+    if (restMessage) {
+
+        restMessage.textContent =
+            "";
+    }
+
+
+    if (nextExercise) {
+
+        nextExercise.textContent =
+            `Your first exercise is ${
+                workouts[0].exercise
+            }`;
+    }
+
+
+    readyCountdown =
+        10;
+
+
+    updateReadyTimerUI(
+        readyCountdown
+    );
+
+
+    speak(
+        "Get ready"
+    );
+
+
+    readyEndAt =
+        Date.now() +
+        10 * 1000;
+
+
+    readyInterval =
+        setInterval(
+            updateReadyTimer,
+            200
+        );
+
+
+    updateReadyTimer();
+}
+
+
+/* =========================================================
+   UPDATE GET READY
+========================================================= */
+
+function updateReadyTimer() {
+
+    if (
+        currentScreen !==
+        "ready"
+    ) {
+
+        clearReadyTimer();
+
+        return;
+    }
+
+
+    if (
+        readyEndAt === null
+    ) {
+
+        clearReadyTimer();
+
+        return;
+    }
+
+
+    const remaining =
+        Math.max(
+            0,
+            (
+                readyEndAt -
+                Date.now()
+            ) / 1000
+        );
+
+
+    const previousSecond =
+        readyCountdown;
+
+
+    updateReadyTimerUI(
+        remaining
+    );
+
+
+    const currentSecond =
+        readyCountdown;
+
+
+    /*
+     * 3 - 2 - 1 voice.
+     */
+
+    if (
+        previousSecond !==
+            currentSecond &&
+        currentSecond <= 3 &&
+        currentSecond > 0
+    ) {
+
+        speakCountdown(
+            currentSecond
+        );
+    }
+
+
+    /*
+     * Countdown complete.
+     */
+
+    if (
+        remaining <= 0
+    ) {
+
+        clearReadyTimer();
+
+
+        if (
+            "speechSynthesis" in window
+        ) {
+
+            window.speechSynthesis.cancel();
+        }
+
+
+        loadWorkout(0);
+
+
+        setTimeout(
+            function() {
+
+                if (
+                    currentScreen ===
+                        "workout" &&
+                    workouts[0]
+                ) {
+
+                    speak(
+                        workouts[0].exercise
+                    );
+                }
+
+            },
+            300
+        );
+    }
+}
+
+
+/* =========================================================
+   MOBILE VISIBILITY RECOVERY
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    function() {
+
+        if (
+            document.visibilityState !==
+            "visible"
+        ) {
+
+            /*
+             * DO NOT pause the workout automatically.
+             * The timestamp system will keep the timer
+             * accurate when the browser returns.
+             */
+
+            return;
+        }
+
+
+        if (
+            currentScreen ===
+            "workout"
+        ) {
+
+            /*
+             * If manually paused, remain paused.
+             */
+
+            if (!exercisePaused) {
+
+                updateExerciseTimer();
+            }
+
+        } else if (
+            currentScreen ===
+            "rest"
+        ) {
+
+            updateRestTimer();
+
+        } else if (
+            currentScreen ===
+            "ready"
+        ) {
+
+            updateReadyTimer();
+        }
+    }
+);
+
+
+/* =========================================================
+   VIDEO ERROR HANDLING
+========================================================= */
+
+if (video) {
+
+    video.addEventListener(
+        "error",
+        function() {
+
+            console.warn(
+                "Workout video could not be loaded:",
+                video.currentSrc || ""
+            );
+        }
+    );
+
+
+    /*
+     * Keep video inline on mobile.
+     */
+
+    video.setAttribute(
+        "playsinline",
+        ""
+    );
+
+    video.setAttribute(
+        "webkit-playsinline",
+        ""
+    );
+
+    video.muted = true;
+}
+
+
+/* =========================================================
+   PREVENT ACCIDENTAL DOUBLE SUBMIT
+========================================================= */
+
+if (completeWorkoutForm) {
+
+    completeWorkoutForm.addEventListener(
+        "submit",
+        function() {
+
+            if (isFinishing) {
+                return;
+            }
+
+            isFinishing =
+                true;
+        }
+    );
+}
+
+
+/* =========================================================
+   START APP
 ========================================================= */
 
 if (
-    workouts &&
+    Array.isArray(workouts) &&
     workouts.length > 0
 ) {
 
     startWorkoutCountdown();
+
+} else {
+
+    console.warn(
+        "Train2Conquer: workouts array is empty."
+    );
 }

@@ -321,7 +321,6 @@ def send_verification_code(email, otp):
     mail["From"] = sender_email
     mail["To"] = email
     mail["Subject"] = "Train2Conquer Verification Code"
-
     body = f"""
     <html>
         <body style="font-family:Arial,sans-serif;background:#08090C;color:#F5F5F3;padding:24px">
@@ -339,7 +338,6 @@ def send_verification_code(email, otp):
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, [email], mail.as_string())
-
 
 def send_contact_info(email, name, contact_message):
     """Send a verified contact message to the site's owner/admin inbox."""
@@ -834,7 +832,7 @@ def delete_account():
 
 EXERCISE_VIDEOS = {
     "jumping-jacks": "/static/assets/videos/jumping_jacks.mp4",
-    "push-ups": "/static/assets/videos/pushups.mp4",
+    "push-ups": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1788422205/Push-ups.mp4",
 }
 
 

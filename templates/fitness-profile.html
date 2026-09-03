@@ -763,5 +763,45 @@
 {{ bootstrap.load_js() }}
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', function () {
+    const equipmentList = document.getElementById('equipment');
+    if (!equipmentList) return;
+
+    const checkboxes = Array.from(equipmentList.querySelectorAll('input[type="checkbox"]'));
+    const noneBox = checkboxes.find(cb => cb.value === 'none');
+    const otherBoxes = checkboxes.filter(cb => cb.value !== 'none');
+
+    if (!noneBox) return;
+
+    function syncDisabledState() {
+        // When "none" is checked, lock the other options out entirely
+        otherBoxes.forEach(cb => {
+            cb.disabled = noneBox.checked;
+            const li = cb.closest('li');
+            if (li) li.style.opacity = noneBox.checked ? '0.45' : '1';
+        });
+    }
+
+    noneBox.addEventListener('change', function () {
+        if (noneBox.checked) {
+            otherBoxes.forEach(cb => { cb.checked = false; });
+        }
+        syncDisabledState();
+    });
+
+    otherBoxes.forEach(cb => {
+        cb.addEventListener('change', function () {
+            if (cb.checked && noneBox.checked) {
+                noneBox.checked = false;
+            }
+            syncDisabledState();
+        });
+    });
+
+    // Run once on load in case the form is re-rendered with prior values
+    // (e.g. validation failed and the page reloaded with "none" pre-checked)
+    syncDisabledState();
+});
+</script>
 </body>
 </html>

@@ -8,11 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-    <style>body{margin:0;background:#08090C;color:#F5F5F3;font-family:Manrope,sans-serif}.error-page{min-height:65vh;display:grid;place-items:center;text-align:center;padding:50px 20px}.error-code{font-family:Anton,sans-serif;font-size:clamp(100px,18vw,190px);line-height:.8;color:#FF512F}.error-page h1{font-size:28px;margin:30px 0 10px}.error-page p{color:#8E929D;max-width:560px;line-height:1.7}.error-page a{display:inline-flex;margin-top:18px;padding:12px 20px;border-radius:10px;background:#FF512F;color:#17110C;text-decoration:none;font-weight:800}</style>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 </head>
-<body>
+<body class="page-error">
 {% include "loader.html" %}
 {% include "navbar.html" %}
 <main class="error-page">

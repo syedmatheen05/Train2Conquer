@@ -8,11 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-    <style>body{margin:0;background:#08090C;color:#F5F5F3;font-family:Manrope,sans-serif}.t2c-info-page{max-width:900px;margin:0 auto;padding:90px 24px}.t2c-info-page h1{font-family:Anton,sans-serif;font-size:clamp(46px,7vw,78px)}.t2c-info-page h2{margin-top:42px;font-size:22px}.t2c-info-page p,.t2c-info-page li{color:#8E929D;line-height:1.8}.t2c-info-page strong{color:#F5F5F3}@media(max-width:700px){.t2c-info-page{padding:60px 18px}}</style>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 </head>
-<body>
+<body class="page-privacy">
 {% include "loader.html" %}
 {% include "navbar.html" %}
 <main class="t2c-info-page">

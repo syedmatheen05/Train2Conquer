@@ -42,7 +42,6 @@
                     <div class="t2c-dropdown-header">{{ current_user.email }}</div>
                     <hr class="t2c-dropdown-divider">
                     <a class="t2c-dropdown-item" href="{{ url_for('fitness_profile') }}">✏️ Edit profile</a>
-                    <a class="t2c-dropdown-item" href="{{ url_for('fitness_profile') }}">⚙️ Account settings</a>
                     <a class="t2c-dropdown-item" href="{{ url_for('find_trainer') }}">🏋️‍♂️ Find Personal Trainer</a>
                     <a class="t2c-dropdown-item" href="{{ url_for('become_trainer') }}">🙎 Become a Trainer</a>
                     <hr class="t2c-dropdown-divider">
@@ -71,3 +70,40 @@
 
     </div>
 </nav>
+
+<!-- Delete Account Confirmation Modal.
+     Lives here (not in a single page template) because the Delete
+     Account button above is rendered by navbar.html on every page --
+     the confirmation UI needs to be available wherever the button is. -->
+{% if current_user.is_authenticated %}
+<div class="t2c-confirm-overlay" id="deleteConfirmModal">
+    <div class="t2c-confirm-box">
+
+        <div class="t2c-confirm-icon">
+            🗑️
+        </div>
+
+        <h3>Delete your account?</h3>
+
+        <p>
+            Are you sure you want to permanently delete your
+            Train2Conquer account?
+        </p>
+
+        <p class="t2c-confirm-warning">
+            This action cannot be undone.
+        </p>
+
+        <div class="t2c-confirm-actions">
+            <button type="button" class="t2c-confirm-cancel" id="cancelDelete">
+                Cancel
+            </button>
+
+            <button type="button" class="t2c-confirm-delete" id="confirmDelete">
+                Yes, Delete
+            </button>
+        </div>
+
+    </div>
+</div>
+{% endif %}

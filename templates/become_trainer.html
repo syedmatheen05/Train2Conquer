@@ -11,6 +11,7 @@
     >
 
     <title>Become a Trainer | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
 
     {{ bootstrap.load_css() }}
 
@@ -42,6 +43,7 @@
                 {% for category, message in messages %}
 
                     <div
+                        data-flash-message
                         class="alert alert-{{ category }} alert-dismissible fade show"
                         role="alert"
                     >

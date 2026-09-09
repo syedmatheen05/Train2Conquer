@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Verify Email | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
 
 {{ bootstrap.load_css() }}
 
@@ -179,10 +180,10 @@
         class="t2c-timer"
     >
 
-        Resend OTP in
+        Resend code in
 
         <span id="countdown">
-            {{ remaining }}
+            {{ resend_remaining }}
         </span>
 
         seconds
@@ -196,7 +197,7 @@
 
     <form method="POST" action="{{ url_for('resend_otp') }}" data-loader-message="Sending a new verification code...">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" id="resend-btn" class="t2c-resend-btn">↻ &nbsp; Resend verification code</button>
+        <button type="submit" id="resend-btn" class="t2c-resend-btn" {% if resend_remaining > 0 %}disabled style="display:none"{% endif %}>↻ &nbsp; Resend verification code</button>
     </form>
 
 
@@ -240,59 +241,38 @@
 
 </div>
 
+{% include "footer.html" %}
+
 {{ bootstrap.load_js() }}
 
 <script>
 
     /* =========================================================
-       OTP COUNTDOWN
+       RESEND COUNTDOWN (30-second cooldown only -- OTP expiry is
+       handled independently and enforced server-side)
     ========================================================= */
+(() => {
+    let seconds = {{ resend_remaining | tojson }};
 
-    let seconds = {{ remaining | tojson }};
+    const timer = document.getElementById("timer");
+    const countdown = document.getElementById("countdown");
+    const resendButton = document.getElementById("resend-btn");
 
-
-    const timer =
-        document.getElementById("timer");
-
-
-    const countdown =
-        document.getElementById("countdown");
-
-
-    const resendButton =
-        document.getElementById("resend-btn");
-
-
-    function showResendButton() {
-
-        timer.style.display = "none";
-
-        resendButton.style.display = "inline-flex";
-    }
-
-
-    function startTimer() {
-
+    const tick = () => {
         if (seconds <= 0) {
-
-            showResendButton();
-
+            if (timer) timer.style.display = "none";
+            if (resendButton) {
+                resendButton.disabled = false;
+                resendButton.style.display = "inline-flex";
+            }
             return;
         }
-
-
-        countdown.textContent =
-            seconds;
-
-
-        seconds--;
-
-
-        setTimeout(startTimer, 1000);
-    }
-
-
-    startTimer();
+        if (countdown) countdown.textContent = seconds;
+        seconds -= 1;
+        window.setTimeout(tick, 1000);
+    };
+    tick();
+})();
 </script>
 
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>

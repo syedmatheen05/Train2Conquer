@@ -10,6 +10,7 @@
 >
 
 <title>Log-in | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
 
 
 <!-- =========================================================
@@ -278,6 +279,7 @@
                 {% for category, message in messages %}
 
                     <div
+                        data-flash-message
                         class="alert alert-{{ category }} t2c-login-flash"
                         role="alert"
                     >

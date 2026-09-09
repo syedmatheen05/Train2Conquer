@@ -194,9 +194,9 @@ body.page-about .t2c-about-hero h1 {
 
             font-size:
                 clamp(
-                    3rem,
-                    8vw,
-                    6rem
+                    2.2rem,
+                    6vw,
+                    4.4rem
                 );
 
             font-weight: 400;
@@ -272,7 +272,7 @@ body.page-about .t2c-story h2 {
 
             font-family: 'Anton', sans-serif;
 
-            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-size: clamp(1.7rem, 3vw, 2.5rem);
 
             font-weight: 400;
 
@@ -371,7 +371,7 @@ body.page-about .t2c-team-header h2 {
 
             font-family: 'Anton', sans-serif;
 
-            font-size: 3rem;
+            font-size: clamp(1.7rem, 3vw, 2.4rem);
 
             font-weight: 400;
 
@@ -401,7 +401,11 @@ body.page-about .t2c-team-grid {
             display: grid;
 
             grid-template-columns:
-                repeat(3, 1fr);
+                repeat(2, 1fr);
+
+            max-width: 760px;
+
+            margin: 0 auto;
 
             gap: 20px;
         }
@@ -637,7 +641,7 @@ body.page-about .t2c-about-cta h2 {
 
             font-family: 'Anton', sans-serif;
 
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 2.6vw, 2.1rem);
 
             font-weight: 400;
 
@@ -692,7 +696,7 @@ body.page-about .t2c-about-hero {
 
 body.page-about .t2c-about-hero h1 {
 
-                font-size: 3.3rem;
+                font-size: 2.6rem;
             }
 
 body.page-about .t2c-about-hero p {
@@ -715,7 +719,7 @@ body.page-about .t2c-story {
 
 body.page-about .t2c-story h2 {
 
-                font-size: 2.4rem;
+                font-size: 2rem;
             }
 
 body.page-about .t2c-story-stats {
@@ -741,7 +745,7 @@ body.page-about .t2c-team-image {
 
 body.page-about .t2c-team-header h2 {
 
-                font-size: 2.5rem;
+                font-size: 2rem;
             }
 
 body.page-about .t2c-about-cta {
@@ -755,14 +759,14 @@ body.page-about .t2c-about-cta {
 
 body.page-about .t2c-about-cta h2 {
 
-                font-size: 2.1rem;
+                font-size: 1.8rem;
             }
 }
 
 @media (max-width: 380px) {
 body.page-about .t2c-about-hero h1 {
 
-                font-size: 2.8rem;
+                font-size: 2.2rem;
             }
 
 body.page-about .t2c-story-stats {
@@ -1377,6 +1381,16 @@ body.page-contact .contact-submit:hover {
     background: #222630;
     color: #fff;
     border-color: #d9a928;
+}
+
+body.page-contact .contact-submit:active {
+    transform: scale(.98);
+}
+
+body.page-contact .contact-submit:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 body.page-contact .contact-submit span {
@@ -4180,11 +4194,15 @@ body.page-fitness-profile .t2c-profile-card .mb-3 {
 body.page-fitness-profile .t2c-profile-card form button[type="submit"],
 body.page-fitness-profile .t2c-profile-card form .btn-primary {
 
-        width: 100%;
+        width: auto;
+
+        min-width: 220px;
+
+        display: block;
+
+        margin: 8px auto 0;
 
         min-height: 50px;
-
-        margin-top: 8px;
 
         padding: 12px 20px;
 
@@ -4293,6 +4311,10 @@ body.page-fitness-profile .t2c-profile-card .form-label {
 body.page-fitness-profile .t2c-profile-card form button[type="submit"] {
 
             min-height: 48px;
+
+            width: 100%;
+
+            min-width: 0;
         }
 }
 
@@ -4436,17 +4458,7 @@ body.page-home .t2c-dashboard-inner {
 
 body.page-home [data-flash-message] {
 
-            max-width: 1120px;
-
             margin: 0 auto 25px;
-
-            border: 1px solid var(--t2c-border);
-
-            border-radius: 12px;
-
-            font-size: 13px;
-
-            box-shadow: 0 12px 30px rgba(0,0,0,.25);
         }
 
 body.page-home .t2c-dashboard-header {
@@ -5188,172 +5200,6 @@ body.page-home .workout-action .btn {
             }
 }
 
-body.page-home .t2c-confirm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px;
-
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-
-    transition:
-        opacity 0.25s ease,
-        visibility 0.25s ease;
-
-    z-index: 99999;
-}
-
-body.page-home .t2c-confirm-overlay.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
-
-body.page-home .t2c-confirm-box {
-    width: 100%;
-    max-width: 420px;
-
-    background: #ffffff;
-    border-radius: 20px;
-
-    padding: 30px 28px;
-
-    text-align: center;
-
-    box-shadow:
-        0 25px 70px rgba(0, 0, 0, 0.25);
-
-    transform: translateY(20px) scale(0.96);
-
-    transition: transform 0.25s ease;
-}
-
-body.page-home .t2c-confirm-overlay.active .t2c-confirm-box {
-    transform: translateY(0) scale(1);
-}
-
-body.page-home .t2c-confirm-icon {
-    width: 64px;
-    height: 64px;
-
-    margin: 0 auto 18px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: #fff1f1;
-
-    font-size: 28px;
-}
-
-body.page-home .t2c-confirm-box h3 {
-    margin: 0 0 10px;
-
-    font-size: 22px;
-    font-weight: 700;
-
-    color: #1f1f1f;
-}
-
-body.page-home .t2c-confirm-box p {
-    margin: 0 auto 8px;
-
-    max-width: 340px;
-
-    font-size: 14px;
-    line-height: 1.6;
-
-    color: #666;
-}
-
-body.page-home .t2c-confirm-warning {
-    font-weight: 600;
-    color: #d64545 !important;
-}
-
-body.page-home .t2c-confirm-actions {
-    display: flex;
-    gap: 12px;
-
-    margin-top: 25px;
-}
-
-body.page-home .t2c-confirm-actions button {
-    flex: 1;
-
-    height: 46px;
-
-    border: none;
-    border-radius: 10px;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
-}
-
-body.page-home .t2c-confirm-actions button:hover {
-    transform: translateY(-1px);
-}
-
-body.page-home .t2c-confirm-actions button:active {
-    transform: translateY(0);
-}
-
-body.page-home .t2c-confirm-cancel {
-    background: #f1f1f1;
-    color: #333;
-}
-
-body.page-home .t2c-confirm-cancel:hover {
-    background: #e7e7e7;
-}
-
-body.page-home .t2c-confirm-delete {
-    background: #dc3545;
-    color: white;
-}
-
-body.page-home .t2c-confirm-delete:hover {
-    background: #c82333;
-}
-
-@media (max-width: 480px) {
-body.page-home .t2c-confirm-box {
-        padding: 26px 20px;
-        border-radius: 18px;
-    }
-
-body.page-home .t2c-confirm-box h3 {
-        font-size: 20px;
-    }
-
-body.page-home .t2c-confirm-actions {
-        flex-direction: column-reverse;
-    }
-
-body.page-home .t2c-confirm-actions button {
-        width: 100%;
-    }
-}
-
-
 
 /* ============================================================
    PAGE: login.html
@@ -5457,17 +5303,27 @@ body.page-login .t2c-login {
         position:
             relative;
 
+        overflow:
+            hidden;
+
         isolation:
             isolate;
     }
 
+/* These are decorative ambient glows that belong to the .t2c-login
+   component itself, not the browser viewport -- they must be
+   "position: absolute" (contained by .t2c-login's own
+   "position: relative") rather than "position: fixed" (pinned to the
+   viewport). "fixed" is what was causing the glow to land in the
+   wrong place relative to the card on mobile, where the viewport
+   size/aspect ratio differs a lot from desktop. */
 body.page-login .t2c-login::before {
 
         content:
             "";
 
         position:
-            fixed;
+            absolute;
 
         width:
             440px;
@@ -5503,7 +5359,7 @@ body.page-login .t2c-login::after {
             "";
 
         position:
-            fixed;
+            absolute;
 
         width:
             420px;
@@ -8708,11 +8564,9 @@ body.page-verify-contact {
 
         display: flex;
 
-        align-items: center;
+        flex-direction: column;
 
-        justify-content: center;
-
-        padding: 30px 18px;
+        padding: 0;
 
         overflow-x: hidden;
     }
@@ -8721,7 +8575,7 @@ body.page-verify-contact .t2c-auth {
 
         width: 100%;
 
-        min-height: 100vh;
+        flex: 1;
 
         display: flex;
 
@@ -8730,6 +8584,8 @@ body.page-verify-contact .t2c-auth {
         justify-content: center;
 
         position: relative;
+
+        padding: 30px 18px;
     }
 
 body.page-verify-contact .t2c-auth::before {
@@ -9328,7 +9184,7 @@ body.page-verify-contact .t2c-back-link {
 
         display: block;
 
-        color: #777B86;
+        color: var(--t2c-orange);
 
         text-decoration: none;
 
@@ -9336,14 +9192,20 @@ body.page-verify-contact .t2c-back-link {
 
         font-size: 12px;
 
-        font-weight: 600;
+        font-weight: 700;
 
-        transition: color .18s ease;
+        transition: color .18s ease, opacity .18s ease;
     }
 
-body.page-verify-contact .t2c-back-link:hover {
+body.page-verify-contact .t2c-back-link:hover,
+body.page-verify-contact .t2c-back-link:focus-visible {
 
-        color: var(--t2c-orange);
+        color: var(--t2c-gold);
+    }
+
+body.page-verify-contact .t2c-back-link:active {
+
+        opacity: .75;
     }
 
 body.page-verify-contact .t2c-security-note {
@@ -9507,11 +9369,9 @@ body.page-verify-otp {
 
         display: flex;
 
-        align-items: center;
+        flex-direction: column;
 
-        justify-content: center;
-
-        padding: 30px 18px;
+        padding: 0;
 
         overflow-x: hidden;
     }
@@ -9520,7 +9380,7 @@ body.page-verify-otp .t2c-auth {
 
         width: 100%;
 
-        min-height: 100vh;
+        flex: 1;
 
         display: flex;
 
@@ -9529,6 +9389,8 @@ body.page-verify-otp .t2c-auth {
         justify-content: center;
 
         position: relative;
+
+        padding: 30px 18px;
     }
 
 body.page-verify-otp .t2c-auth::before {
@@ -10025,7 +9887,7 @@ body.page-verify-otp .t2c-back-link {
 
         display: block;
 
-        color: #777B86;
+        color: var(--t2c-orange);
 
         text-decoration: none;
 
@@ -10033,14 +9895,20 @@ body.page-verify-otp .t2c-back-link {
 
         font-size: 12px;
 
-        font-weight: 600;
+        font-weight: 700;
 
-        transition: color .18s ease;
+        transition: color .18s ease, opacity .18s ease;
     }
 
-body.page-verify-otp .t2c-back-link:hover {
+body.page-verify-otp .t2c-back-link:hover,
+body.page-verify-otp .t2c-back-link:focus-visible {
 
-        color: var(--t2c-orange);
+        color: var(--t2c-gold);
+    }
+
+body.page-verify-otp .t2c-back-link:active {
+
+        opacity: .75;
     }
 
 body.page-verify-otp .t2c-security-note {

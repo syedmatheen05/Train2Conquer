@@ -13,43 +13,13 @@
     {{ bootstrap.load_css() }}
 
     <title>Train2Conquer | Workout Plan</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
 
 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 </head>
 
-<!-- Delete Account Confirmation Modal -->
-<div class="t2c-confirm-overlay" id="deleteConfirmModal">
-    <div class="t2c-confirm-box">
-
-        <div class="t2c-confirm-icon">
-            🗑️
-        </div>
-
-        <h3>Delete your account?</h3>
-
-        <p>
-            Are you sure you want to permanently delete your
-            Train2Conquer account?
-        </p>
-
-        <p class="t2c-confirm-warning">
-            This action cannot be undone.
-        </p>
-
-        <div class="t2c-confirm-actions">
-            <button type="button" class="t2c-confirm-cancel" id="cancelDelete">
-                Cancel
-            </button>
-
-            <button type="button" class="t2c-confirm-delete" id="confirmDelete">
-                Yes, Delete
-            </button>
-        </div>
-
-    </div>
-</div>
 <body class="d-flex flex-column min-vh-100 page-home">
 
 
@@ -90,7 +60,7 @@
 
 
 
-        {% if workout_plan %}
+        {% if workout_plan and workout_plan.status == 'ready' and workout_plan_data %}
 
 
         <!-- =====================================================
@@ -303,6 +273,57 @@
         </div>
 
 
+        {% elif workout_plan and workout_plan.status == 'generating' %}
+
+
+        <!-- =====================================================
+             GENERATING STATE
+             The AI call runs in a background thread (see
+             start_plan_generation in main.py) so this page polls
+             /workout-plan/status and reloads once it's ready
+             instead of the request itself blocking (and risking a
+             504 Gateway Timeout).
+        ====================================================== -->
+
+        <div class="t2c-empty" id="plan-generating-state">
+
+            <div class="t2c-empty-icon">
+                ⏳
+            </div>
+
+            <h3>
+                Building Your Workout Plan
+            </h3>
+
+            <p>
+                Our AI is putting together your personalized 7-day
+                plan. This usually takes under a minute -- feel free
+                to stay on this page, it'll update automatically.
+            </p>
+
+        </div>
+
+        <script>
+            (() => {
+                const poll = () => {
+                    fetch("{{ url_for('workout_plan_status') }}")
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.status && data.status !== "generating") {
+                                window.location.reload();
+                                return;
+                            }
+                            window.setTimeout(poll, 4000);
+                        })
+                        .catch(() => {
+                            window.setTimeout(poll, 6000);
+                        });
+                };
+                window.setTimeout(poll, 4000);
+            })();
+        </script>
+
+
         {% else %}
 
 
@@ -421,55 +442,6 @@
         nextWeekButton.disabled = false;
 
     }
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const deleteBtn = document.getElementById("deleteAccountBtn");
-    const modal = document.getElementById("deleteConfirmModal");
-    const cancelBtn = document.getElementById("cancelDelete");
-    const confirmBtn = document.getElementById("confirmDelete");
-    const deleteForm = document.getElementById("deleteAccountForm");
-
-    if (!deleteBtn || !modal || !cancelBtn || !confirmBtn || !deleteForm) {
-        return;
-    }
-
-    // Open confirmation popup
-    deleteBtn.addEventListener("click", function () {
-        modal.classList.add("active");
-    });
-
-    // Cancel deletion
-    cancelBtn.addEventListener("click", function () {
-        modal.classList.remove("active");
-    });
-
-    // Confirm deletion
-    confirmBtn.addEventListener("click", function () {
-
-        // Prevent accidental double click
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "Deleting...";
-
-        // Submit the actual Flask form
-        deleteForm.submit();
-    });
-
-    // Close when clicking outside the popup
-    modal.addEventListener("click", function (event) {
-        if (event.target === modal) {
-            modal.classList.remove("active");
-        }
-    });
-
-    // Close with Escape key
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
-            modal.classList.remove("active");
-        }
-    });
-
-});
 
 </script>
 

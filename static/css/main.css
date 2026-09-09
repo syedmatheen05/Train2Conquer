@@ -51,6 +51,58 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
 @media(prefers-reduced-motion:reduce){#page-loader{transition:none}.loader-spinner{animation-duration:1.5s}}
 
 
+/* =====================================================================
+   SHARED FLASH-MESSAGE SYSTEM
+   ---------------------------------------------------------------------
+   One consistent, compact flash-message design used by every page.
+   Markup contract: <div data-flash-message class="alert alert-{{category}}">
+   Individual pages may still add a body.page-xyz [data-flash-message]
+   override for layout context (e.g. sitting inside a narrow auth card),
+   but the look/feel below is the shared baseline so nothing needs to
+   reinvent its own flash design.
+===================================================================== */
+[data-flash-message].alert{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    width:100%;
+    max-width:520px;
+    margin:0 auto 18px;
+    padding:13px 16px;
+    border-radius:12px;
+    border:1px solid var(--t2c-line);
+    background:var(--t2c-surface-2);
+    color:var(--t2c-text);
+    font-family:'Manrope',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    line-height:1.5;
+    box-shadow:0 12px 28px rgba(0,0,0,.28);
+    animation:t2cFlashIn .3s ease both;
+}
+[data-flash-message].alert-success{ border-color:rgba(70,214,145,.4); background:rgba(70,214,145,.08); color:#8FE9BC; }
+[data-flash-message].alert-danger{ border-color:rgba(255,104,96,.42); background:rgba(255,104,96,.09); color:#FFAFA9; }
+[data-flash-message].alert-warning{ border-color:rgba(240,184,75,.4); background:rgba(240,184,75,.09); color:#F5CD82; }
+[data-flash-message].alert-info{ border-color:rgba(90,170,255,.4); background:rgba(90,170,255,.09); color:#9CC7FF; }
+
+@keyframes t2cFlashIn{
+    from{ opacity:0; transform:translateY(-8px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
+@media (max-width:600px){
+    [data-flash-message].alert{
+        max-width:100%;
+        font-size:13px;
+        padding:12px 14px;
+        border-radius:10px;
+    }
+}
+
+@media (prefers-reduced-motion:reduce){
+    [data-flash-message].alert{ animation:none; }
+}
+
 /* Global flash-message dismissal */
 [data-flash-message]{
     transition: opacity .35s ease, transform .35s ease, max-height .35s ease, margin .35s ease, padding .35s ease;
@@ -65,6 +117,183 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
     padding-bottom:0 !important;
     overflow:hidden !important;
 }
+
+/* ---- 2b. Delete-account confirmation modal --------------------------------
+   Lives in navbar.html (shared on every page) so the modal is unscoped
+   to any single page's body class -- it must work everywhere the
+   navbar's Delete Account button is rendered. -------------------------- */
+.t2c-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+
+    z-index: 99999;
+}
+
+.t2c-confirm-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.t2c-confirm-box {
+    width: 100%;
+    max-width: 420px;
+
+    background: #ffffff;
+    border-radius: 20px;
+
+    padding: 30px 28px;
+
+    text-align: center;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.25);
+
+    transform: translateY(20px) scale(0.96);
+
+    transition: transform 0.25s ease;
+}
+
+.t2c-confirm-overlay.active .t2c-confirm-box {
+    transform: translateY(0) scale(1);
+}
+
+.t2c-confirm-icon {
+    width: 64px;
+    height: 64px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #fff1f1;
+
+    font-size: 28px;
+}
+
+.t2c-confirm-box h3 {
+    margin: 0 0 10px;
+
+    font-size: 22px;
+    font-weight: 700;
+
+    color: #1f1f1f;
+}
+
+.t2c-confirm-box p {
+    margin: 0 auto 8px;
+
+    max-width: 340px;
+
+    font-size: 14px;
+    line-height: 1.6;
+
+    color: #666;
+}
+
+.t2c-confirm-warning {
+    font-weight: 600;
+    color: #d64545 !important;
+}
+
+.t2c-confirm-actions {
+    display: flex;
+    gap: 12px;
+
+    margin-top: 25px;
+}
+
+.t2c-confirm-actions button {
+    flex: 1;
+
+    height: 46px;
+
+    border: none;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.t2c-confirm-actions button:hover {
+    transform: translateY(-1px);
+}
+
+.t2c-confirm-actions button:active {
+    transform: translateY(0);
+}
+
+.t2c-confirm-cancel {
+    background: #f1f1f1;
+    color: #333;
+}
+
+.t2c-confirm-cancel:hover {
+    background: #e7e7e7;
+}
+
+.t2c-confirm-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.t2c-confirm-delete:hover {
+    background: #c82333;
+}
+
+@media (max-width: 480px) {
+    .t2c-confirm-box {
+        padding: 26px 20px;
+        border-radius: 18px;
+    }
+
+    .t2c-confirm-box h3 {
+        font-size: 20px;
+    }
+
+    .t2c-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .t2c-confirm-actions button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .t2c-confirm-overlay,
+    .t2c-confirm-box {
+        transition: none;
+    }
+}
+
 
 /* ---- 3. Navbar + footer (and other shared components) ------------------- */
 /* ===== extracted from navbar.html ===== */
@@ -352,13 +581,20 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
                 align-items: stretch;
                 gap: 2px;
                 background: var(--t2c-ink);
-                border-bottom: 1px solid var(--t2c-line);
-                padding: 10px 16px 16px;
+                /* Border only shows once the menu is actually open (below) --
+                   otherwise, at max-height:0, the border itself still renders
+                   as a stray 1px line under the navbar even while "closed". */
+                border-bottom: 1px solid transparent;
+                padding: 0 16px;
                 max-height: 0;
                 overflow: hidden;
-                transition: max-height .25s ease;
+                transition: max-height .25s ease, padding .25s ease, border-color .25s ease;
             }
-            .t2c-links.open{ max-height: 320px; }
+            .t2c-links.open{
+                max-height: 320px;
+                padding: 10px 16px 16px;
+                border-bottom-color: var(--t2c-line);
+            }
             .t2c-link{ width: 100%; height: 46px; padding: 0 12px; }
             .t2c-link::after{ display: none; }
             .t2c-right .t2c-btn-ghost{ display:none; }
@@ -400,6 +636,17 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
             .t2c-profile-name, .t2c-profile-trigger .t2c-caret{ display:none; }
             .t2c-profile-trigger{ padding:4px; }
             .t2c-avatar{ width:36px; height:36px; }
+            /* Let the brand/right side shrink instead of forcing an overflow
+               that pushes "Sign up" off screen on narrow phones. */
+            .t2c-brand{ flex-shrink: 1; min-width: 0; }
+            .t2c-brand-word{ overflow:hidden; text-overflow:ellipsis; }
+            .t2c-right{ flex-shrink: 0; gap: 6px; }
+            .t2c-right .t2c-btn{ padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+        }
+
+        @media (max-width: 360px){
+            .t2c-nav-inner{ padding: 0 12px; gap: 6px; }
+            .t2c-brand-word{ font-size: 15px; max-width: 128px; }
         }
 
         @media (prefers-reduced-motion: reduce){

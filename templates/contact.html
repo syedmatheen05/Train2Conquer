@@ -7,6 +7,7 @@
     {{ bootstrap.load_css() }}
 
     <title>Contact | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 </head>
@@ -152,7 +153,7 @@
 
                             {% for category, message in messages %}
 
-                                <div class="alert alert-{{ category }}">
+                                <div data-flash-message class="alert alert-{{ category }}">
                                     {{ message }}
                                 </div>
 
@@ -243,7 +244,7 @@
                             <!-- SEND -->
 
                             <button type="submit"
-                                    class="btn contact-submit">
+                                    class="btn btn-primary contact-submit">
 
                                 Send Message
                                 <span>→</span>

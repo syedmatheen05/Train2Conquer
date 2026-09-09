@@ -37,7 +37,6 @@ ul {
     padding-left: 0;
 }
 
-
 /* ---- 2. Page loader spinner ---------------------------------------------- */
 #page-loader{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:#08090C;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .32s ease,visibility .32s ease}
 #page-loader.hide{opacity:0;visibility:hidden;pointer-events:none}
@@ -49,7 +48,6 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
 .loader-text{color:#8E929D;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
 @keyframes t2cLoaderSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){#page-loader{transition:none}.loader-spinner{animation-duration:1.5s}}
-
 
 /* =====================================================================
    SHARED FLASH-MESSAGE SYSTEM
@@ -128,21 +126,16 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
     background: rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     padding: 20px;
-
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-
     transition:
         opacity 0.25s ease,
         visibility 0.25s ease;
-
     z-index: 99999;
 }
 
@@ -155,19 +148,13 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
 .t2c-confirm-box {
     width: 100%;
     max-width: 420px;
-
     background: #ffffff;
     border-radius: 20px;
-
     padding: 30px 28px;
-
     text-align: center;
-
     box-shadow:
         0 25px 70px rgba(0, 0, 0, 0.25);
-
     transform: translateY(20px) scale(0.96);
-
     transition: transform 0.25s ease;
 }
 
@@ -178,37 +165,27 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
 .t2c-confirm-icon {
     width: 64px;
     height: 64px;
-
     margin: 0 auto 18px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border-radius: 50%;
-
     background: #fff1f1;
-
     font-size: 28px;
 }
 
 .t2c-confirm-box h3 {
     margin: 0 0 10px;
-
     font-size: 22px;
     font-weight: 700;
-
     color: #1f1f1f;
 }
 
 .t2c-confirm-box p {
     margin: 0 auto 8px;
-
     max-width: 340px;
-
     font-size: 14px;
     line-height: 1.6;
-
     color: #666;
 }
 
@@ -220,23 +197,17 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
 .t2c-confirm-actions {
     display: flex;
     gap: 12px;
-
     margin-top: 25px;
 }
 
 .t2c-confirm-actions button {
     flex: 1;
-
     height: 46px;
-
     border: none;
     border-radius: 10px;
-
     font-size: 14px;
     font-weight: 600;
-
     cursor: pointer;
-
     transition:
         transform 0.2s ease,
         opacity 0.2s ease;
@@ -273,15 +244,12 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
         padding: 26px 20px;
         border-radius: 18px;
     }
-
     .t2c-confirm-box h3 {
         font-size: 20px;
     }
-
     .t2c-confirm-actions {
         flex-direction: column-reverse;
     }
-
     .t2c-confirm-actions button {
         width: 100%;
     }
@@ -293,7 +261,6 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
         transition: none;
     }
 }
-
 
 /* ---- 3. Navbar + footer (and other shared components) ------------------- */
 /* ===== extracted from navbar.html ===== */
@@ -654,8 +621,6 @@ html.t2c-loading,body.t2c-loading{overflow:hidden!important}
                 transition: none !important;
             }
         }
-    
-
 
 /* ===== extracted from footer.html ===== */
 

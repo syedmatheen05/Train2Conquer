@@ -30,7 +30,7 @@ bootstrap = Bootstrap5(app)
 csrf = CSRFProtect(app)
 
 login_manager = LoginManager()
-login_manager.login_view = "login"
+login_manager.login_view = "login" # type: ignore
 login_manager.login_message = "Please log in to continue."
 login_manager.login_message_category = "warning"
 login_manager.init_app(app)
@@ -329,7 +329,7 @@ def find_nearby_trainers(location,gender,radius=5):
     if not coordinates:
         return []
     user_lat, user_lon = coordinates
-    trainers = trainers = Trainer.query.filter_by(gender=gender).all()
+    trainers = Trainer.query.filter_by(gender=gender).all()
     nearby = []
     for trainer in trainers:
         distance = calculate_distance(user_lat,user_lon,trainer.latitude,trainer.longitude)

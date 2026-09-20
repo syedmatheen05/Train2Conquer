@@ -1,255 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Train2Conquer | Workout</title>
-    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
-
-    {{ bootstrap.load_css() }}
-
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
-</head>
-
-
-<body class="page-workout">
-    {% include "loader.html" %}
-
-<div class="t2c-workout-page">
-
-
-    <!-- =====================================================
-         TOP INFORMATION
-    ====================================================== -->
-
-    <div class="t2c-workout-top">
-
-
-        <div class="t2c-day">
-
-            <span class="t2c-day-label">
-                Current session
-            </span>
-
-            <span class="t2c-day-number">
-                Day {{ day_number }}
-            </span>
-
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Train2Conquer | Workout</title>
+        <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}"/>
+        {{ bootstrap.load_css() }}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}"/>
+    </head>
+    <body class="page-workout">
+        {% include "loader.html" %}
+        <div class="t2c-workout-page">
+        <div class="t2c-workout-top">
+            <div class="t2c-day">
+            <span class="t2c-day-label">Current session</span>
+            <span class="t2c-day-number">Day {{ day_number }}</span>
+            </div>
+            <div class="t2c-workout-count">Workout<span id="workout-number">1</span>
+            </div>
         </div>
-
-
-        <div class="t2c-workout-count">
-
-            Workout
-            <span id="workout-number">1</span>
-
+        <!--WORKOUT CARD-->
+        <div class="t2c-workout-card workout-card">
+            <!-- VIDEO-->
+            <div class="t2c-video-wrapper">
+            <video
+                id="workout-video"
+                autoplay
+                muted
+                loop
+                playsinline
+                webkit-playsinline
+                preload="metadata">
+                <source id="video-source" src="" type="video/mp4" />
+            </video>
+            </div>
+            <!-- PAUSE BUTTON Only appears for timed exercises.-->
+            <div class="t2c-pause-wrapper">
+            <button id="pause-exercise" type="button" class="d-none" aria-label="Pause workout">Ⅱ PAUSE</button>
+            </div>
+            <!-- EXERCISE INFORMATION-->
+            <div class="t2c-exercise-info">
+            <div class="t2c-exercise-label">Next movement</div>
+            <h3 id="exercise-name"></h3>
+            <h4 id="reps"></h4>
+            </div>
         </div>
-
-
-    </div>
-
-
-
-    <!-- =====================================================
-         WORKOUT CARD
-    ====================================================== -->
-
-
-
-<div class="t2c-workout-card workout-card">
-
-    <!-- =================================================
-         VIDEO
-    ================================================== -->
-
-    <div class="t2c-video-wrapper">
-
-        <video
-            id="workout-video"
-            autoplay
-            muted
-            loop
-            playsinline
-            webkit-playsinline
-            preload="metadata"
-        >
-
-            <source
-                id="video-source"
-                src=""
-                type="video/mp4"
-            >
-
-        </video>
-
-    </div>
-
-
-    <!-- =================================================
-         PAUSE BUTTON
-         Only appears for timed exercises.
-    ================================================== -->
-
-    <div class="t2c-pause-wrapper">
-
-        <button
-            id="pause-exercise"
-            type="button"
-            class="d-none"
-            aria-label="Pause workout"
-        >
-            Ⅱ PAUSE
-        </button>
-
-    </div>
-
-
-    <!-- =================================================
-         EXERCISE INFORMATION
-    ================================================== -->
-
-    <div class="t2c-exercise-info">
-
-        <div class="t2c-exercise-label">
-            Next movement
-        </div>
-
-
-        <h3 id="exercise-name"></h3>
-
-
-        <h4 id="reps"></h4>
-
-    </div>
-
-</div>
-
-
-    <!-- =====================================================
-         PREVIOUS / DONE
-    ====================================================== -->
-
-    <div
-        id="navigation-buttons"
-        class="t2c-navigation"
-    >
-
-
-        <button
-            id="previous-button"
-            class="btn"
-            disabled
-        >
-            ← Previous
-        </button>
-
-
-        <form
+        <!-- PREVIOUS / DONE -->
+        <div id="navigation-buttons" class="t2c-navigation">
+            <button id="previous-button" class="btn" disabled>← Previous</button>
+            <form
             id="completeWorkoutForm"
             method="POST"
             data-loader-message="Saving your workout..."
-            action="{{ url_for(
-                'complete_workout',
-                day=day_number
-            ) }}"
-        >
-
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <button
-                id="next-button"
-                type="button"
-                class="btn"
-            >
-                Done →
-            </button>
-
-        </form>
-
-
-    </div>
-
-
-
-    <!-- =====================================================
-         REST SCREEN
-    ====================================================== -->
-
-    <div
-        id="rest-screen"
-        class="d-none"
-    >
-
-
-        <h2 id="rest-title">
-            REST
-        </h2>
-
-
-        <p id="rest-message">
-
-            Take a short break before your
-            next exercise.
-
-        </p>
-
-
-        <p id="next-exercise">
-        </p>
-
-
-        <div id="rest-timer">
+            action="{{ url_for('complete_workout',day=day_number) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button id="next-button" type="button" class="btn">Done →</button>
+            </form>
         </div>
-
-
-        <div class="t2c-timer-controls">
-            <button
-                id="add-rest-time"
-                class="t2c-plus20"
-                type="button"
-                aria-label="Add 20 seconds to rest timer"
-            >
-                20 SEC
-            </button>
+        <!--REST SCREEN-->
+        <div id="rest-screen" class="d-none">
+            <h2 id="rest-title">REST</h2>
+            <p id="rest-message">Take a short break before your next exercise.</p>
+            <p id="next-exercise"></p>
+            <div id="rest-timer"></div>
+            <div class="t2c-timer-controls">
+            <button id="add-rest-time" class="t2c-plus20" type="button" aria-label="Add 20 seconds to rest timer">20 SEC</button>
+            </div>
+            <button id="skip-rest" type="button" class="btn">Skip Rest</button>
         </div>
-
-        <button
-            id="skip-rest"
-            type="button"
-            class="btn"
-        >
-            Skip Rest
-        </button>
-
-
-    </div>
-
-
-</div>
-
-
-
-{{ bootstrap.load_js() }}
-
-
-<script>
-
-    const workouts =
-        {{ workouts | tojson | safe }};
-
-</script>
-
-
-<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
-<script src="{{ url_for('static', filename='js/workout.js') }}"></script>
-</body>
-
+        </div>
+        {{ bootstrap.load_js() }}
+        <script>
+            const workouts = {{ workouts | tojson | safe }};
+        </script>
+        <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/workout.js') }}"></script>
+    </body>
 </html>

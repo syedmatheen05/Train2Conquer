@@ -6,7 +6,7 @@
 let currentWorkout = 0;
 let currentScreen = "ready";
 
-// Exercise timer
+// Exercise timera
 let exerciseTime = 0;
 let exerciseEndAt = null;
 let exerciseInterval = null;

@@ -1,0 +1,288 @@
+/* =====================================================================
+   ADMIN.CSS -- styles for the /admin/... panel only.
+   ---------------------------------------------------------------------
+   Loaded only on admin pages (templates/admin/*.html), same pattern as
+   pages.css being loaded per-page. Reuses the same dark/orange-gold
+   design tokens already used on the dashboard so the admin panel looks
+   like part of Train2Conquer, not a bolted-on generic backend.
+===================================================================== */
+
+body.page-admin {
+    --t2c-bg: #07080b;
+    --t2c-surface: #111319;
+    --t2c-surface-2: #171a21;
+    --t2c-text: #f5f4ef;
+    --t2c-muted: #969aa7;
+    --t2c-orange: #ff4b26;
+    --t2c-gold: #d9a83b;
+    --t2c-danger: #ff6860;
+    --t2c-green: #48d99b;
+    --t2c-border: rgba(255,255,255,.08);
+    --t2c-radius: 18px;
+    --t2c-radius-sm: 12px;
+
+    margin: 0;
+    background: var(--t2c-bg);
+    color: var(--t2c-text);
+    font-family: 'Manrope', system-ui, sans-serif;
+    overflow-x: hidden;
+}
+
+.t2c-admin {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+}
+
+.t2c-admin-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.t2c-admin-kicker {
+    color: var(--t2c-gold);
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-size: 12px;
+    margin: 0 0 6px;
+}
+
+.t2c-admin-header h1 {
+    font-family: Anton, sans-serif;
+    font-weight: 400;
+    font-size: clamp(26px, 4vw, 38px);
+    margin: 0;
+}
+
+.t2c-admin-back {
+    color: var(--t2c-muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+.t2c-admin-back:hover { color: var(--t2c-text); }
+
+/* ---- Stat cards (dashboard) ---- */
+.t2c-admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+.t2c-admin-stat {
+    background: var(--t2c-surface);
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius);
+    padding: 20px;
+}
+.t2c-admin-stat strong {
+    display: block;
+    font-family: Anton, sans-serif;
+    font-weight: 400;
+    font-size: 32px;
+    color: var(--t2c-gold);
+}
+.t2c-admin-stat span {
+    color: var(--t2c-muted);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.t2c-admin-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+.t2c-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 14px;
+    border: 1px solid var(--t2c-border);
+    color: var(--t2c-text);
+    background: var(--t2c-surface);
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease;
+}
+.t2c-admin-btn:hover { border-color: var(--t2c-border-hover, rgba(255,255,255,.2)); transform: translateY(-1px); }
+.t2c-admin-btn-solid {
+    background: linear-gradient(135deg, var(--t2c-orange), var(--t2c-gold));
+    border-color: transparent;
+    color: #0B0C0F;
+}
+.t2c-admin-btn-danger {
+    background: rgba(255,104,96,.12);
+    border-color: rgba(255,104,96,.35);
+    color: var(--t2c-danger);
+}
+
+/* ---- Search bar ---- */
+.t2c-admin-search {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.t2c-admin-search input[type="text"] {
+    flex: 1;
+    background: var(--t2c-surface);
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius-sm);
+    padding: 12px 16px;
+    color: var(--t2c-text);
+    font-family: inherit;
+    font-size: 14px;
+}
+.t2c-admin-search input[type="text"]:focus {
+    outline: none;
+    border-color: var(--t2c-orange);
+}
+
+/* ---- Trainer table (desktop) / cards (mobile) ---- */
+.t2c-admin-table-wrap {
+    background: var(--t2c-surface);
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius);
+    overflow: hidden;
+}
+table.t2c-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.t2c-admin-table th,
+.t2c-admin-table td {
+    text-align: left;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--t2c-border);
+    font-size: 14px;
+}
+.t2c-admin-table th {
+    color: var(--t2c-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 12px;
+    font-weight: 700;
+}
+.t2c-admin-table tr:last-child td { border-bottom: none; }
+.t2c-admin-table .t2c-admin-row-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+.t2c-admin-table .t2c-admin-row-actions form { margin: 0; }
+.t2c-admin-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--t2c-surface-2);
+    border: 1px solid var(--t2c-border);
+    text-transform: capitalize;
+}
+
+.t2c-admin-empty {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--t2c-muted);
+}
+
+/* ---- Form (add/edit trainer) ---- */
+.t2c-admin-form-card {
+    background: var(--t2c-surface);
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius);
+    padding: 28px;
+    max-width: 560px;
+}
+.t2c-admin-form-card label {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--t2c-muted);
+    margin: 18px 0 6px;
+}
+.t2c-admin-form-card label:first-of-type { margin-top: 0; }
+.t2c-admin-form-card input[type="text"],
+.t2c-admin-form-card select,
+.t2c-admin-form-card textarea {
+    width: 100%;
+    background: var(--t2c-bg);
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius-sm);
+    padding: 12px 14px;
+    color: var(--t2c-text);
+    font-family: inherit;
+    font-size: 14px;
+}
+.t2c-admin-form-card input:focus,
+.t2c-admin-form-card select:focus,
+.t2c-admin-form-card textarea:focus {
+    outline: none;
+    border-color: var(--t2c-orange);
+}
+.t2c-admin-form-card .t2c-admin-errors {
+    color: var(--t2c-danger);
+    font-size: 12px;
+    margin-top: 4px;
+    list-style: none;
+    padding: 0;
+}
+.t2c-admin-form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+.t2c-admin-form-card button[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    border: none;
+    background: linear-gradient(135deg, var(--t2c-orange), var(--t2c-gold));
+    color: #0B0C0F;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* ---- Mobile: table becomes stacked cards ---- */
+@media (max-width: 720px) {
+    .t2c-admin { padding: 28px 16px 60px; }
+    .t2c-admin-table thead { display: none; }
+    .t2c-admin-table, .t2c-admin-table tbody, .t2c-admin-table tr, .t2c-admin-table td {
+        display: block;
+        width: 100%;
+    }
+    .t2c-admin-table tr {
+        border-bottom: 1px solid var(--t2c-border);
+        padding: 14px 16px;
+    }
+    .t2c-admin-table td {
+        border: none;
+        padding: 4px 0;
+    }
+    .t2c-admin-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--t2c-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin-bottom: 2px;
+    }
+    .t2c-admin-table .t2c-admin-row-actions {
+        justify-content: flex-start;
+        margin-top: 8px;
+    }
+}

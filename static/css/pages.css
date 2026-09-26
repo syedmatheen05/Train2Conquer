@@ -1,4 +1,10 @@
 /* =====================================================================
+   NOTE: this combined file has been split into per-page files under
+   static/css/pages/<name>.css (one per template), so no live template
+   links to this file anymore -- only the unused templates/base.html
+   scaffold still does. Kept here for reference/history; not loaded by
+   the app. See static/css/pages/<name>.css for the current styles.
+   ---------------------------------------------------------------------
    PAGES.CSS -- styles that belong to ONE specific page only.
    ---------------------------------------------------------------------
    Beginner-friendly guide:
@@ -1149,7 +1155,18 @@ body.page-dashboard a {
 
 body.page-dashboard .t2c-page {
             position: relative;
-            overflow: hidden;
+            /* No overflow rule here on purpose. It used to be
+               "overflow: hidden" to clip the decorative glow blobs below,
+               but that breaks position: sticky on the navbar (a sticky
+               element can't stick past an ancestor with overflow
+               hidden/auto/scroll). Setting overflow-x: hidden alone doesn't
+               fix it either -- per the CSS overflow spec, if only one axis
+               is non-"visible" the other axis computes to "auto" instead
+               of "visible", which still creates a scroll container and
+               still blocks sticky. The blobs are position: fixed
+               (viewport-relative, not clipped by this element anyway), and
+               body.page-dashboard already has overflow-x: hidden, so
+               horizontal clipping is still covered at the body level. */
         }
 
 body.page-dashboard .t2c-page::before {
@@ -7185,7 +7202,37 @@ body.page-workout {
 body.page-workout .t2c-workout-page {
             width: min(900px, 100%);
             margin: 0 auto;
-            padding: 35px 18px 60px;
+            /* Single-viewport workout player: the whole card (top bar,
+               video, exercise info, nav) is meant to fit in one screen so
+               clicking Next never requires scrolling down then back up.
+               100svh (small viewport height) falls back to 100vh for
+               browsers that don't support it yet; min-height (not height)
+               so genuinely tall content -- e.g. a very long "about" bio on
+               a tiny phone -- can still grow instead of clipping. */
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 18px 18px 26px;
+            box-sizing: border-box;
+        }
+
+body.page-workout .t2c-workout-progress {
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: var(--t2c-panel);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+body.page-workout .t2c-workout-progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--t2c-orange), var(--t2c-gold));
+            transition: width .3s ease;
         }
 
 body.page-workout .t2c-workout-top {
@@ -7254,10 +7301,12 @@ body.page-workout .t2c-video-wrapper {
     background: #050608;
     overflow: hidden;
     /*
-     * Prevent the video from becoming
-     * ridiculously tall on large screens.
+     * Capped shorter than before (was min(70vh,620px)) so the video +
+     * exercise info + nav buttons together fit inside one viewport on a
+     * typical laptop/phone screen without pushing the Next button below
+     * the fold -- that's the whole point of the single-viewport player.
      */
-    max-height: min(70vh, 620px);
+    max-height: min(40vh, 360px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7335,11 +7384,13 @@ body.page-workout #pause-exercise.is-paused {
 @media (max-width: 768px) {
 body.page-workout .t2c-video-wrapper {
         /*
-         * Full available width.
+         * Full available width, but keep a height cap (was max-height:
+         * none here, which let the video eat the whole viewport on
+         * mobile and push Next below the fold again).
          */
         width: 100%;
         aspect-ratio: 16 / 9;
-        max-height: none;
+        max-height: min(34vh, 280px);
         border-radius: 0;
     }
 body.page-workout #workout-video {
@@ -7380,7 +7431,7 @@ body.page-workout #pause-exercise {
 }
 
 body.page-workout .t2c-exercise-info {
-            padding: 28px 30px 25px;
+            padding: 18px 30px 18px;
             text-align: center;
             border-bottom: 1px solid var(--t2c-border);
         }
@@ -7485,8 +7536,12 @@ body.page-workout #next-button:hover {
 body.page-workout #rest-screen {
     width: 100%;
     margin-top: 20px;
-    min-height: 390px;
-    padding: 45px 25px;
+    /* Reduced from 390px (was taller than the workout card itself,
+       causing the page to grow/shrink and re-scroll each time the user
+       moved between an exercise and its rest break). Now closer to the
+       workout card's own height so switching screens doesn't jump. */
+    min-height: 300px;
+    padding: 30px 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -7615,9 +7670,12 @@ body.page-workout #add-rest-time:active {
 }
 
 @media (max-width: 600px) {
+body.page-workout .t2c-workout-page {
+        padding: 14px 14px 20px;
+    }
 body.page-workout #rest-screen {
-        min-height: 350px;
-        padding: 35px 18px;
+        min-height: 260px;
+        padding: 26px 18px;
     }
 body.page-workout #rest-title {
         font-size: 2.4rem;
@@ -7642,8 +7700,8 @@ body.page-workout #add-rest-time {
 
 @media (max-width: 380px) {
 body.page-workout #rest-screen {
-        min-height: 320px;
-        padding: 30px 15px;
+        min-height: 230px;
+        padding: 22px 14px;
     }
 body.page-workout #rest-title {
         font-size: 2.1rem;

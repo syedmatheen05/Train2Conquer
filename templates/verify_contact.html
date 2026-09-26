@@ -20,7 +20,7 @@
     rel="stylesheet"
 >
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/verify_contact.css') }}">
 </head>
 
 <body class="page-verify-contact">
@@ -243,7 +243,10 @@
 
 {% include "footer.html" %}
 
-{{ bootstrap.load_js() }}
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
 
 <script>
 

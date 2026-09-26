@@ -37,6 +37,24 @@ ul {
     padding-left: 0;
 }
 
+/* ---- 1b. Consistent keyboard-focus visibility ---------------------------
+   Previously there was no site-wide focus style, so keyboard/assistive-tech
+   users navigating with Tab had no visible indicator on most links, buttons
+   and form fields (or fell back to the browser default, which is low-
+   contrast on this dark background). :focus-visible only shows the ring
+   for keyboard/programmatic focus, not every mouse click, so it doesn't
+   change how the site looks for mouse/touch users. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--t2c-flame, #FF5A36);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 /* ---- 2. Page loader spinner ---------------------------------------------- */
 #page-loader{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:#08090C;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .32s ease,visibility .32s ease}
 #page-loader.hide{opacity:0;visibility:hidden;pointer-events:none}

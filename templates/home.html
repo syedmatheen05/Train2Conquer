@@ -17,7 +17,7 @@
 
 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/home.css') }}">
 </head>
 
 <body class="d-flex flex-column min-vh-100 page-home">
@@ -379,7 +379,10 @@
 {% include "footer.html" %}
 
 
-{{ bootstrap.load_js() }}
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
 
 
 <script>

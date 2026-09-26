@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">Train2Conquer</p>
+            <h1>Admin Dashboard</h1>
+        </div>
+    </div>
+
+    <div class="t2c-admin-stats">
+        <div class="t2c-admin-stat">
+            <strong>{{ trainer_count }}</strong>
+            <span>Trainers</span>
+        </div>
+        <div class="t2c-admin-stat">
+            <strong>{{ user_count }}</strong>
+            <span>Users</span>
+        </div>
+        <div class="t2c-admin-stat">
+            <strong>{{ admin_count }}</strong>
+            <span>Admins</span>
+        </div>
+    </div>
+
+    <div class="t2c-admin-actions">
+        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_trainers') }}">Manage Trainers</a>
+        <a class="t2c-admin-btn" href="{{ url_for('admin_trainer_new') }}">+ Add Trainer</a>
+        <a class="t2c-admin-btn" href="{{ url_for('home') }}">← Back to site</a>
+    </div>
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

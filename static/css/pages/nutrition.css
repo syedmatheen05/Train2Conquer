@@ -1,0 +1,31 @@
+/* This file holds ONLY the CSS for this one page, split out of the
+   original single pages.css (which held every page's styles in one
+   197KB file loaded on every page). Selectors here are still scoped
+   to body.page-<name> exactly as before -- nothing about how the
+   page looks has changed, only which file the browser has to
+   download to render it. */
+
+/* ============================================================
+   PAGE: nutrition.html
+   ============================================================ */
+
+body.page-nutrition .t2c-info-page {max-width:1050px;margin:0 auto;padding:90px 24px}
+
+body.page-nutrition .t2c-info-page h1 {font-family:Anton,sans-serif;font-size:clamp(48px,8vw,88px);line-height:.95}
+
+body.page-nutrition .t2c-info-page .accent {color:#FF512F}
+
+body.page-nutrition .t2c-info-page .lead {max-width:720px;color:#9a9eaa;font-size:18px;line-height:1.8}
+
+body.page-nutrition .t2c-nutrition-grid {display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:48px}
+
+body.page-nutrition .t2c-info-card {background:#101217;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}
+
+body.page-nutrition .t2c-info-card h2 {font-size:20px;margin-bottom:10px}
+
+body.page-nutrition .t2c-info-card p {color:#8E929D;line-height:1.7;margin:0}
+
+@media(max-width:700px) {
+body.page-nutrition .t2c-nutrition-grid {grid-template-columns:1fr}
+body.page-nutrition .t2c-info-page {padding:60px 18px}
+}

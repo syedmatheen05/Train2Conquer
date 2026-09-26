@@ -1,0 +1,537 @@
+/* This file holds ONLY the CSS for this one page, split out of the
+   original single pages.css (which held every page's styles in one
+   197KB file loaded on every page). Selectors here are still scoped
+   to body.page-<name> exactly as before -- nothing about how the
+   page looks has changed, only which file the browser has to
+   download to render it. */
+
+/* ============================================================
+   PAGE: home.html
+   ============================================================ */
+
+body.page-home {
+            --t2c-bg: #08090C;
+            --t2c-panel: #101217;
+            --t2c-panel-2: #151820;
+            --t2c-panel-3: #1A1D24;
+            --t2c-border: rgba(255,255,255,.08);
+            --t2c-border-hover: rgba(255,255,255,.15);
+            --t2c-text: #F5F5F3;
+            --t2c-muted: #8E929D;
+            --t2c-muted-2: #686D78;
+            --t2c-orange: #FF512F;
+            --t2c-orange-light: #FF704D;
+            --t2c-gold: #D7AA48;
+            --t2c-green: #35C978;
+        }
+
+body.page-home {
+            background: var(--t2c-bg);
+            color: var(--t2c-text);
+            font-family:
+                'Manrope',
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                'Segoe UI',
+                sans-serif;
+            overflow-x: hidden;
+        }
+
+@import url(
+            'https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;
+
+600;
+
+700;
+
+800&display=swap'
+        );
+
+body.page-home .t2c-dashboard {
+            width: 100%;
+            min-height: calc(100vh - 72px);
+            padding: 55px 20px 70px;
+            background:
+                radial-gradient(
+                    circle at 8% 5%,
+                    rgba(255,81,47,.08),
+                    transparent 25%
+                ),
+                radial-gradient(
+                    circle at 92% 35%,
+                    rgba(215,170,72,.05),
+                    transparent 25%
+                ),
+                var(--t2c-bg);
+        }
+
+body.page-home .t2c-dashboard-inner {
+            width: min(1120px, 100%);
+            margin: auto;
+        }
+
+body.page-home [data-flash-message] {
+            margin: 0 auto 25px;
+        }
+
+body.page-home .t2c-dashboard-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 25px;
+            margin-bottom: 34px;
+        }
+
+body.page-home .t2c-header-left {
+            max-width: 650px;
+        }
+
+body.page-home .t2c-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 12px;
+            color: var(--t2c-gold);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+body.page-home .t2c-eyebrow::before {
+            content: "";
+            width: 25px;
+            height: 2px;
+            border-radius: 10px;
+            background: var(--t2c-orange);
+        }
+
+body.page-home .t2c-dashboard-header h1 {
+            font-family: 'Anton', sans-serif;
+            font-weight: 400;
+            text-transform: uppercase;
+            font-size: clamp(
+                2.2rem,
+                5vw,
+                3.5rem
+            );
+            line-height: .95;
+            letter-spacing: .01em;
+            margin: 0 0 13px;
+            color: var(--t2c-text);
+        }
+
+body.page-home .t2c-dashboard-header h1 .accent {
+            color: var(--t2c-orange);
+        }
+
+body.page-home .t2c-dashboard-header p {
+            margin: 0;
+            color: var(--t2c-muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+body.page-home .t2c-progress-summary {
+            min-width: 185px;
+            padding: 18px;
+            background: var(--t2c-panel);
+            border: 1px solid var(--t2c-border);
+            border-radius: 16px;
+            text-align: left;
+            box-shadow: 0 15px 40px rgba(0,0,0,.22);
+        }
+
+body.page-home .t2c-progress-label {
+            color: var(--t2c-muted-2);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom: 6px;
+        }
+
+body.page-home .t2c-progress-number {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+
+body.page-home .t2c-progress-number strong {
+            font-family: 'Anton', sans-serif;
+            font-size: 30px;
+            font-weight: 400;
+            color: var(--t2c-text);
+        }
+
+body.page-home .t2c-progress-number span {
+            color: var(--t2c-muted);
+            font-size: 12px;
+        }
+
+body.page-home .t2c-progress-bar {
+            width: 100%;
+            height: 5px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #20232B;
+        }
+
+body.page-home .t2c-progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--t2c-orange),
+                    var(--t2c-gold)
+                );
+            transition: width .4s ease;
+        }
+
+body.page-home .workout-plan {
+            display: grid;
+            gap: 13px;
+        }
+
+body.page-home .workout-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 88px minmax(0,1fr) auto;
+            align-items: center;
+            gap: 20px;
+            min-height: 116px;
+            padding: 14px 17px;
+            background:
+                linear-gradient(
+                    120deg,
+                    rgba(255,255,255,.025),
+                    transparent 60%
+                ),
+                var(--t2c-panel);
+            border: 1px solid var(--t2c-border);
+            border-radius: 18px;
+            overflow: hidden;
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                background .2s ease,
+                box-shadow .2s ease;
+        }
+
+body.page-home .workout-row::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 15px;
+            bottom: 15px;
+            width: 3px;
+            border-radius: 0 5px 5px 0;
+            background: var(--t2c-orange);
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+
+body.page-home .workout-row:hover {
+            transform: translateY(-2px);
+            border-color: var(--t2c-border-hover);
+            background: var(--t2c-panel-2);
+            box-shadow:
+                0 15px 40px rgba(0,0,0,.28);
+        }
+
+body.page-home .workout-row:hover::before {
+            opacity: 1;
+        }
+
+body.page-home .workout-image {
+            width: 88px;
+            height: 88px;
+            max-width: none;
+            object-fit: cover;
+            display: block;
+            border-radius: 14px;
+            background: var(--t2c-panel-3);
+            border: 1px solid var(--t2c-border);
+            transition: transform .25s ease;
+        }
+
+body.page-home .workout-row:hover .workout-image {
+            transform: scale(1.035);
+        }
+
+body.page-home .workout-info {
+            min-width: 0;
+        }
+
+body.page-home .workout-day {
+            display: inline-block;
+            color: var(--t2c-orange);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+body.page-home .workout-info h2 {
+            display: none;
+        }
+
+body.page-home .workout-info h4 {
+            color: var(--t2c-text);
+            font-size: 17px;
+            font-weight: 800;
+            margin: 0 0 5px;
+            line-height: 1.3;
+        }
+
+body.page-home .workout-info p {
+            color: var(--t2c-muted);
+            font-size: 12px;
+            line-height: 1.55;
+            margin: 0;
+            max-width: 570px;
+        }
+
+body.page-home .workout-action {
+            display: flex;
+            justify-content: flex-end;
+            min-width: 145px;
+        }
+
+body.page-home .workout-action .btn {
+            min-width: 140px;
+            min-height: 42px;
+            padding: 9px 17px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            transition:
+                transform .15s ease,
+                box-shadow .15s ease,
+                filter .15s ease;
+        }
+
+body.page-home .workout-action .btn-primary {
+            border: none;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--t2c-orange),
+                    var(--t2c-orange-light)
+                );
+            color: #170E0A;
+            box-shadow:
+                0 8px 20px rgba(255,81,47,.13);
+        }
+
+body.page-home .workout-action .btn-primary:hover {
+            filter: brightness(1.07);
+            transform: translateY(-1px);
+            box-shadow:
+                0 12px 25px rgba(255,81,47,.20);
+        }
+
+body.page-home .workout-action .btn-success {
+            background: rgba(53,201,120,.08);
+            color: var(--t2c-green);
+            border: 1px solid rgba(53,201,120,.18);
+            opacity: 1;
+        }
+
+body.page-home .t2c-next-week {
+            margin-top: 38px;
+            padding: 28px;
+            text-align: center;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,81,47,.05),
+                    rgba(215,170,72,.03)
+                ),
+                var(--t2c-panel);
+            border: 1px solid var(--t2c-border);
+            border-radius: 18px;
+        }
+
+body.page-home .t2c-next-week h3 {
+            font-family: 'Anton', sans-serif;
+            font-size: 21px;
+            font-weight: 400;
+            text-transform: uppercase;
+            margin: 0 0 7px;
+        }
+
+body.page-home .t2c-next-week p {
+            color: var(--t2c-muted);
+            font-size: 12px;
+            margin: 0 0 18px;
+        }
+
+body.page-home .t2c-next-week .btn {
+            min-height: 45px;
+            padding: 10px 28px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+body.page-home .t2c-next-week .btn-primary {
+            border: none;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--t2c-orange),
+                    var(--t2c-orange-light)
+                );
+            color: #170E0A;
+        }
+
+body.page-home .t2c-next-week .btn-primary:disabled {
+            background: #252830;
+            color: #555A66;
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+body.page-home .t2c-empty {
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 50px 30px;
+            text-align: center;
+            background: var(--t2c-panel);
+            border: 1px solid var(--t2c-border);
+            border-radius: 20px;
+        }
+
+body.page-home .t2c-empty-icon {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 22px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background: rgba(255,81,47,.08);
+            border: 1px solid rgba(255,81,47,.14);
+            color: var(--t2c-orange);
+            font-size: 25px;
+        }
+
+body.page-home .t2c-empty h3 {
+            font-family: 'Anton', sans-serif;
+            font-weight: 400;
+            text-transform: uppercase;
+            font-size: 25px;
+            margin: 0 0 8px;
+        }
+
+body.page-home .t2c-empty p {
+            color: var(--t2c-muted);
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
+
+body.page-home .t2c-empty .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 22px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: var(--t2c-orange);
+            color: #170E0A;
+        }
+
+@media(max-width: 768px) {
+body.page-home .t2c-dashboard {
+                padding: 35px 14px 55px;
+            }
+body.page-home .t2c-dashboard-header {
+                align-items: flex-start;
+                flex-direction: column;
+                margin-bottom: 25px;
+            }
+body.page-home .t2c-dashboard-header h1 {
+                font-size: 2.5rem;
+            }
+body.page-home .t2c-progress-summary {
+                width: 100%;
+                min-width: 0;
+            }
+body.page-home .workout-row {
+                grid-template-columns: 72px minmax(0,1fr);
+                gap: 14px;
+                padding: 13px;
+                min-height: auto;
+            }
+body.page-home .workout-image {
+                width: 72px;
+                height: 72px;
+                border-radius: 12px;
+            }
+body.page-home .workout-info h4 {
+                font-size: 15px;
+            }
+body.page-home .workout-info p {
+                font-size: 11.5px;
+            }
+body.page-home .workout-action {
+                grid-column: 1 / -1;
+                width: 100%;
+                min-width: 0;
+                justify-content: stretch;
+            }
+body.page-home .workout-action .btn {
+                width: 100%;
+                min-width: 0;
+            }
+body.page-home .t2c-next-week {
+                margin-top: 25px;
+                padding: 24px 18px;
+            }
+}
+
+@media(max-width: 420px) {
+body.page-home .t2c-dashboard {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+body.page-home .t2c-dashboard-header h1 {
+                font-size: 2.15rem;
+            }
+body.page-home .workout-row {
+                grid-template-columns: 62px minmax(0,1fr);
+                gap: 12px;
+                border-radius: 15px;
+            }
+body.page-home .workout-image {
+                width: 62px;
+                height: 62px;
+            }
+body.page-home .workout-info h4 {
+                font-size: 14px;
+                margin-bottom: 3px;
+            }
+body.page-home .workout-info p {
+                font-size: 10.5px;
+                line-height: 1.45;
+            }
+body.page-home .t2c-next-week h3 {
+                font-size: 19px;
+            }
+}
+
+@media(prefers-reduced-motion: reduce) {
+body.page-home .workout-row,
+body.page-home .workout-image,
+body.page-home .workout-action .btn {
+                transition: none;
+            }
+}

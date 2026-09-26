@@ -1,0 +1,25 @@
+/* This file holds ONLY the CSS for this one page, split out of the
+   original single pages.css (which held every page's styles in one
+   197KB file loaded on every page). Selectors here are still scoped
+   to body.page-<name> exactly as before -- nothing about how the
+   page looks has changed, only which file the browser has to
+   download to render it. */
+
+/* ============================================================
+   PAGE: privacy.html
+   ============================================================ */
+
+body.page-privacy .t2c-info-page {max-width:900px;margin:0 auto;padding:90px 24px}
+
+body.page-privacy .t2c-info-page h1 {font-family:Anton,sans-serif;font-size:clamp(46px,7vw,78px)}
+
+body.page-privacy .t2c-info-page h2 {margin-top:42px;font-size:22px}
+
+body.page-privacy .t2c-info-page p,
+body.page-privacy .t2c-info-page li {color:#8E929D;line-height:1.8}
+
+body.page-privacy .t2c-info-page strong {color:#F5F5F3}
+
+@media(max-width:700px) {
+body.page-privacy .t2c-info-page {padding:60px 18px}
+}

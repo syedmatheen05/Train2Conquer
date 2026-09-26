@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy & Security | Train2Conquer</title>
     <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
-    {{ bootstrap.load_css() }}
+    <!-- Bootstrap intentionally NOT loaded on this page: it uses zero
+         Bootstrap classes/components, so shipping its ~232KB CSS here
+         would be pure dead weight. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/privacy.css') }}">
 </head>
 <body class="page-privacy">
 {% include "loader.html" %}

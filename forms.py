@@ -2,6 +2,10 @@ from flask_wtf import FlaskForm
 from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Regexp
 from wtforms.widgets import ListWidget, CheckboxInput
+# NOTE: TrainerSearchForm/TrainerForm below used to re-import FlaskForm,
+# SelectField/StringField/SubmitField and DataRequired a second time
+# (this file was originally pasted together from two source files).
+# Those imports are already covered above, so the duplicates were removed.
 class Loginform(FlaskForm):
     email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
     submit=SubmitField("verify")
@@ -93,10 +97,6 @@ class ContactOTPForm(FlaskForm):
                                                       Regexp(r"^\d{6}$", message="Verification code must contain exactly 6 digits.")])
     submit=SubmitField("Verify")
 
-from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired
-
 
 class TrainerSearchForm(FlaskForm):
 
@@ -180,3 +180,40 @@ class TrainerForm(FlaskForm):
     )
 
     submit = SubmitField("Become a Trainer")
+
+
+class AdminTrainerForm(FlaskForm):
+    """Used by the admin panel to add/edit rows in the Trainer table.
+
+    Distinct from TrainerForm (the public "become a trainer" application,
+    which only emails the site owner and never touches the Trainer table).
+    Gender choices match the lowercase values already used elsewhere
+    (FitnessProfileform, TrainerSearchForm) so gender filtering stays
+    consistent across the app.
+    """
+
+    name = StringField(
+        "Full Name",
+        validators=[DataRequired(), Length(max=100)],
+        render_kw={"placeholder": "e.g. Priya Sharma"},
+    )
+
+    gender = SelectField(
+        "Gender",
+        choices=[("male", "Male"), ("female", "Female"), ("other", "Other")],
+        validators=[DataRequired()],
+    )
+
+    location = StringField(
+        "Location",
+        validators=[DataRequired(), Length(max=200)],
+        render_kw={"placeholder": "e.g. Koramangala, Bengaluru"},
+    )
+
+    about = TextAreaField(
+        "About",
+        validators=[Length(max=300)],
+        render_kw={"placeholder": "Short bio shown to users (optional)", "rows": 4},
+    )
+
+    submit = SubmitField("Save Trainer")

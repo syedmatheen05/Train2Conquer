@@ -1,0 +1,267 @@
+/* This file holds ONLY the CSS for this one page, split out of the
+   original single pages.css (which held every page's styles in one
+   197KB file loaded on every page). Selectors here are still scoped
+   to body.page-<name> exactly as before -- nothing about how the
+   page looks has changed, only which file the browser has to
+   download to render it. */
+
+/* ============================================================
+   PAGE: contact.html
+   ============================================================ */
+
+body.page-contact .contact-hero {
+    padding: 90px 20px 70px;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(218, 170, 55, 0.12),
+            transparent 45%
+        ),
+        #08090c;
+}
+
+body.page-contact .contact-label,
+body.page-contact .small-label {
+    display: inline-block;
+    color: #ff4b2b;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+}
+
+body.page-contact .contact-title {
+    font-size: clamp(48px, 7vw, 90px);
+    font-weight: 900;
+    margin: 0;
+    color: #f5f5f5;
+    letter-spacing: -3px;
+}
+
+body.page-contact .contact-title span,
+body.page-contact .contact-info-card h2 span,
+body.page-contact .form-header h2 span {
+    color: #e2ad38;
+}
+
+body.page-contact .contact-subtitle {
+    max-width: 700px;
+    margin: 20px auto 0;
+    color: #8d94a5;
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+body.page-contact .contact-section {
+    padding: 70px 0 100px;
+    background: #08090c;
+}
+
+body.page-contact .contact-info-card {
+    padding: 40px;
+    border: 1px solid #292d36;
+    border-radius: 22px;
+    background:
+        linear-gradient(
+            145deg,
+            #151820,
+            #0e1015
+        );
+}
+
+body.page-contact .contact-info-card h2 {
+    color: #f5f5f5;
+    font-size: clamp(35px, 4vw, 55px);
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 25px;
+}
+
+body.page-contact .contact-info-card > p {
+    color: #8992a4;
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 35px;
+}
+
+body.page-contact .contact-info-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 20px;
+    margin-top: 15px;
+    border: 1px solid #292d36;
+    border-radius: 16px;
+    background: #171a21;
+}
+
+body.page-contact .contact-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: rgba(255, 75, 43, 0.12);
+    color: #ff4b2b;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+body.page-contact .contact-info-item small {
+    display: block;
+    color: #747d91;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin-bottom: 5px;
+}
+
+body.page-contact .contact-info-item strong {
+    display: block;
+    color: #f5f5f5;
+    font-size: 15px;
+}
+
+body.page-contact .contact-security {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(226, 173, 56, 0.06);
+    border: 1px solid rgba(226, 173, 56, 0.15);
+}
+
+body.page-contact .contact-security > span {
+    font-size: 22px;
+}
+
+body.page-contact .contact-security strong {
+    color: #e2ad38;
+}
+
+body.page-contact .contact-security p {
+    margin: 5px 0 0;
+    color: #7f8798;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.page-contact .contact-form-card {
+    padding: 45px;
+    border: 1px solid #292d36;
+    border-radius: 22px;
+    background:
+        linear-gradient(
+            145deg,
+            #12151b,
+            #0c0e12
+        );
+}
+
+body.page-contact .form-header h2 {
+    color: #f5f5f5;
+    font-size: clamp(30px, 4vw, 45px);
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+
+body.page-contact .form-header p {
+    color: #858da0;
+    line-height: 1.7;
+    margin-bottom: 35px;
+}
+
+body.page-contact .contact-form-card .form-label {
+    display: block;
+    color: #dfe3eb;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+body.page-contact .contact-form-card .form-control {
+    width: 100%;
+    min-height: 58px;
+    padding: 15px 18px;
+    color: #f5f5f5 !important;
+    background: #171a21 !important;
+    border: 1px solid #303541 !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+    transition: 0.25s ease;
+}
+
+body.page-contact .contact-form-card .form-control:focus {
+    border-color: #e2ad38 !important;
+    box-shadow:
+        0 0 0 3px rgba(226, 173, 56, 0.10) !important;
+}
+
+body.page-contact .contact-form-card .form-control::placeholder {
+    color: #687083;
+}
+
+body.page-contact .contact-message {
+    min-height: 170px !important;
+    resize: vertical;
+}
+
+body.page-contact .contact-submit {
+    background: #171a21;
+    color: #fff;
+    border: 1px solid #343842;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+body.page-contact .contact-submit:hover {
+    background: #222630;
+    color: #fff;
+    border-color: #d9a928;
+}
+
+body.page-contact .contact-submit:active {
+    transform: scale(.98);
+}
+
+body.page-contact .contact-submit:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+body.page-contact .contact-submit span {
+    margin-left: 8px;
+}
+
+@media (max-width: 767px) {
+body.page-contact .contact-hero {
+        padding: 65px 20px 50px;
+    }
+body.page-contact .contact-title {
+        font-size: 52px;
+        letter-spacing: -2px;
+    }
+body.page-contact .contact-subtitle {
+        font-size: 15px;
+    }
+body.page-contact .contact-section {
+        padding: 40px 15px 70px;
+    }
+body.page-contact .contact-info-card,
+body.page-contact .contact-form-card {
+        padding: 25px;
+        border-radius: 18px;
+    }
+body.page-contact .contact-info-card h2 {
+        font-size: 38px;
+    }
+body.page-contact .form-header h2 {
+        font-size: 32px;
+    }
+}

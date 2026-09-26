@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from functools import wraps
 from math import radians, sin, cos, sqrt, atan2
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_bootstrap import Bootstrap5
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
@@ -13,7 +13,7 @@ from flask_wtf import CSRFProtect
 from sqlalchemy import Date, ForeignKey, Integer, String, Text, inspect, text, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.pool import NullPool
-from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm
+from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm, AdminTrainerForm
 from ai import generate_fitness_plan
 
 load_dotenv()
@@ -26,6 +26,17 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") == "production"
 app.config["PERMANENT_SESSION_LIFETIME"] = 60 * 60 * 24 * 7
 
+# Cache static assets (CSS/JS/images) in the browser for a week. Filenames
+# here aren't hash-versioned (e.g. main.css, not main.a1b2c3.css), so this
+# is a deliberate trade-off: repeat page loads and page-to-page navigation
+# get real savings from not re-downloading the same CSS/JS/images every
+# time, at the cost of a browser potentially holding a stale copy for up
+# to 7 days after a static file changes. For a small project redeployed
+# occasionally rather than many times a day, that trade-off is worth it;
+# if this becomes a problem, the fix is content-hashed filenames, not
+# turning caching off.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24 * 7
+
 bootstrap = Bootstrap5(app)
 csrf = CSRFProtect(app)
 
@@ -34,6 +45,48 @@ login_manager.login_view = "login" # type: ignore
 login_manager.login_message = "Please log in to continue."
 login_manager.login_message_category = "warning"
 login_manager.init_app(app)
+
+
+# Lightweight response compression using only the standard library (no
+# Flask-Compress dependency). Gzips text-based responses (HTML/CSS/JS/
+# JSON/SVG) above a small size threshold, only when the browser says it
+# accepts gzip, and only if the response isn't already encoded. This is
+# the same real saving Flask-Compress would give for this app's actual
+# traffic (server-rendered HTML pages + the CSS/JS this project already
+# ships), without adding a dependency for it.
+import gzip as _gzip
+COMPRESSIBLE_MIMETYPES = {
+    "text/html", "text/css", "text/javascript", "application/javascript",
+    "application/json", "image/svg+xml",
+}
+MIN_COMPRESS_BYTES = 500
+
+@app.after_request
+def compress_response(response):
+    accepts_gzip = "gzip" in request.headers.get("Accept-Encoding", "")
+    already_encoded = "Content-Encoding" in response.headers
+    mimetype_ok = response.mimetype in COMPRESSIBLE_MIMETYPES
+    if not accepts_gzip or already_encoded or not mimetype_ok:
+        return response
+    if response.direct_passthrough:
+        # Static files (send_from_directory) default to direct_passthrough
+        # for efficient streaming + Range-request support. This app never
+        # actually serves anything that needs Range requests (no local
+        # video/large downloadable files -- exercise videos are external
+        # URLs), so it's safe to disable passthrough here and buffer the
+        # file in memory to compress it; ETag/Last-Modified conditional
+        # caching (304 responses) is untouched since those headers are
+        # already set before this hook runs.
+        response.direct_passthrough = False
+    data = response.get_data()
+    if len(data) < MIN_COMPRESS_BYTES:
+        return response
+    compressed = _gzip.compress(data, compresslevel=6)
+    response.set_data(compressed)
+    response.headers["Content-Encoding"] = "gzip"
+    response.headers["Content-Length"] = str(len(compressed))
+    response.headers.setdefault("Vary", "Accept-Encoding")
+    return response
 
 
 class Base(DeclarativeBase):
@@ -66,6 +119,7 @@ class User(UserMixin, db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=False)
 
 class Trainer(UserMixin, db.Model):
     __tablename__ = "trainers"
@@ -112,6 +166,26 @@ def ensure_database_schema():
     with app.app_context():
         db.create_all()
         inspector = inspect(db.engine)
+        if "users" in inspector.get_table_names():
+            user_columns = {column["name"] for column in inspector.get_columns("users")}
+            if "is_admin" not in user_columns:
+                db.session.execute(
+                    text("ALTER TABLE users "
+                         "ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
+                db.session.commit()
+            # Optional bootstrap: if ADMIN_EMAIL is set and that user
+            # already exists (has registered/logged in at least once),
+            # promote them. This never runs unless the env var is set,
+            # never creates an account, and never demotes anyone -- it
+            # only grants is_admin to a specific address you control.
+            admin_email = os.environ.get("ADMIN_EMAIL")
+            if admin_email:
+                admin_user = db.session.execute(
+                    db.select(User).where(User.email == admin_email.strip().lower())
+                ).scalar_one_or_none()
+                if admin_user and not admin_user.is_admin:
+                    admin_user.is_admin = True
+                    db.session.commit()
         if "workout_plans" in inspector.get_table_names():
             columns = {column["name"] for column in inspector.get_columns("workout_plans")}
             if "completed_days" not in columns:
@@ -142,13 +216,20 @@ except Exception as exc:
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-def logged_in_users_only(function):
-    """Backward-compatible custom decorator; prefer @login_required."""
+def admin_required(function):
+    """Server-side admin gate. Stacks under @login_required on every
+    /admin/... route. Never relies on hiding a button in the template --
+    unauthorized users get redirected here regardless of what the
+    frontend shows them."""
     @wraps(function)
     def decorator_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            flash("Please login or register first.", "warning")
-            return redirect(url_for("login"))
+        if not current_user.is_authenticated or not getattr(current_user, "is_admin", False):
+            # Not an admin: no admin-only data is ever exposed to this
+            # response. Authenticated non-admins get a safe redirect back
+            # home; anyone unauthenticated goes through the normal login
+            # flow via login_required (which always runs first).
+            flash("You don't have access to the admin panel.", "danger")
+            return redirect(url_for("home"))
         return function(*args, **kwargs)
     return decorator_function
 
@@ -329,9 +410,24 @@ def find_nearby_trainers(location,gender,radius=5):
     if not coordinates:
         return []
     user_lat, user_lon = coordinates
-    trainers = Trainer.query.filter_by(gender=gender).all()
+    # Bounding-box pre-filter: instead of loading every trainer of this
+    # gender and Haversine-checking each one in Python (O(T)), first ask
+    # the database for only the trainers whose lat/lon fall inside a
+    # square box around the search point (O(1)-ish via the WHERE clause,
+    # no extra index needed for this table size). Haversine still runs
+    # on the (much smaller) remaining candidate set to get the exact
+    # circular 5 km radius, since a square box slightly over-includes
+    # the corners. 1 degree latitude ~= 111 km everywhere; 1 degree
+    # longitude shrinks with cos(latitude), so it's computed per-search.
+    lat_delta = radius / 111.0
+    lon_delta = radius / (111.0 * max(cos(radians(user_lat)), 0.01))
+    candidates = Trainer.query.filter(
+        Trainer.gender == gender,
+        Trainer.latitude.between(user_lat - lat_delta, user_lat + lat_delta),
+        Trainer.longitude.between(user_lon - lon_delta, user_lon + lon_delta),
+    ).all()
     nearby = []
-    for trainer in trainers:
+    for trainer in candidates:
         distance = calculate_distance(user_lat,user_lon,trainer.latitude,trainer.longitude)
         if distance <= radius:
             nearby.append(trainer)
@@ -994,6 +1090,110 @@ def become_trainer():
             flash("Something went wrong while sending your application. Please try again.","danger")
     return render_template("become_trainer.html",form=form,profile=profile)
         
+# ADMIN
+# Every /admin/... route is protected by BOTH @login_required and
+# @admin_required (stacked), so authorization is enforced server-side on
+# every request -- never by hiding a link/button in a template. A signed-in
+# non-admin hitting any of these gets redirected with a flash message; an
+# unauthenticated visitor gets sent through the normal login flow first.
+@app.route("/admin")
+@login_required
+@admin_required
+def admin_dashboard():
+    trainer_count = db.session.scalar(db.select(db.func.count()).select_from(Trainer))
+    user_count = db.session.scalar(db.select(db.func.count()).select_from(User))
+    admin_count = db.session.scalar(
+        db.select(db.func.count()).select_from(User).where(User.is_admin == True))  # noqa: E712
+    return render_template(
+        "admin/dashboard.html",
+        trainer_count=trainer_count,
+        user_count=user_count,
+        admin_count=admin_count,
+    )
+
+
+@app.route("/admin/trainers")
+@login_required
+@admin_required
+def admin_trainers():
+    search = request.args.get("q", "").strip()
+    query = db.select(Trainer).order_by(Trainer.name)
+    if search:
+        like = f"%{search}%"
+        query = query.where(db.or_(Trainer.name.ilike(like), Trainer.location.ilike(like)))
+    trainers = db.session.execute(query).scalars().all()
+    return render_template("admin/trainers.html", trainers=trainers, search=search)
+
+
+@app.route("/admin/trainers/new", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_trainer_new():
+    form = AdminTrainerForm()
+    if form.validate_on_submit():
+        coordinates = get_coordinates(form.location.data.strip())
+        if not coordinates:
+            flash("Couldn't find that location. Try a more specific address.", "danger")
+            return render_template("admin/trainer_form.html", form=form, mode="new", trainer=None)
+        latitude, longitude = coordinates
+        trainer = Trainer(
+            name=form.name.data.strip(),
+            gender=form.gender.data,
+            location=form.location.data.strip(),
+            latitude=latitude,
+            longitude=longitude,
+            about=form.about.data.strip() if form.about.data else None,
+        )
+        db.session.add(trainer)
+        db.session.commit()
+        flash(f"Trainer \"{trainer.name}\" added.", "success")
+        return redirect(url_for("admin_trainers"))
+    return render_template("admin/trainer_form.html", form=form, mode="new", trainer=None)
+
+
+@app.route("/admin/trainers/<int:trainer_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_trainer_edit(trainer_id):
+    trainer = db.session.get(Trainer, trainer_id)
+    if not trainer:
+        return "Trainer not found", 404
+    form = AdminTrainerForm(obj=trainer)
+    if form.validate_on_submit():
+        location_changed = form.location.data.strip() != trainer.location
+        if location_changed:
+            coordinates = get_coordinates(form.location.data.strip())
+            if not coordinates:
+                flash("Couldn't find that location. Try a more specific address.", "danger")
+                return render_template("admin/trainer_form.html", form=form, mode="edit", trainer=trainer)
+            trainer.latitude, trainer.longitude = coordinates
+        trainer.name = form.name.data.strip()
+        trainer.gender = form.gender.data
+        trainer.location = form.location.data.strip()
+        trainer.about = form.about.data.strip() if form.about.data else None
+        db.session.commit()
+        flash(f"Trainer \"{trainer.name}\" updated.", "success")
+        return redirect(url_for("admin_trainers"))
+    return render_template("admin/trainer_form.html", form=form, mode="edit", trainer=trainer)
+
+
+@app.route("/admin/trainers/<int:trainer_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def admin_trainer_delete(trainer_id):
+    # POST-only (never a GET link), CSRF-protected by the global
+    # CSRFProtect, and the confirmation step lives in the template
+    # (admin/trainers.html) as a JS confirm dialog before the form submits.
+    trainer = db.session.get(Trainer, trainer_id)
+    if not trainer:
+        return "Trainer not found", 404
+    name = trainer.name
+    db.session.delete(trainer)
+    db.session.commit()
+    flash(f"Trainer \"{name}\" deleted.", "info")
+    return redirect(url_for("admin_trainers"))
+
+
 @app.route("/nutrition")
 def nutrition():
     return render_template("nutrition.html")
@@ -1020,12 +1220,6 @@ def internal_server_error(error):
 @app.context_processor
 def inject_template_globals():
     return {"current_year": datetime.now().year}
-
-# with app.app_context():
-#     trainer= db.session.scalar(db.select(Trainer).where(Trainer.name =="Syed Mohammed Haneef"))
-#     db.session.delete(trainer)
-#     db.session.commit()
-
 
 if __name__ == "__main__":
     app.run(debug=False, port=5002)

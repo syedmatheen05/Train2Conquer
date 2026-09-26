@@ -46,6 +46,7 @@ const nextExercise = document.getElementById("next-exercise");
 const skipRest = document.getElementById("skip-rest");
 const addRestTimeButton = document.getElementById("add-rest-time");
 const completeWorkoutForm = document.getElementById("completeWorkoutForm");
+const workoutProgressFill = document.getElementById("workout-progress-fill");
 
 // Pause button
 const pauseExerciseButton = document.getElementById("pause-exercise");
@@ -134,6 +135,29 @@ function stopEverything() {
 }
 
 // Screen control
+//
+// scrollWorkoutIntoView() is a safety net for the single-viewport workout
+// player: the CSS is sized so the whole card fits one screen on typical
+// viewports, but on very short viewports (or if a previous screen left
+// the page scrolled down) this guarantees the user always lands back at
+// the top of the workout frame instead of having to scroll up manually
+// after Next/Previous/skip/finish. "auto" (instant) behavior is used on
+// purpose -- a smooth animated scroll on every exercise change would
+// itself feel like unwanted motion.
+function scrollWorkoutIntoView() {
+    if (window.scrollY > 0 || window.pageYOffset > 0) {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+}
+
+function updateWorkoutProgress(index) {
+    if (!workoutProgressFill || !workouts.length) {
+        return;
+    }
+    const percent = Math.min(100, Math.round(((index + 1) / workouts.length) * 100));
+    workoutProgressFill.style.width = `${percent}%`;
+}
+
 function showWorkoutScreen() {
     if (workoutCard) {
         workoutCard.classList.remove("d-none");
@@ -144,6 +168,7 @@ function showWorkoutScreen() {
     if (restScreen) {
         restScreen.classList.add("d-none");
     }
+    scrollWorkoutIntoView();
 }
 
 function showRestScreen() {
@@ -156,6 +181,7 @@ function showRestScreen() {
     if (restScreen) {
         restScreen.classList.remove("d-none");
     }
+    scrollWorkoutIntoView();
 }
 
 // Rest-only controls
@@ -277,6 +303,7 @@ function loadWorkout(index) {
     if (workoutNumber) {
         workoutNumber.textContent = `${index + 1}/${workouts.length}`;
     }
+    updateWorkoutProgress(index);
     if (exerciseName) {
         exerciseName.textContent = workout.exercise || "Exercise";
     }

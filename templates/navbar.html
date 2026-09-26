@@ -44,6 +44,9 @@
                     <a class="t2c-dropdown-item" href="{{ url_for('fitness_profile') }}">✏️ Edit profile</a>
                     <a class="t2c-dropdown-item" href="{{ url_for('find_trainer') }}">🏋️‍♂️ Find Personal Trainer</a>
                     <a class="t2c-dropdown-item" href="{{ url_for('become_trainer') }}">🙎 Become a Trainer</a>
+                    {% if current_user.is_admin %}
+                    <a class="t2c-dropdown-item" href="{{ url_for('admin_dashboard') }}">🛠️ Admin Panel</a>
+                    {% endif %}
                     <hr class="t2c-dropdown-divider">
                     <form action="{{ url_for('logout') }}" method="POST" data-loader-message="Signing you out...">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Trainers | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
+            <h1>Trainers</h1>
+        </div>
+        <a class="t2c-admin-back" href="{{ url_for('admin_dashboard') }}">← Admin dashboard</a>
+    </div>
+
+    <div class="t2c-admin-actions">
+        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_trainer_new') }}">+ Add Trainer</a>
+    </div>
+
+    <form class="t2c-admin-search" method="GET" action="{{ url_for('admin_trainers') }}">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search by name or location...">
+        <button type="submit" class="t2c-admin-btn">Search</button>
+    </form>
+
+    <div class="t2c-admin-table-wrap">
+        {% if trainers %}
+        <table class="t2c-admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Location</th>
+                    <th>About</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trainer in trainers %}
+                <tr>
+                    <td data-label="Name">{{ trainer.name }}</td>
+                    <td data-label="Gender"><span class="t2c-admin-pill">{{ trainer.gender }}</span></td>
+                    <td data-label="Location">{{ trainer.location }}</td>
+                    <td data-label="About">{{ (trainer.about or "—")[:60] }}{% if trainer.about and trainer.about|length > 60 %}…{% endif %}</td>
+                    <td data-label="Actions">
+                        <div class="t2c-admin-row-actions">
+                            <a class="t2c-admin-btn" href="{{ url_for('admin_trainer_edit', trainer_id=trainer.id) }}">Edit</a>
+                            <form method="POST" action="{{ url_for('admin_trainer_delete', trainer_id=trainer.id) }}"
+                                  onsubmit="return confirm('Delete {{ trainer.name|e }}? This cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="t2c-admin-btn t2c-admin-btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="t2c-admin-empty">
+            {% if search %}No trainers match "{{ search }}".{% else %}No trainers yet. Add your first one.{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

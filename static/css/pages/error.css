@@ -1,0 +1,20 @@
+/* This file holds ONLY the CSS for this one page, split out of the
+   original single pages.css (which held every page's styles in one
+   197KB file loaded on every page). Selectors here are still scoped
+   to body.page-<name> exactly as before -- nothing about how the
+   page looks has changed, only which file the browser has to
+   download to render it. */
+
+/* ============================================================
+   PAGE: error.html
+   ============================================================ */
+
+body.page-error .error-page {min-height:65vh;display:grid;place-items:center;text-align:center;padding:50px 20px}
+
+body.page-error .error-code {font-family:Anton,sans-serif;font-size:clamp(100px,18vw,190px);line-height:.8;color:#FF512F}
+
+body.page-error .error-page h1 {font-size:28px;margin:30px 0 10px}
+
+body.page-error .error-page p {color:#8E929D;max-width:560px;line-height:1.7}
+
+body.page-error .error-page a {display:inline-flex;margin-top:18px;padding:12px 20px;border-radius:10px;background:#FF512F;color:#17110C;text-decoration:none;font-weight:800}

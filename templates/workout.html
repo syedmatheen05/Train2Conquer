@@ -7,7 +7,7 @@
         <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}"/>
         {{ bootstrap.load_css() }}
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}"/>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/workout.css') }}"/>
     </head>
     <body class="page-workout">
         {% include "loader.html" %}
@@ -19,6 +19,9 @@
             </div>
             <div class="t2c-workout-count">Workout<span id="workout-number">1</span>
             </div>
+        </div>
+        <div class="t2c-workout-progress" aria-hidden="true">
+            <div id="workout-progress-fill" class="t2c-workout-progress-fill"></div>
         </div>
         <!--WORKOUT CARD-->
         <div class="t2c-workout-card workout-card">
@@ -70,7 +73,9 @@
             <button id="skip-rest" type="button" class="btn">Skip Rest</button>
         </div>
         </div>
-        {{ bootstrap.load_js() }}
+        <!-- Bootstrap JS intentionally NOT loaded on this page: it uses
+             no data-bs-* components; the workout player's own JS
+             (workout.js) handles everything interactive here. -->
         <script>
             const workouts = {{ workouts | tojson | safe }};
         </script>

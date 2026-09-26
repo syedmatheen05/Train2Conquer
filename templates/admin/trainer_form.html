@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ "Edit" if mode == "edit" else "Add" }} Trainer | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
+            <h1>{{ "Edit Trainer" if mode == "edit" else "Add Trainer" }}</h1>
+        </div>
+        <a class="t2c-admin-back" href="{{ url_for('admin_trainers') }}">← Back to trainers</a>
+    </div>
+
+    <div class="t2c-admin-form-card">
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            {{ form.name.label }}
+            {{ form.name(type="text") }}
+            {% if form.name.errors %}
+            <ul class="t2c-admin-errors">
+                {% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            {{ form.gender.label }}
+            {{ form.gender() }}
+            {% if form.gender.errors %}
+            <ul class="t2c-admin-errors">
+                {% for error in form.gender.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            {{ form.location.label }}
+            {{ form.location(type="text") }}
+            {% if form.location.errors %}
+            <ul class="t2c-admin-errors">
+                {% for error in form.location.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+            <small style="color:var(--t2c-muted);font-size:12px;">
+                Used to geocode the trainer's position for the 5&nbsp;km nearby search.
+                {% if mode == "edit" %}Changing this re-geocodes the trainer.{% endif %}
+            </small>
+
+            {{ form.about.label }}
+            {{ form.about() }}
+            {% if form.about.errors %}
+            <ul class="t2c-admin-errors">
+                {% for error in form.about.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="t2c-admin-form-actions">
+                {{ form.submit() }}
+                <a class="t2c-admin-btn" href="{{ url_for('admin_trainers') }}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

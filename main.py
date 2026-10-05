@@ -13,7 +13,7 @@ from flask_wtf import CSRFProtect
 from sqlalchemy import Date, ForeignKey, Integer, String, Text, inspect, text, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.pool import NullPool
-from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm, AdminTrainerForm
+from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm, AdminTrainerForm, AdminUserForm
 from ai import generate_fitness_plan
 
 load_dotenv()
@@ -212,6 +212,8 @@ except Exception as exc:
     print("DATABASE STARTUP ERROR:", exc)
 
 # AUTH HELPERS
+ADMIN_PAGE_SIZE = 20
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -1100,10 +1102,15 @@ def become_trainer():
 @login_required
 @admin_required
 def admin_dashboard():
-    trainer_count = db.session.scalar(db.select(db.func.count()).select_from(Trainer))
-    user_count = db.session.scalar(db.select(db.func.count()).select_from(User))
-    admin_count = db.session.scalar(
-        db.select(db.func.count()).select_from(User).where(User.is_admin == True))  # noqa: E712
+    # One round trip instead of three: with NullPool every query on a
+    # cold connection is expensive, so batch the counts into one SELECT.
+    user_count, admin_count, trainer_count = db.session.execute(
+        db.select(
+            db.select(db.func.count(User.id)).scalar_subquery(),
+            db.select(db.func.count(User.id)).where(User.is_admin.is_(True)).scalar_subquery(),
+            db.select(db.func.count(Trainer.id)).scalar_subquery(),
+        )
+    ).one()
     return render_template(
         "admin/dashboard.html",
         trainer_count=trainer_count,
@@ -1121,8 +1128,9 @@ def admin_trainers():
     if search:
         like = f"%{search}%"
         query = query.where(db.or_(Trainer.name.ilike(like), Trainer.location.ilike(like)))
-    trainers = db.session.execute(query).scalars().all()
-    return render_template("admin/trainers.html", trainers=trainers, search=search)
+    page = db.paginate(query, page=request.args.get("page", 1, type=int),
+                       per_page=ADMIN_PAGE_SIZE, error_out=False)
+    return render_template("admin/trainers.html", trainers=page.items, page=page, search=search)
 
 
 @app.route("/admin/trainers/new", methods=["GET", "POST"])
@@ -1192,6 +1200,112 @@ def admin_trainer_delete(trainer_id):
     db.session.commit()
     flash(f"Trainer \"{name}\" deleted.", "info")
     return redirect(url_for("admin_trainers"))
+
+
+
+# ADMIN: USER CRUD
+
+def count_admins():
+    return db.session.scalar(
+        db.select(db.func.count(User.id)).where(User.is_admin.is_(True)))
+
+
+def email_taken(email, exclude_id=None):
+    query = db.select(User.id).where(User.email == email)
+    if exclude_id is not None:
+        query = query.where(User.id != exclude_id)
+    return db.session.scalar(query) is not None
+
+
+@app.route("/admin/users")
+@login_required
+@admin_required
+def admin_users():
+    search = request.args.get("q", "").strip()
+    query = db.select(User).order_by(User.name)
+    if search:
+        like = f"%{search}%"
+        query = query.where(db.or_(User.name.ilike(like), User.email.ilike(like)))
+    page = db.paginate(query, page=request.args.get("page", 1, type=int),
+                       per_page=ADMIN_PAGE_SIZE, error_out=False)
+    return render_template("admin/users.html", users=page.items, page=page, search=search)
+
+
+@app.route("/admin/users/new", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_user_new():
+    form = AdminUserForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        if email_taken(email):
+            form.email.errors.append("A user with this e-mail already exists.")
+            return render_template("admin/user_form.html", form=form, mode="new", user=None)
+        user = User(name=form.name.data.strip(), email=email, is_admin=bool(form.is_admin.data))
+        db.session.add(user)
+        db.session.commit()
+        flash(f"User \"{user.name}\" added.", "success")
+        return redirect(url_for("admin_users"))
+    return render_template("admin/user_form.html", form=form, mode="new", user=None)
+
+
+@app.route("/admin/users/<int:user_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_user_edit(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        return "User not found", 404
+    form = AdminUserForm(obj=user)
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        wants_admin = bool(form.is_admin.data)
+        if email_taken(email, exclude_id=user.id):
+            form.email.errors.append("A user with this e-mail already exists.")
+            return render_template("admin/user_form.html", form=form, mode="edit", user=user)
+        # Guard rail: never let the panel lock everyone out. Removing admin
+        # rights from the last admin (including yourself) is refused.
+        if user.is_admin and not wants_admin and count_admins() <= 1:
+            flash("You can't remove admin access from the last remaining admin.", "danger")
+            return render_template("admin/user_form.html", form=form, mode="edit", user=user)
+        user.name = form.name.data.strip()
+        user.email = email
+        user.is_admin = wants_admin
+        db.session.commit()
+        flash(f"User \"{user.name}\" updated.", "success")
+        return redirect(url_for("admin_users"))
+    return render_template("admin/user_form.html", form=form, mode="edit", user=user)
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def admin_user_delete(user_id):
+    # POST-only + CSRF-protected, same as the trainer delete. Extra rules:
+    # an admin can't delete their own account here (use "Delete account"
+    # on the profile page), and the last admin can never be deleted.
+    user = db.session.get(User, user_id)
+    if not user:
+        return "User not found", 404
+    if user.id == current_user.id:
+        flash("You can't delete your own account from the admin panel.", "danger")
+        return redirect(url_for("admin_users"))
+    if user.is_admin and count_admins() <= 1:
+        flash("You can't delete the last remaining admin.", "danger")
+        return redirect(url_for("admin_users"))
+    name = user.name
+    try:
+        # Child rows first -- profiles/workout_plans have FKs to users.id.
+        FitnessProfile.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        WorkoutPlan.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        User.query.filter_by(id=user.id).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f"User \"{name}\" deleted.", "info")
+    except Exception as exc:
+        db.session.rollback()
+        print("ADMIN DELETE USER ERROR:", exc)
+        flash("We couldn't delete that user right now.", "danger")
+    return redirect(url_for("admin_users"))
 
 
 @app.route("/nutrition")

@@ -1,0 +1,11 @@
+{% if page and page.pages > 1 %}
+<nav class="t2c-admin-pager" aria-label="Pagination">
+    {% if page.has_prev %}
+    <a class="t2c-admin-btn" href="{{ url_for(request.endpoint, page=page.prev_num, q=search or None) }}">← Prev</a>
+    {% endif %}
+    <span class="t2c-admin-pager-info">Page {{ page.page }} of {{ page.pages }} · {{ page.total }} total</span>
+    {% if page.has_next %}
+    <a class="t2c-admin-btn" href="{{ url_for(request.endpoint, page=page.next_num, q=search or None) }}">Next →</a>
+    {% endif %}
+</nav>
+{% endif %}

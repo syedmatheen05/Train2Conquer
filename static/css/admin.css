@@ -214,6 +214,7 @@ table.t2c-admin-table {
 }
 .t2c-admin-form-card label:first-of-type { margin-top: 0; }
 .t2c-admin-form-card input[type="text"],
+.t2c-admin-form-card input[type="email"],
 .t2c-admin-form-card select,
 .t2c-admin-form-card textarea {
     width: 100%;
@@ -286,3 +287,23 @@ table.t2c-admin-table {
         margin-top: 8px;
     }
 }
+
+/* ---- User form + pagination ---- */
+.t2c-admin-form-card .t2c-admin-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 6px;
+    color: var(--t2c-text);
+    cursor: pointer;
+}
+.t2c-admin-form-card .t2c-admin-check input { width: 18px; height: 18px; accent-color: var(--t2c-orange); }
+.t2c-admin-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+.t2c-admin-pager-info { color: var(--t2c-muted); font-size: 13px; }

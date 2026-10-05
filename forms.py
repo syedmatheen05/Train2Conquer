@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
+from wtforms import BooleanField, EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Regexp
 from wtforms.widgets import ListWidget, CheckboxInput
 # NOTE: TrainerSearchForm/TrainerForm below used to re-import FlaskForm,
@@ -217,3 +217,29 @@ class AdminTrainerForm(FlaskForm):
     )
 
     submit = SubmitField("Save Trainer")
+
+
+class AdminUserForm(FlaskForm):
+    """Used by the admin panel to add/edit rows in the User table.
+
+    Accounts are passwordless (email OTP login), so there is no password
+    field: an admin only manages name, email and the admin flag. Email is
+    normalised to lowercase in the route, matching how login/register
+    look users up.
+    """
+
+    name = StringField(
+        "Full Name",
+        validators=[DataRequired(), Length(max=100)],
+        render_kw={"placeholder": "e.g. Syed Matheen", "autocomplete": "off"},
+    )
+
+    email = EmailField(
+        "E-mail",
+        validators=[DataRequired(), Email(), Length(max=200)],
+        render_kw={"placeholder": "name@example.com", "autocomplete": "off"},
+    )
+
+    is_admin = BooleanField("Admin access")
+
+    submit = SubmitField("Save User")

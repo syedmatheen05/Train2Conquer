@@ -307,3 +307,56 @@ table.t2c-admin-table {
     flex-wrap: wrap;
 }
 .t2c-admin-pager-info { color: var(--t2c-muted); font-size: 13px; }
+
+/* ---- User detail ---- */
+.t2c-admin-link { color: var(--t2c-text); text-decoration: none; font-weight: 700; }
+.t2c-admin-link:hover { color: var(--t2c-gold); }
+.t2c-admin-actions form { margin: 0; }
+.t2c-admin-section {
+    background: var(--t2c-surface);
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+}
+.t2c-admin-section h2 {
+    font-family: Anton, sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    margin: 0 0 16px;
+}
+.t2c-admin-dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px 24px;
+    margin: 0;
+}
+.t2c-admin-dl dt {
+    color: var(--t2c-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 4px;
+}
+.t2c-admin-dl dd { margin: 0; font-size: 15px; word-break: break-word; }
+.t2c-admin-dl-wide { grid-column: 1 / -1; }
+.t2c-admin-empty-inline { color: var(--t2c-muted); margin: 0; }
+.t2c-admin-muted { color: var(--t2c-muted); font-size: 13px; }
+.t2c-admin-error-text { color: var(--t2c-danger); }
+.t2c-pill-ready { color: var(--t2c-green); border-color: rgba(72,217,155,.35); }
+.t2c-pill-generating { color: var(--t2c-gold); border-color: rgba(217,168,59,.35); }
+.t2c-pill-failed { color: var(--t2c-danger); border-color: rgba(255,104,96,.35); }
+.t2c-admin-day {
+    border: 1px solid var(--t2c-border);
+    border-radius: var(--t2c-radius-sm);
+    margin-top: 12px;
+    background: var(--t2c-surface-2);
+}
+.t2c-admin-day summary {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 16px; cursor: pointer; list-style: none;
+}
+.t2c-admin-day summary::-webkit-details-marker { display: none; }
+.t2c-admin-day[open] summary { border-bottom: 1px solid var(--t2c-border); }
+.t2c-admin-day .t2c-admin-table-wrap { border: none; border-radius: 0 0 var(--t2c-radius-sm) var(--t2c-radius-sm); }
+.t2c-admin-day > .t2c-admin-empty-inline { padding: 14px 16px; }

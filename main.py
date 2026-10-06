@@ -9,6 +9,7 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from flask_bootstrap import Bootstrap5
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy.pagination import SelectPagination
 from flask_wtf import CSRFProtect
 from sqlalchemy import Date, ForeignKey, Integer, String, Text, inspect, text, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -1204,6 +1205,16 @@ def admin_trainer_delete(trainer_id):
 
 
 # ADMIN: USER CRUD
+class RowPagination(SelectPagination):
+    """db.paginate() keeps only the first column of each row (it calls
+    .scalars()). The admin user list selects several columns, so keep the
+    full rows instead; counting and limit/offset are inherited unchanged."""
+
+    def _query_items(self):
+        select = self._query_args["select"].limit(self.per_page).offset(self._query_offset)
+        return list(self._query_args["session"].execute(select).all())
+
+
 
 def count_admins():
     return db.session.scalar(
@@ -1222,13 +1233,69 @@ def email_taken(email, exclude_id=None):
 @admin_required
 def admin_users():
     search = request.args.get("q", "").strip()
-    query = db.select(User).order_by(User.name)
+    # One query: outer-join the profile and plan so the list can show goal /
+    # experience / plan status without an extra query per row. The heavy
+    # plan JSON column is NOT selected here -- only on the detail page.
+    query = (
+        db.select(User, FitnessProfile.goal, FitnessProfile.experience, WorkoutPlan.status)
+        .outerjoin(FitnessProfile, FitnessProfile.user_id == User.id)
+        .outerjoin(WorkoutPlan, WorkoutPlan.user_id == User.id)
+        .order_by(User.name)
+    )
     if search:
         like = f"%{search}%"
         query = query.where(db.or_(User.name.ilike(like), User.email.ilike(like)))
-    page = db.paginate(query, page=request.args.get("page", 1, type=int),
-                       per_page=ADMIN_PAGE_SIZE, error_out=False)
-    return render_template("admin/users.html", users=page.items, page=page, search=search)
+    page = RowPagination(page=request.args.get("page", 1, type=int), per_page=ADMIN_PAGE_SIZE,
+                         max_per_page=None, error_out=False, count=True,
+                         select=query, session=db.session)
+    return render_template("admin/users.html", rows=page.items, page=page, search=search)
+
+
+@app.route("/admin/users/<int:user_id>")
+@login_required
+@admin_required
+def admin_user_detail(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        return "User not found", 404
+    profile = db.session.execute(
+        db.select(FitnessProfile).where(FitnessProfile.user_id == user.id)).scalar_one_or_none()
+    plan_row = db.session.execute(
+        db.select(WorkoutPlan).where(WorkoutPlan.user_id == user.id)).scalar_one_or_none()
+
+    age = None
+    equipment = []
+    if profile:
+        today = date.today()
+        age = today.year - profile.dob.year - ((today.month, today.day) < (profile.dob.month, profile.dob.day))
+        equipment = [x.strip() for x in profile.equipment.split(",") if x.strip()]
+
+    plan_days = []
+    completed_days = []
+    plan_error = None
+    if plan_row:
+        try:
+            completed = json.loads(plan_row.completed_days or "[]")
+            completed_days = completed if isinstance(completed, list) else []
+        except (TypeError, ValueError):
+            completed_days = []
+        if plan_row.status == "ready":
+            try:
+                parsed = json.loads(plan_row.plan)
+                for key in sorted(parsed, key=lambda k: int(k.split("_")[1])):
+                    day = parsed[key]
+                    plan_days.append({
+                        "number": int(key.split("_")[1]),
+                        "meta": day[0],
+                        "exercises": [e for e in day[1:] if isinstance(e, dict)],
+                    })
+            except (TypeError, ValueError, KeyError, IndexError):
+                plan_error = "This saved plan could not be read (invalid JSON)."
+    return render_template(
+        "admin/user_detail.html", user=user, profile=profile, age=age, equipment=equipment,
+        plan=plan_row, plan_days=plan_days, completed_days=completed_days,
+        plan_error=plan_error, exercise_names=EXERCISE_NAMES,
+    )
 
 
 @app.route("/admin/users/new", methods=["GET", "POST"])

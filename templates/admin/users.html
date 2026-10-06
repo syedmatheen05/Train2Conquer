@@ -40,24 +40,31 @@
     </form>
 
     <div class="t2c-admin-table-wrap">
-        {% if users %}
+        {% if rows %}
         <table class="t2c-admin-table">
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>E-mail</th>
                     <th>Role</th>
+                    <th>Goal</th>
+                    <th>Level</th>
+                    <th>Plan</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                {% for user in users %}
+                {% for user, goal, experience, plan_status in rows %}
                 <tr>
-                    <td data-label="Name">{{ user.name }}{% if user.id == current_user.id %} <span class="t2c-admin-pill">You</span>{% endif %}</td>
+                    <td data-label="Name"><a class="t2c-admin-link" href="{{ url_for('admin_user_detail', user_id=user.id) }}">{{ user.name }}</a>{% if user.id == current_user.id %} <span class="t2c-admin-pill">You</span>{% endif %}</td>
                     <td data-label="E-mail">{{ user.email }}</td>
                     <td data-label="Role"><span class="t2c-admin-pill">{{ "admin" if user.is_admin else "user" }}</span></td>
+                    <td data-label="Goal">{{ (goal or "—")|replace("_", " ")|title }}</td>
+                    <td data-label="Level">{{ (experience or "—")|title }}</td>
+                    <td data-label="Plan">{% if plan_status %}<span class="t2c-admin-pill t2c-pill-{{ plan_status }}">{{ plan_status }}</span>{% else %}—{% endif %}</td>
                     <td data-label="Actions">
                         <div class="t2c-admin-row-actions">
+                            <a class="t2c-admin-btn" href="{{ url_for('admin_user_detail', user_id=user.id) }}">View</a>
                             <a class="t2c-admin-btn" href="{{ url_for('admin_user_edit', user_id=user.id) }}">Edit</a>
                             {% if user.id != current_user.id %}
                             <form method="POST" action="{{ url_for('admin_user_delete', user_id=user.id) }}"

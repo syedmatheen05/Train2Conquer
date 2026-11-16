@@ -174,6 +174,12 @@ def validate_startup():
     return problems
 
 
+def remember_me_days():
+    """How long a "Remember Me" login lasts (REMEMBER_ME_DAYS, default 30, limited to 1-90).
+    It is a fixed lifetime from the moment of login, never renewed by visiting."""
+    return max(1, min(90, int_env("REMEMBER_ME_DAYS", 30)))
+
+
 def generation_mode():
     """'inline' = web server runs jobs itself, 'worker' = separate worker.py."""
     mode = _env("GENERATION_MODE", "inline").lower()

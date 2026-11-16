@@ -3,6 +3,7 @@
 Existing tables keep their names and columns. New columns are added by the
 numbered steps in migrations.py (never by dropping or recreating tables).
 """
+import time
 from datetime import date, datetime, timezone
 
 from flask_login import UserMixin
@@ -33,6 +34,15 @@ class User(UserMixin, db.Model):
     # and an open session is ended on the next request. Data is kept.
     is_active: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=True, server_default=db.true())
     created_at = db.Column(db.DateTime, nullable=True, default=utcnow)
+
+    def get_id(self):
+        """What Flask-Login stores in the session and in the signed Remember Me cookie.
+
+        "<user id>:<login time>". The login time makes the cookie's lifetime
+        enforceable on the SERVER (Flask-Login's own cookie carries no timestamp,
+        so only the browser would otherwise enforce its expiry). See main.load_user.
+        """
+        return f"{self.id}:{int(time.time())}"
 
 
 class Trainer(UserMixin, db.Model):

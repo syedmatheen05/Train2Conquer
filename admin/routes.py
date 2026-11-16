@@ -14,7 +14,7 @@ import os
 from datetime import date
 
 from flask import current_app, flash, redirect, render_template, request, url_for
-from flask_login import current_user
+from flask_login import current_user, login_fresh
 from flask_sqlalchemy.pagination import SelectPagination
 from sqlalchemy import update
 
@@ -47,6 +47,8 @@ def require_admin():
     if not current_user.is_admin:
         flash("You don't have access to the admin panel.", "danger")
         return redirect(url_for("home"))
+    if not login_fresh():       # restored from a Remember Me cookie: confirm with a new e-mail code first
+        return current_app.login_manager.needs_refresh()
     return None
 
 

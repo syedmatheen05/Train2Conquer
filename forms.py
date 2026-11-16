@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, Email, Length, NumberRange, Optiona
 from wtforms.widgets import ListWidget, CheckboxInput
 class Loginform(FlaskForm):
     email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
+    remember=BooleanField("Remember Me", default=False)   # unchecked unless the user ticks it
     submit=SubmitField("verify")
 
 class OTPform(FlaskForm):
@@ -17,6 +18,7 @@ class OTPform(FlaskForm):
 class Registerform(FlaskForm):
     name=StringField("Full Name",validators=[DataRequired()], render_kw={"autocomplete": "name"})
     email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
+    remember=BooleanField("Remember Me", default=False)
     submit=SubmitField("verify")
 
 class FitnessProfileform(FlaskForm):

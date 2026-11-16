@@ -21,7 +21,7 @@ load_dotenv()   # must run before config/billing read the environment
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_bootstrap import Bootstrap5
 from extensions import limiter
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+from flask_login import LoginManager, current_user, fresh_login_required, login_required, login_user, logout_user
 from flask_sqlalchemy.pagination import SelectPagination
 from flask_wtf import CSRFProtect
 from sqlalchemy import update
@@ -46,8 +46,14 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", config.DEFAULT_SECRET_KE
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION          # cookies only over https in production
+# "Remember Me": Flask-Login's own signed cookie (no database table). HttpOnly so scripts can't
+# read it, Secure over https in production, SameSite=Lax, host-only (no domain), fixed lifetime.
 app.config["REMEMBER_COOKIE_SECURE"] = IS_PRODUCTION
 app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+app.config["REMEMBER_COOKIE_PATH"] = "/"
+app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=config.remember_me_days())
+app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = False   # no sliding window: expires N days after login
 app.config["PERMANENT_SESSION_LIFETIME"] = 60 * 60 * 24 * 7
 app.config["WTF_CSRF_TIME_LIMIT"] = 60 * 60 * 8
 if IS_PRODUCTION:
@@ -64,6 +70,10 @@ login_manager = LoginManager()
 login_manager.login_view = "login" # type: ignore
 login_manager.login_message = "Please log in to continue."
 login_manager.login_message_category = "warning"
+# A session restored from the Remember Me cookie is "not fresh": sensitive actions ask for a new e-mail code.
+login_manager.refresh_view = "login" # type: ignore
+login_manager.needs_refresh_message = "For your security, please verify your e-mail again to continue."
+login_manager.needs_refresh_message_category = "warning"
 login_manager.init_app(app)
 
 
@@ -184,11 +194,36 @@ def healthz():
                    payments_enabled=billing.is_configured())
 
 # AUTH HELPERS
+SESSION_CLOCK_SKEW_SECONDS = 300
+
+
+def _parse_session_id(raw):
+    """Split "<id>:<login time>" into (user_id, login_time). Old-format sessions that are
+    just "<id>" (from before this change) give (id, None). Garbage gives (None, None)."""
+    user_part, _, issued_part = str(raw).partition(":")
+    if not user_part.isdigit() or (issued_part and not issued_part.isdigit()):
+        return None, None
+    return int(user_part), (int(issued_part) if issued_part else None)
+
+
 @login_manager.user_loader
-def load_user(user_id):
-    user = db.session.get(User, int(user_id))
-    # A suspended account loses its session on the very next request.
+def load_user(session_id):
+    """Called on every request that carries a login session or Remember Me cookie.
+
+    The browser's claim is never trusted on its own: the account is re-read from the
+    database each time, so deleted or deactivated users, and any change of admin rights,
+    take effect immediately. The cookie also expires on the server after REMEMBER_ME_DAYS.
+    """
+    user_id, issued_at = _parse_session_id(session_id)
+    if user_id is None:
+        return None
+    if issued_at is not None:
+        age = time.time() - issued_at
+        if age > config.remember_me_days() * 86400 or age < -SESSION_CLOCK_SKEW_SECONDS:
+            return None
+    user = db.session.get(User, user_id)
     return user if user is not None and user.is_active else None
+
 
 def send_trainer_application(email,name,about,location,gender,phone_number):
     """Send trainer application to the site owner/admin."""
@@ -327,7 +362,7 @@ def check_existing_user(email):
 
 
 def clear_otp_session():
-    for key in ("otp_purpose", "name", "email", "message", "trainer_id", "contact_mode"):
+    for key in ("otp_purpose", "name", "email", "message", "trainer_id", "contact_mode", "remember_me"):
         session.pop(key, None)
 
 
@@ -358,6 +393,7 @@ def login():
     login_form = Loginform()
     if login_form.validate_on_submit():
         email = login_form.email.data.strip().lower()
+        session["remember_me"] = bool(login_form.remember.data)
         if not _start_login_code(email, "login"):
             return redirect(url_for("login"))
         flash(CODE_SENT_MESSAGE, "info")
@@ -399,7 +435,8 @@ def verify_otp():
                 except IntegrityError:          # two requests registered the same e-mail
                     db.session.rollback()
                     user = check_existing_user(email)
-            if user is None or not login_user(user):          # login_user refuses suspended accounts
+            # The persistent cookie is only ever created here, AFTER the e-mail code was verified.
+            if user is None or not login_user(user, remember=bool(session.get("remember_me"))):  # refuses suspended accounts
                 clear_otp_session()
                 flash("We couldn't sign you in. Please contact support.", "danger")
                 return redirect(url_for("login"))
@@ -451,6 +488,7 @@ def register():
     if register_form.validate_on_submit():
         email = register_form.email.data.strip().lower()
         session["name"] = register_form.name.data.strip()
+        session["remember_me"] = bool(register_form.remember.data)
         # Existing accounts get a login code; the page says the same thing either way.
         purpose = "login" if check_existing_user(email) else "registration"
         if not _start_login_code(email, purpose):
@@ -1232,7 +1270,7 @@ def retry_plan(plan_id):
 
 
 @app.route("/payments/<int:payment_id>/refund-request", methods=["POST"])
-@login_required
+@fresh_login_required
 @limiter.limit("5 per hour")
 def request_refund(payment_id):
     """Customer asks for a refund (only when their paid plan never got built).
@@ -1269,7 +1307,7 @@ def logout():
     return redirect(url_for("home"))
 
 @app.route("/delete-account", methods=["POST"])
-@login_required
+@fresh_login_required
 def delete_account():
     user_id = current_user.id
     try:

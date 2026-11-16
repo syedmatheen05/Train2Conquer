@@ -117,10 +117,21 @@ def make_user():
     return make
 
 
+def _session_identifier(client):
+    """The IP+browser fingerprint Flask-Login stores at a real login (so the test session counts as fresh)."""
+    from flask_login.utils import _create_identifier
+    from werkzeug.test import EnvironBuilder
+    builder = EnvironBuilder(environ_base=client.environ_base)
+    with main.app.request_context(builder.get_environ()):
+        return _create_identifier()
+
+
 def login(client, user_id):
+    """Logs a user in like a real, fresh login (without the OTP e-mail step)."""
     with client.session_transaction() as s:
         s["_user_id"] = str(user_id)
         s["_fresh"] = True
+        s["_id"] = _session_identifier(client)
 
 
 class Gateway:

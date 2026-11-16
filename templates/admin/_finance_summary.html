@@ -1,0 +1,46 @@
+{# Calculated from our own records. These are ESTIMATES, not bank balances or Razorpay settlements. #}
+<section class="t2c-fin">
+    <h2 class="t2c-fin-title">Financial Overview</h2>
+    <p class="t2c-fin-note">Calculated from recorded payments and API usage. Estimates are <strong>not</strong> your bank balance or actual Razorpay settlements.</p>
+
+    <h3 class="t2c-fin-sub">Customer payments (gross)</h3>
+    <div class="t2c-admin-stats">
+        <div class="t2c-admin-stat"><strong>{{ (fin.gross_paise)|inr_paise }}</strong><span>Total successful payments ({{ fin.gross_count }})</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.personalized.paise|inr_paise }}</strong><span>Personalized sales ({{ fin.personalized.count }})</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.advanced.paise|inr_paise }}</strong><span>Advanced sales ({{ fin.advanced.count }})</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.refund_inr|inr }}</strong><span>Refunds{% if fin.refund_requests_open %} ({{ fin.refund_requests_open }} open request{{ 's' if fin.refund_requests_open != 1 }}){% endif %}</span></div>
+    </div>
+
+    <h3 class="t2c-fin-sub">OpenAI API expenses (every attempt)</h3>
+    <div class="t2c-admin-stats">
+        <div class="t2c-admin-stat"><strong>{{ fin.openai_inr|inr }}</strong><span>Total ({{ fin.openai_usd|usd }})</span></div>
+        <div class="t2c-admin-stat"><strong>{{ (fin.by_tier.get('personalized', {}).get('inr', 0))|inr }}</strong><span>Personalized API</span></div>
+        <div class="t2c-admin-stat"><strong>{{ (fin.by_tier.get('advanced', {}).get('inr', 0))|inr }}</strong><span>Advanced API</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.openai_requests }}</strong><span>API requests</span></div>
+    </div>
+    {% if fin.openai_unknown_attempts %}<p class="t2c-fin-warn">{{ fin.openai_unknown_attempts }} API request(s) have an <strong>unknown</strong> cost (no usage returned, or no price/exchange rate configured). Totals above exclude them.</p>{% endif %}
+
+    <h3 class="t2c-fin-sub">Fees and what is left</h3>
+    <div class="t2c-admin-stats">
+        <div class="t2c-admin-stat"><strong>{{ fin.fee_inr|inr }}</strong><span>Razorpay fees reported{% if fin.fee_not_reported %} ({{ fin.fee_not_reported }} payment(s) not reported){% endif %}</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.tax_inr|inr }}</strong><span>Tax on fees reported</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.remaining_before_other_expenses|inr }}</strong><span>Estimated remaining revenue before other expenses</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.net_estimate|inr }}</strong><span>Estimated net after recorded fees &amp; refunds{% if not fin.costs_complete %} (incomplete){% endif %}</span></div>
+    </div>
+
+    <h3 class="t2c-fin-sub">Generations</h3>
+    <div class="t2c-admin-stats">
+        <div class="t2c-admin-stat"><strong>{{ fin.generations }}</strong><span>Paid generations</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.failed_generations }}</strong><span>Failed generations</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.avg_cost_usd|usd }}</strong><span>Average API cost per generation</span></div>
+        <div class="t2c-admin-stat"><strong>{{ fin.highest.usd|usd if fin.highest else 'n/a' }}</strong><span>Highest-cost generation{% if fin.highest %} (#{{ fin.highest.plan_id }}, {{ fin.highest.tier }}){% endif %}</span></div>
+    </div>
+
+    <h3 class="t2c-fin-sub">Model-wise API usage</h3>
+    <div class="t2c-fin-scroll"><table class="t2c-fin-table">
+        <tr><th>Model</th><th>Requests</th><th>Rejected/failed</th><th>Input tokens</th><th>Output tokens</th><th>Cost (USD)</th><th>Cost (INR)</th><th>Unknown-cost</th></tr>
+        {% for model, m in fin.by_model.items() %}
+        <tr><td>{{ model }}</td><td>{{ m.requests }}</td><td>{{ m.rejected }}</td><td>{{ m.input_tokens }}</td><td>{{ m.output_tokens }}</td><td>{{ m.usd|usd }}</td><td>{{ m.inr|inr }}</td><td>{{ m.unknown }}</td></tr>
+        {% else %}<tr><td colspan="8">No API usage recorded yet.</td></tr>{% endfor %}
+    </table></div>
+</section>

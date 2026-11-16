@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/fitness-profile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/plans.css') }}">
+</head>
+
+<body class="page-fitness-profile">
+    {% include 'navbar.html' %}
+        {% include "loader.html" %}
+    {% from 'bootstrap5/form.html' import render_form %}
+<div class="t2c-profile-page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category,message in messages %}
+                        <div data-flash-message class="alert alert-{{category}}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+    <div class="t2c-profile-container">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="t2c-profile-header">
+
+            <div class="t2c-profile-eyebrow">
+                Personalize your training
+            </div>
+
+
+            <h1>
+                Build Your
+                <span>Profile</span>
+            </h1>
+
+
+            <p>
+                Tell us about yourself, your fitness level,
+                goals and available equipment. We'll use this
+                information to create a workout plan for you.
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             FORM
+        ================================================== -->
+
+        <div class="t2c-profile-card">
+            <a href="{{ url_for('home') }}" class="t2c-skip-profile">Skip →</a>
+
+            {{ render_form(form) }}
+
+        </div>
+
+        {% if has_profile %}
+            {% include "_plan_options.html" %}
+        {% endif %}
+
+
+    </div>
+
+</div>
+{% include "footer.html" %}
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', function () {
+    const equipmentList = document.getElementById('equipment');
+    if (!equipmentList) return;
+
+    const checkboxes = Array.from(equipmentList.querySelectorAll('input[type="checkbox"]'));
+    const noneBox = checkboxes.find(cb => cb.value === 'none');
+    const otherBoxes = checkboxes.filter(cb => cb.value !== 'none');
+
+    if (!noneBox) return;
+
+    function syncDisabledState() {
+        // When "none" is checked, lock the other options out entirely
+        otherBoxes.forEach(cb => {
+            cb.disabled = noneBox.checked;
+            const li = cb.closest('li');
+            if (li) li.style.opacity = noneBox.checked ? '0.45' : '1';
+        });
+    }
+
+    noneBox.addEventListener('change', function () {
+        if (noneBox.checked) {
+            otherBoxes.forEach(cb => { cb.checked = false; });
+        }
+        syncDisabledState();
+    });
+
+    otherBoxes.forEach(cb => {
+        cb.addEventListener('change', function () {
+            if (cb.checked && noneBox.checked) {
+                noneBox.checked = false;
+            }
+            syncDisabledState();
+        });
+    });
+
+    // Run once on load in case the form is re-rendered with prior values
+    // (e.g. validation failed and the page reloaded with "none" pre-checked)
+    syncDisabledState();
+});
+</script>
+</body>
+</html>

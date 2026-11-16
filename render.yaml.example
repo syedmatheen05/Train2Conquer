@@ -1,0 +1,25 @@
+# EXAMPLE ONLY (rename to render.yaml to use Render "Blueprints").
+# Add your secrets in the Render dashboard; never write them in this file.
+services:
+  - type: web
+    name: train2conquer
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --workers 2 --timeout 120
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: GENERATION_MODE
+        value: worker
+      # then add SECRET_KEY, SUPABASE, RAZORPAY_*, OPENAI_API_KEY, GEMINI_API_KEY ... in the dashboard
+  - type: worker
+    name: train2conquer-worker
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: GENERATION_MODE
+        value: worker

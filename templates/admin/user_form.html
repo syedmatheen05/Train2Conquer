@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ "Edit" if mode == "edit" else "Add" }} User | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
+            <h1>{{ "Edit User" if mode == "edit" else "Add User" }}</h1>
+        </div>
+        <a class="t2c-admin-back" href="{{ url_for('admin_users') }}">← Back to users</a>
+    </div>
+
+    <div class="t2c-admin-form-card">
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            {{ form.name.label }}
+            {{ form.name(type="text") }}
+            {% if form.name.errors %}
+            <ul class="t2c-admin-errors">
+                {% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            {{ form.email.label }}
+            {{ form.email() }}
+            {% if form.email.errors %}
+            <ul class="t2c-admin-errors">
+                {% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+            <small style="color:var(--t2c-muted);font-size:12px;">
+                Login is by e-mail code, so this must be an address the user can receive mail on.
+            </small>
+
+            <label class="t2c-admin-check">
+                {{ form.is_admin() }} Admin access
+            </label>
+            {% if user and user.id == current_user.id %}
+            <small style="color:var(--t2c-muted);font-size:12px;">You are editing your own account.</small>
+            {% endif %}
+
+            <div class="t2c-admin-form-actions">
+                {{ form.submit() }}
+                <a class="t2c-admin-btn" href="{{ url_for('admin_users') }}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

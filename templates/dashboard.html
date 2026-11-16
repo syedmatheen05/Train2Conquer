@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{ bootstrap.load_css() }}
+
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+    <title>Train2Conquer — Train. Track. Conquer.</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}">
+</head>
+
+
+<body class="page-dashboard">
+
+<div class="t2c-page">
+
+    {% include 'navbar.html' %}
+
+    <!-- =========================================================
+         LOADER
+         ========================================================= -->
+
+    {% include "loader.html" %}
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+         ========================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    data-flash-message
+                    class="alert alert-{{ category }}"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+
+    <header class="t2c-hero">
+
+        <div class="t2c-hero-bg">
+            <div class="t2c-hero-glow"></div>
+            <div class="t2c-hero-grid"></div>
+        </div>
+
+
+        <div class="t2c-container">
+
+            <div class="t2c-hero-content">
+
+                <!-- HERO COPY -->
+
+                <div class="t2c-hero-copy t2c-reveal">
+
+                    <div class="t2c-hero-badge">
+                        <span></span>
+                        Your fitness journey starts here
+                    </div>
+
+                    <h1 class="t2c-hero-title">
+                        Train
+                        <span class="accent">2Conquer</span>
+                    </h1>
+
+                    <p class="t2c-hero-text">
+                        A smarter way to train at home. Get personalized
+                        workouts, track your progress, build consistency,
+                        and turn every session into another step forward.
+                    </p>
+
+                    <div class="t2c-hero-actions">
+
+                        <a
+                            href="{{ url_for('register') }}"
+                            class="t2c-btn t2c-btn-primary"
+                            data-loader-message="Preparing your training journey..."
+                        >
+                            Start training
+                            <span class="t2c-arrow">→</span>
+                        </a>
+
+                        <a
+                            href="#programs"
+                            class="t2c-btn t2c-btn-secondary"
+                        >
+                            Explore workouts
+                        </a>
+
+                    </div>
+
+                    <div class="t2c-hero-note">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M12 3l7 3v5c0 4.6-2.8 8.5-7 10-4.2-1.5-7-5.4-7-10V6l7-3z"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M9 12l2 2 4-4"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                        Built for consistency, not perfection.
+
+                    </div>
+
+                </div>
+
+
+                <!-- DASHBOARD VISUAL -->
+
+                <div class="t2c-dashboard-wrap t2c-reveal">
+
+                    <div class="t2c-dashboard-glow"></div>
+
+                    <div class="t2c-dashboard">
+
+                        <div class="t2c-dashboard-top">
+
+                            <div class="t2c-dashboard-brand">
+                                Train2Conquer
+                            </div>
+
+                            <div class="t2c-dashboard-status">
+                                Active
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-progress-card">
+
+                            <div class="t2c-progress-label">
+
+                                <span>Weekly progress</span>
+
+                                <strong>72%</strong>
+
+                            </div>
+
+                            <div class="t2c-progress-bar">
+                                <div class="t2c-progress-fill"></div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-dashboard-stats">
+
+                            <div class="t2c-mini-stat">
+
+                                <span class="t2c-mini-stat-number">
+                                    05
+                                </span>
+
+                                <span class="t2c-mini-stat-label">
+                                    Sessions
+                                </span>
+
+                            </div>
+
+                            <div class="t2c-mini-stat">
+
+                                <span class="t2c-mini-stat-number">
+                                    18
+                                </span>
+
+                                <span class="t2c-mini-stat-label">
+                                    Day streak
+                                </span>
+
+                            </div>
+
+                            <div class="t2c-mini-stat">
+
+                                <span class="t2c-mini-stat-number">
+                                    4.2K
+                                </span>
+
+                                <span class="t2c-mini-stat-label">
+                                    Calories
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-workout-preview">
+
+                            <div class="t2c-workout-preview-top">
+
+                                <span>Today's workout</span>
+
+                                <span class="t2c-day">
+                                    DAY 04
+                                </span>
+
+                            </div>
+
+
+                            <div class="t2c-exercise">
+
+                                <div class="t2c-exercise-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M6 10v4M9 8v8M15 8v8M18 10v4M9 12h6"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div class="t2c-exercise-info">
+
+                                    <span class="t2c-exercise-name">
+                                        Push Ups
+                                    </span>
+
+                                    <span class="t2c-exercise-meta">
+                                        3 sets × 12 reps
+                                    </span>
+
+                                </div>
+
+                                <div class="t2c-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+
+                            <div class="t2c-exercise">
+
+                                <div class="t2c-exercise-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M6 19l3-7 3 3 3-7 3 4"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div class="t2c-exercise-info">
+
+                                    <span class="t2c-exercise-name">
+                                        Squats
+                                    </span>
+
+                                    <span class="t2c-exercise-meta">
+                                        4 sets × 15 reps
+                                    </span>
+
+                                </div>
+
+                                <div class="t2c-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+
+                            <div class="t2c-exercise">
+
+                                <div class="t2c-exercise-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                    >
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="8"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                        />
+                                        <path
+                                            d="M12 8v4l3 2"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div class="t2c-exercise-info">
+
+                                    <span class="t2c-exercise-name">
+                                        Plank
+                                    </span>
+
+                                    <span class="t2c-exercise-meta">
+                                        3 sets × 45 sec
+                                    </span>
+
+                                </div>
+
+                                <div class="t2c-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         TRUST / BENEFIT STRIP
+         ========================================================= -->
+
+    <section class="t2c-trust">
+
+        <div class="t2c-container">
+
+            <div class="t2c-trust-inner">
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ✓
+                    </div>
+
+                    Personalized plans
+
+                </div>
+
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ◷
+                    </div>
+
+                    Train anywhere
+
+                </div>
+
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ↗
+                    </div>
+
+                    Track your progress
+
+                </div>
+
+
+                <div class="t2c-trust-item">
+
+                    <div class="t2c-trust-icon">
+                        ★
+                    </div>
+
+                    Build your streak
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         HOW IT WORKS
+         ========================================================= -->
+
+    <section class="t2c-section">
+
+        <div class="t2c-container">
+
+            <div class="t2c-section-heading t2c-reveal">
+
+                <p class="t2c-kicker">
+                    Simple by design
+                </p>
+
+                <h2 class="t2c-title">
+                    From zero to consistent
+                </h2>
+
+                <p class="t2c-description">
+                    Stop wondering what to do next. Train2Conquer gives
+                    you a clear path so you can spend less time planning
+                    and more time moving.
+                </p>
+
+            </div>
+
+
+            <div class="t2c-how-grid">
+
+                <div class="t2c-how-card t2c-reveal">
+
+                    <span class="t2c-how-number">
+                        01
+                    </span>
+
+                    <div class="t2c-how-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M12 3v18M3 12h18"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <h3>
+                        Build your profile
+                    </h3>
+
+                    <p>
+                        Tell us about your goals, fitness level,
+                        available equipment, and training preferences.
+                    </p>
+
+                </div>
+
+
+                <div class="t2c-how-card t2c-reveal">
+
+                    <span class="t2c-how-number">
+                        02
+                    </span>
+
+                    <div class="t2c-how-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M5 4h14v16H5z"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M8 8h8M8 12h8M8 16h5"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <h3>
+                        Get your plan
+                    </h3>
+
+                    <p>
+                        Follow a structured workout routine designed
+                        around your goals and the way you want to train.
+                    </p>
+
+                </div>
+
+
+                <div class="t2c-how-card t2c-reveal">
+
+                    <span class="t2c-how-number">
+                        03
+                    </span>
+
+                    <div class="t2c-how-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M4 17l5-5 3 3 7-8"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M15 7h4v4"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <h3>
+                        Train & conquer
+                    </h3>
+
+                    <p>
+                        Complete sessions, maintain your streak,
+                        measure progress, and keep pushing forward.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         PROGRAMS
+         ========================================================= -->
+
+    <section
+        class="t2c-section"
+        id="programs"
+    >
+
+        <div class="t2c-container">
+
+            <div class="t2c-section-heading t2c-reveal">
+
+                <p class="t2c-kicker">
+                    Training library
+                </p>
+
+                <h2 class="t2c-title">
+                    Choose your challenge
+                </h2>
+
+                <p class="t2c-description">
+                    Whether you're building strength, improving
+                    conditioning, or simply trying to move better,
+                    start where you are and progress from there.
+                </p>
+
+            </div>
+
+
+            <div class="t2c-program-grid">
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Creating your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Build power
+                        </span>
+
+                        <h3>
+                            Strength
+                        </h3>
+
+                        <p>
+                            Build muscle, strength and control.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Preparing your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Push limits
+                        </span>
+
+                        <h3>
+                            HIIT
+                        </h3>
+
+                        <p>
+                            Short, intense sessions that keep you moving.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Preparing your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Move better
+                        </span>
+
+                        <h3>
+                            Mobility
+                        </h3>
+
+                        <p>
+                            Improve movement, flexibility and control.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('register') }}"
+                    class="t2c-program-card t2c-reveal"
+                    data-loader-message="Preparing your training profile..."
+                >
+
+                    <div class="t2c-program-content">
+
+                        <span class="t2c-program-tag">
+                            Recover
+                        </span>
+
+                        <h3>
+                            Recovery
+                        </h3>
+
+                        <p>
+                            Give your body the recovery it deserves.
+                        </p>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         PROGRESS
+         ========================================================= -->
+
+    <section class="t2c-section t2c-progress-section">
+
+        <div class="t2c-container">
+
+            <div class="t2c-progress-layout">
+
+
+                <!-- LEFT -->
+
+                <div class="t2c-progress-panel t2c-reveal">
+
+                    <div class="t2c-progress-header">
+
+                        <h3>
+                            Your weekly progress
+                        </h3>
+
+                        <span class="t2c-week">
+                            Week 04
+                        </span>
+
+                    </div>
+
+
+                    <div class="t2c-progress-circle">
+
+                        <div class="t2c-progress-circle-content">
+
+                            <span class="t2c-progress-percent">
+                                73%
+                            </span>
+
+                            <span class="t2c-progress-small">
+                                Completed
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-progress-details">
+
+                        <div class="t2c-detail">
+
+                            <strong>
+                                05
+                            </strong>
+
+                            <span>
+                                Workouts
+                            </span>
+
+                        </div>
+
+
+                        <div class="t2c-detail">
+
+                            <strong>
+                                18
+                            </strong>
+
+                            <span>
+                                Day streak
+                            </span>
+
+                        </div>
+
+
+                        <div class="t2c-detail">
+
+                            <strong>
+                                12
+                            </strong>
+
+                            <span>
+                                PRs
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RIGHT -->
+
+                <div class="t2c-reveal">
+
+                    <p class="t2c-kicker">
+                        Progress over perfection
+                    </p>
+
+                    <h2 class="t2c-title">
+                        Every session counts
+                    </h2>
+
+                    <p class="t2c-description">
+                        Motivation comes and goes. Progress is built by
+                        showing up. Train2Conquer helps you turn individual
+                        workouts into a habit you can actually maintain.
+                    </p>
+
+
+                    <div class="t2c-benefits">
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Know what you're doing
+                                </h4>
+
+                                <p>
+                                    Follow a structured routine instead
+                                    of guessing your next exercise.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    See your progress
+                                </h4>
+
+                                <p>
+                                    Track completed workouts and build
+                                    momentum through consistency.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Keep moving forward
+                                </h4>
+
+                                <p>
+                                    Missed a day? Reset, continue and
+                                    keep working toward your next goal.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('register') }}"
+                        class="t2c-btn t2c-btn-primary"
+                        data-loader-message="Setting up your profile..."
+                    >
+                        Build my plan
+                        <span class="t2c-arrow">→</span>
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         TRAINERS
+         ========================================================= -->
+
+    <section
+        class="t2c-section"
+        id="hire-a-trainer"
+    >
+
+        <div class="t2c-container">
+
+            <div class="t2c-trainer-layout">
+
+
+                <div class="t2c-reveal">
+
+                    <p class="t2c-kicker">
+                        Extra support
+                    </p>
+
+                    <h2 class="t2c-title">
+                        Never train alone
+                    </h2>
+
+                    <p class="t2c-description">
+                        Want more accountability? Connect with a trainer
+                        for guidance, form checks, personalized plans,
+                        and support when you need it.
+                    </p>
+
+
+                    <div class="t2c-benefits">
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Personalized guidance
+                                </h4>
+
+                                <p>
+                                    Training can be adapted around your
+                                    goals and experience.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Form & technique feedback
+                                </h4>
+
+                                <p>
+                                    Get help making your movements safer
+                                    and more effective.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="t2c-benefit">
+
+                            <div class="t2c-benefit-check">
+                                ✓
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    Accountability
+                                </h4>
+
+                                <p>
+                                    Someone in your corner when motivation
+                                    starts getting low.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('find_trainer') }}"
+                        class="t2c-btn t2c-btn-secondary"
+                    >
+                        Find a trainer
+                        <span class="t2c-arrow">→</span>
+                    </a>
+
+                </div>
+
+
+                <div class="t2c-trainer-cards t2c-reveal">
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            S
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Strength Coach
+                            </h4>
+
+                            <p>
+                                Strength & conditioning
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.9
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            H
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                HIIT Coach
+                            </h4>
+
+                            <p>
+                                HIIT & conditioning
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.8
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            M
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Mobility Coach
+                            </h4>
+
+                            <p>
+                                Mobility & recovery
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.9
+                        </div>
+
+                    </div>
+
+
+                    <div class="t2c-trainer-card">
+
+                        <div class="t2c-trainer-avatar">
+                            F
+                        </div>
+
+                        <div class="t2c-trainer-info">
+
+                            <h4>
+                                Functional Coach
+                            </h4>
+
+                            <p>
+                                Functional fitness
+                            </p>
+
+                        </div>
+
+                        <div class="t2c-trainer-rating">
+                            ★ 4.7
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ACHIEVEMENTS
+         ========================================================= -->
+
+    <section class="t2c-section">
+
+        <div class="t2c-container">
+
+            <div class="t2c-section-heading t2c-reveal">
+
+                <p class="t2c-kicker">
+                    The goal
+                </p>
+
+                <h2 class="t2c-title">
+                    Become stronger than yesterday
+                </h2>
+
+                <p class="t2c-description">
+                    The best transformation isn't just what you see
+                    in the mirror. It's becoming the person who keeps
+                    showing up.
+                </p>
+
+            </div>
+
+
+            <div class="t2c-achievement-grid">
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        🔥
+                    </div>
+
+                    <strong>
+                        Streak
+                    </strong>
+
+                    <span>
+                        Build consistency
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        ↗
+                    </div>
+
+                    <strong>
+                        Progress
+                    </strong>
+
+                    <span>
+                        Beat yesterday
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        ★
+                    </div>
+
+                    <strong>
+                        Goals
+                    </strong>
+
+                    <span>
+                        Reach milestones
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-achievement t2c-reveal">
+
+                    <div class="t2c-achievement-icon">
+                        ✓
+                    </div>
+
+                    <strong>
+                        Complete
+                    </strong>
+
+                    <span>
+                        Finish strong
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         FINAL CTA
+         ========================================================= -->
+
+    <section class="t2c-section t2c-final">
+
+        <div class="t2c-container">
+
+            <div class="t2c-final-inner t2c-reveal">
+
+                <p class="t2c-kicker">
+                    Your next session starts now
+                </p>
+
+                <h2 class="t2c-final-title">
+                    Train hard.
+                    <br>
+                    <span>Conquer more.</span>
+                </h2>
+
+                <p class="t2c-final-text">
+                    No complicated equipment. No endless planning.
+                    Just a clear path, a workout, and the decision
+                    to show up.
+                </p>
+
+
+                <div class="t2c-final-actions">
+
+                    <a
+                        href="{{ url_for('register') }}"
+                        class="t2c-btn t2c-btn-primary"
+                        data-loader-message="Starting your Train2Conquer journey..."
+                    >
+                        Start training
+                        <span class="t2c-arrow">→</span>
+                    </a>
+
+                    <a
+                        href="#programs"
+                        class="t2c-btn t2c-btn-secondary"
+                    >
+                        View programs
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    {% include 'footer.html' %}
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+<script>
+
+    /* =========================================================
+       TRAIN2CONQUER — SCROLL REVEAL
+       ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const revealElements =
+            document.querySelectorAll(".t2c-reveal");
+
+        if (!("IntersectionObserver" in window)) {
+
+            revealElements.forEach(function (element) {
+                element.classList.add("visible");
+            });
+
+            return;
+        }
+
+
+        const observer =
+            new IntersectionObserver(
+                function (entries, observer) {
+
+                    entries.forEach(function (entry) {
+
+                        if (entry.isIntersecting) {
+
+                            entry.target.classList.add("visible");
+
+                            observer.unobserve(entry.target);
+
+                        }
+
+                    });
+
+                },
+                {
+                    threshold: 0.12,
+                    rootMargin: "0px 0px -35px 0px"
+                }
+            );
+
+
+        revealElements.forEach(function (element) {
+
+            observer.observe(element);
+
+        });
+
+    });
+
+
+    /* =========================================================
+       STAGGER CARDS
+       ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const groups = [
+            ".t2c-how-grid",
+            ".t2c-program-grid",
+            ".t2c-achievement-grid",
+            ".t2c-trainer-cards"
+        ];
+
+        groups.forEach(function (selector) {
+
+            const container =
+                document.querySelector(selector);
+
+            if (!container) return;
+
+            const children =
+                container.querySelectorAll(".t2c-reveal");
+
+            children.forEach(function (child, index) {
+
+                child.style.transitionDelay =
+                    (index * 70) + "ms";
+
+            });
+
+        });
+
+    });
+
+
+    /* =========================================================
+       SMOOTH ANCHOR SCROLL
+       ========================================================= */
+
+    document.addEventListener("click", function (event) {
+
+        const link =
+            event.target.closest('a[href^="#"]');
+
+        if (!link) return;
+
+        const targetId =
+            link.getAttribute("href");
+
+        if (!targetId || targetId === "#") return;
+
+        const target =
+            document.querySelector(targetId);
+
+        if (!target) return;
+
+        event.preventDefault();
+
+        target.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    });
+
+
+    /* =========================================================
+       BUTTON LOADING STATE
+       ========================================================= */
+
+    document.addEventListener("click", function (event) {
+
+        const button =
+            event.target.closest(
+                ".t2c-btn[data-loader-message]"
+            );
+
+        if (!button) return;
+
+        /*
+         * loader.js can handle the actual page transition.
+         * This only gives the button a small visual response.
+         */
+
+        button.style.pointerEvents = "none";
+
+    });
+
+</script>
+
+</body>
+</html>

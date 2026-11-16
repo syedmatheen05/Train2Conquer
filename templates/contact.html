@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{ bootstrap.load_css() }}
+
+    <title>Contact | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/contact.css') }}">
+</head>
+
+<body class="page-contact">
+{% include "navbar.html" %}
+    {% include "loader.html" %}
+<!-- =========================
+     CONTACT HERO
+========================= -->
+
+<section class="contact-hero">
+
+    <div class="container text-center">
+
+        <span class="contact-label">
+            GET IN TOUCH
+        </span>
+
+        <h1 class="contact-title">
+            TALK TO <span>US.</span>
+        </h1>
+
+        <p class="contact-subtitle">
+            Whether you have feedback, a question, a technical
+            issue or simply want to know more about Train2Conquer,
+            we'd love to hear from you.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     CONTACT SECTION
+========================= -->
+
+<section class="contact-section">
+
+    <div class="container">
+
+        <div class="row g-5 align-items-start">
+
+            <!-- =========================
+                 LEFT SIDE
+            ========================= -->
+
+            <div class="col-lg-5">
+
+                <div class="contact-info-card">
+
+                    <span class="small-label">
+                        CONTACT
+                    </span>
+
+                    <h2>
+                        Let's build<br>
+                        something <span>strong.</span>
+                    </h2>
+
+                    <p>
+                        Have feedback about Train2Conquer?
+                        Found a bug? Need help?
+                        Send us a message and we'll get back to you.
+                    </p>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="contact-info-item">
+
+                        <div class="contact-icon">
+                            @
+                        </div>
+
+                        <div>
+                            <small>EMAIL</small>
+
+                            <strong>
+                                syedmatheen2910@gmail.com
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <!-- RESPONSE TIME -->
+
+                    <div class="contact-info-item">
+
+                        <div class="contact-icon">
+                            ⚡
+                        </div>
+
+                        <div>
+                            <small>RESPONSE TIME</small>
+
+                            <strong>
+                                Usually within 24 hours
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <!-- SECURITY -->
+
+                    <div class="contact-security">
+
+                        <span>🔒</span>
+
+                        <div>
+                            <strong>
+                                Your privacy matters
+                            </strong>
+
+                            <p>
+                                We verify email addresses before
+                                accepting messages from visitors.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 RIGHT SIDE FORM
+            ========================= -->
+
+            <div class="col-lg-7">
+
+                <div class="contact-form-card">
+
+                    {% with messages =
+                        get_flashed_messages(with_categories=true) %}
+
+                        {% if messages %}
+
+                            {% for category, message in messages %}
+
+                                <div data-flash-message class="alert alert-{{ category }}">
+                                    {{ message }}
+                                </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    {% endwith %}
+
+
+                    <!-- =================================
+                         LOGGED-IN USER
+                    ================================= -->
+
+                    {% if current_user.is_authenticated %}
+
+                        <div class="form-header">
+
+                            <span class="small-label">
+                                SEND A MESSAGE
+                            </span>
+
+                            <h2>
+                                Welcome back,
+                                <span>{{ current_user.name }}</span>
+                            </h2>
+
+                            <p>
+                                You're already verified, so you don't
+                                need to enter your name or email again.
+                            </p>
+
+                        </div>
+
+
+                        <form method="POST"
+                              action="{{ url_for('contact') }}">
+
+                            {{ form.hidden_tag() }}
+
+
+                            <!-- Hidden identity fields -->
+
+                            <input type="hidden"
+                                   name="name"
+                                   value="{{ current_user.name }}">
+
+                            <input type="hidden"
+                                   name="email"
+                                   value="{{ current_user.email }}">
+
+
+                            <!-- MESSAGE ONLY -->
+
+                            <div class="mb-4">
+
+                                <label for="message"
+                                       class="form-label">
+                                    Message
+                                </label>
+
+                                {{ form.message(
+                                    class="form-control contact-message",
+                                    id="message",
+                                    placeholder="Write your message here...",
+                                    rows="7"
+                                ) }}
+
+                                {% if form.message.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.message.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- SEND -->
+
+                            <button type="submit"
+                                    class="btn btn-primary contact-submit">
+
+                                Send Message
+                                <span>→</span>
+
+                            </button>
+
+                        </form>
+
+
+                    <!-- =================================
+                         GUEST USER
+                    ================================= -->
+
+                    {% else %}
+
+                        <div class="form-header">
+
+                            <span class="small-label">
+                                SEND A MESSAGE
+                            </span>
+
+                            <h2>
+                                Tell us what you
+                                <span>think.</span>
+                            </h2>
+
+                            <p>
+                                Enter your details below.
+                                We'll verify your email before
+                                sending your message.
+                            </p>
+
+                        </div>
+
+
+                        <form method="POST"
+                              action="{{ url_for('contact') }}">
+
+                            {{ form.hidden_tag() }}
+
+
+                            <!-- NAME -->
+
+                            <div class="mb-4">
+
+                                {{ form.name.label(
+                                    class="form-label"
+                                ) }}
+
+                                {{ form.name(
+                                    class="form-control",
+                                    placeholder="Enter your name"
+                                ) }}
+
+                                {% if form.name.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.name.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- EMAIL -->
+
+                            <div class="mb-4">
+
+                                {{ form.email.label(
+                                    class="form-label"
+                                ) }}
+
+                                {{ form.email(
+                                    class="form-control",
+                                    type="email",
+                                    placeholder="Enter your email"
+                                ) }}
+
+                                {% if form.email.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.email.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- MESSAGE -->
+
+                            <div class="mb-4">
+
+                                {{ form.message.label(
+                                    class="form-label"
+                                ) }}
+
+                                {{ form.message(
+                                    class="form-control contact-message",
+                                    placeholder="Write your message here...",
+                                    rows="7"
+                                ) }}
+
+                                {% if form.message.errors %}
+
+                                    <div class="text-danger mt-2">
+
+                                        {% for error in form.message.errors %}
+
+                                            <small>
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- VERIFY -->
+
+                            <button type="submit"
+                                    class="btn btn-primary contact-submit">
+
+                                Verify Email
+                                <span>→</span>
+
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+{% include 'footer.html' %}
+
+
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
+
+
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

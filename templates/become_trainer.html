@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Become a Trainer | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+    {{ bootstrap.load_css() }}
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/become_trainer.css') }}">
+</head>
+
+
+<body class="page-become-trainer">
+
+
+    <!-- =====================================================
+         NAVBAR
+    ====================================================== -->
+
+    {% include "navbar.html" %}
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    <div class="container mt-3">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        data-flash-message
+                        class="alert alert-{{ category }} alert-dismissible fade show"
+                        role="alert"
+                    >
+
+                        {{ message }}
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                        ></button>
+
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+    </div>
+
+
+    <!-- =====================================================
+         LOADER
+    ====================================================== -->
+
+    {% include "loader.html" %}
+
+
+    <!-- =====================================================
+         PAGE
+    ====================================================== -->
+
+    <main class="trainer-page">
+
+        <div class="trainer-wrapper">
+
+
+            <!-- HEADER -->
+
+            <div class="trainer-header">
+
+                <div class="trainer-badge">
+
+                    <span class="trainer-badge-dot"></span>
+
+                    Trainer Program
+
+                </div>
+
+                <h1>
+                    Become a <span>Trainer.</span>
+                </h1>
+
+                <p>
+                    Share your knowledge, experience and passion for
+                    fitness. Tell us about yourself and we'll review
+                    your trainer application.
+                </p>
+
+            </div>
+
+
+            <!-- CARD -->
+
+            <div class="trainer-card">
+
+
+                <!-- USER INFORMATION -->
+
+                <div class="trainer-user-info">
+
+
+                    <!-- NAME -->
+
+                    <div class="trainer-info-box">
+
+                        <div class="trainer-info-icon">
+                            👤
+                        </div>
+
+                        <div class="trainer-info-content">
+
+                            <span class="trainer-info-label">
+                                Name
+                            </span>
+
+                            <span class="trainer-info-value">
+                                {{ current_user.name }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="trainer-info-box">
+
+                        <div class="trainer-info-icon">
+                            ✉
+                        </div>
+
+                        <div class="trainer-info-content">
+
+                            <span class="trainer-info-label">
+                                Email
+                            </span>
+
+                            <span class="trainer-info-value">
+                                {{ current_user.email }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="trainer-divider"></div>
+
+
+                <!-- FORM -->
+
+                <form
+                    method="POST"
+                    id="trainerForm"
+                >
+
+                    {{ form.hidden_tag() }}
+
+
+                    <!-- ABOUT -->
+
+                    <div class="trainer-form-group">
+
+                        <label
+                            for="{{ form.about.id }}"
+                            class="trainer-label"
+                        >
+                            About Yourself <span>*</span>
+                        </label>
+
+                        {{ form.about(
+                            class="trainer-textarea"
+                        ) }}
+
+                        {% for error in form.about.errors %}
+
+                            <div class="trainer-error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                        <div class="trainer-helper">
+                            Tell us about your fitness experience,
+                            expertise, certifications, specialties and
+                            training approach.
+                        </div>
+
+                    </div>
+
+
+                    <!-- LOCATION + PHONE -->
+
+                    <div class="trainer-form-row">
+
+
+                        <!-- LOCATION -->
+
+                        <div class="trainer-form-group">
+
+                            <label
+                                for="{{ form.location.id }}"
+                                class="trainer-label"
+                            >
+                                Location <span>*</span>
+                            </label>
+
+                            {{ form.location(
+                                class="trainer-input"
+                            ) }}
+
+                            {% for error in form.location.errors %}
+
+                                <div class="trainer-error">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div class="trainer-form-group">
+
+                            <label
+                                for="{{ form.phone_number.id }}"
+                                class="trainer-label"
+                            >
+                                Phone Number <span>*</span>
+                            </label>
+
+                            {{ form.phone_number(
+                                class="trainer-input"
+                            ) }}
+
+                            {% for error in form.phone_number.errors %}
+
+                                <div class="trainer-error">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- GENDER -->
+
+                    {% if not profile %}
+
+                        <div class="trainer-form-group">
+
+                            <label
+                                for="{{ form.gender.id }}"
+                                class="trainer-label"
+                            >
+                                Gender <span>*</span>
+                            </label>
+
+                            {{ form.gender(
+                                class="trainer-select"
+                            ) }}
+
+                            {% for error in form.gender.errors %}
+
+                                <div class="trainer-error">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- SUBMIT -->
+
+                    <button
+                        type="submit"
+                        class="trainer-submit"
+                    >
+                        Submit Trainer Application
+                    </button>
+
+
+                    <div class="trainer-note">
+                        Your information will be sent to the
+                        Train2Conquer team for review.
+                    </div>
+
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    {% include "footer.html" %}
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    {{ bootstrap.load_js() }}
+
+    <script
+        src="{{ url_for('static', filename='js/loader.js') }}"
+    ></script>
+
+    <script
+        src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
+
+
+</body>
+
+</html>

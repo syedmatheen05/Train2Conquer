@@ -1,0 +1,969 @@
+/* This file holds ONLY the CSS for this one page, split out of the
+   original single pages.css (which held every page's styles in one
+   197KB file loaded on every page). Selectors here are still scoped
+   to body.page-<name> exactly as before -- nothing about how the
+   page looks has changed, only which file the browser has to
+   download to render it. */
+
+/* ============================================================
+   PAGE: login.html
+   ============================================================ */
+
+body.page-login {
+        --t2c-bg: #08090C;
+        --t2c-panel: #101217;
+        --t2c-panel-2: #151820;
+        --t2c-panel-3: #0D0F14;
+        --t2c-border:
+            rgba(255,255,255,.08);
+        --t2c-text:
+            #F5F5F3;
+        --t2c-muted:
+            #8E929D;
+        --t2c-muted-2:
+            #656A76;
+        --t2c-orange:
+            #FF512F;
+        --t2c-orange-light:
+            #FF704D;
+        --t2c-gold:
+            #D7AA48;
+        --t2c-danger:
+            #FF6961;
+        --t2c-radius:
+            24px;
+    }
+
+body.page-login {
+        margin:
+            0;
+        min-height:
+            100vh;
+        background:
+            radial-gradient(
+                circle at 8% 10%,
+                rgba(255,81,47,.10),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 92% 90%,
+                rgba(215,170,72,.07),
+                transparent 30%
+            ),
+            var(--t2c-bg);
+        color:
+            var(--t2c-text);
+        font-family:
+            'Manrope',
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            sans-serif;
+        overflow-x:
+            hidden;
+    }
+
+body.page-login .t2c-login {
+        width:
+            100%;
+        min-height:
+            100vh;
+        padding:
+            38px 22px;
+        display:
+            flex;
+        align-items:
+            center;
+        justify-content:
+            center;
+        position:
+            relative;
+        overflow:
+            hidden;
+        isolation:
+            isolate;
+    }
+
+/* These are decorative ambient glows that belong to the .t2c-login
+   component itself, not the browser viewport -- they must be
+   "position: absolute" (contained by .t2c-login's own
+   "position: relative") rather than "position: fixed" (pinned to the
+   viewport). "fixed" is what was causing the glow to land in the
+   wrong place relative to the card on mobile, where the viewport
+   size/aspect ratio differs a lot from desktop. */
+body.page-login .t2c-login::before {
+        content:
+            "";
+        position:
+            absolute;
+        width:
+            440px;
+        height:
+            440px;
+        left:
+            -250px;
+        top:
+            -230px;
+        border-radius:
+            50%;
+        background:
+            rgba(255,81,47,.055);
+        filter:
+            blur(85px);
+        pointer-events:
+            none;
+        z-index:
+            -2;
+    }
+
+body.page-login .t2c-login::after {
+        content:
+            "";
+        position:
+            absolute;
+        width:
+            420px;
+        height:
+            420px;
+        right:
+            -250px;
+        bottom:
+            -240px;
+        border-radius:
+            50%;
+        background:
+            rgba(215,170,72,.045);
+        filter:
+            blur(85px);
+        pointer-events:
+            none;
+        z-index:
+            -2;
+    }
+
+body.page-login .t2c-login-card {
+        width:
+            min(1080px, 100%);
+        min-height:
+            650px;
+        display:
+            grid;
+        grid-template-columns:
+            .92fr 1.08fr;
+        background:
+            var(--t2c-panel);
+        border:
+            1px solid
+            var(--t2c-border);
+        border-radius:
+            var(--t2c-radius);
+        overflow:
+            hidden;
+        position:
+            relative;
+        box-shadow:
+            0 35px 100px
+            rgba(0,0,0,.58),
+            0 0 0 1px
+            rgba(255,255,255,.012);
+        animation:
+            t2cLoginIn .55s ease both;
+    }
+
+body.page-login .t2c-login-card::before {
+        content:
+            "";
+        position:
+            absolute;
+        top:
+            0;
+        left:
+            0;
+        right:
+            0;
+        height:
+            2px;
+        background:
+            linear-gradient(
+                90deg,
+                var(--t2c-orange),
+                var(--t2c-gold)
+            );
+        z-index:
+            5;
+    }
+
+@keyframes t2cLoginIn {
+        from {
+            opacity:
+                0;
+            transform:
+                translateY(18px)
+                scale(.985);
+        }
+        to {
+            opacity:
+                1;
+            transform:
+                translateY(0)
+                scale(1);
+        }
+    }
+
+body.page-login .t2c-login-brand {
+        min-width:
+            0;
+        position:
+            relative;
+        overflow:
+            hidden;
+        padding:
+            42px 46px;
+        display:
+            flex;
+        flex-direction:
+            column;
+        justify-content:
+            space-between;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,.025),
+                transparent 45%
+            ),
+            var(--t2c-panel-3);
+        border-right:
+            1px solid
+            var(--t2c-border);
+        isolation:
+            isolate;
+    }
+
+body.page-login .t2c-login-brand::before {
+        content:
+            "";
+        position:
+            absolute;
+        width:
+            350px;
+        height:
+            350px;
+        left:
+            -180px;
+        top:
+            -160px;
+        border-radius:
+            50%;
+        background:
+            rgba(255,81,47,.12);
+        filter:
+            blur(28px);
+        z-index:
+            -3;
+    }
+
+body.page-login .t2c-login-brand::after {
+        content:
+            "";
+        position:
+            absolute;
+        width:
+            300px;
+        height:
+            300px;
+        right:
+            -170px;
+        bottom:
+            -170px;
+        border-radius:
+            50%;
+        background:
+            rgba(215,170,72,.08);
+        filter:
+            blur(28px);
+        z-index:
+            -3;
+    }
+
+body.page-login .t2c-login-climb {
+        position:
+            absolute;
+        inset:
+            0;
+        width:
+            100%;
+        height:
+            100%;
+        opacity:
+            .26;
+        z-index:
+            -2;
+        pointer-events:
+            none;
+    }
+
+body.page-login .t2c-login-logo {
+        display:
+            inline-flex;
+        align-items:
+            center;
+        gap:
+            11px;
+        width:
+            max-content;
+        color:
+            var(--t2c-text) !important;
+        text-decoration:
+            none !important;
+        position:
+            relative;
+        z-index:
+            3;
+    }
+
+body.page-login .t2c-login-logo svg {
+        width:
+            31px;
+        height:
+            31px;
+        flex-shrink:
+            0;
+    }
+
+body.page-login .t2c-login-logo span {
+        font-family:
+            'Anton',
+            sans-serif;
+        font-size:
+            19px;
+        letter-spacing:
+            .04em;
+        line-height:
+            1;
+    }
+
+body.page-login .t2c-login-logo .accent {
+        color:
+            var(--t2c-orange);
+    }
+
+body.page-login .t2c-login-content {
+        margin-top:
+            auto;
+        margin-bottom:
+            auto;
+        padding:
+            70px 0 40px;
+        position:
+            relative;
+        z-index:
+            2;
+    }
+
+body.page-login .t2c-login-eyebrow {
+        display:
+            inline-flex;
+        align-items:
+            center;
+        gap:
+            8px;
+        margin-bottom:
+            18px;
+        color:
+            var(--t2c-gold);
+        font-size:
+            11px;
+        font-weight:
+            800;
+        letter-spacing:
+            .14em;
+        text-transform:
+            uppercase;
+    }
+
+body.page-login .t2c-login-eyebrow::before {
+        content:
+            "";
+        width:
+            24px;
+        height:
+            2px;
+        border-radius:
+            10px;
+        background:
+            var(--t2c-orange);
+    }
+
+body.page-login .t2c-login-content h2 {
+        margin:
+            0 0 20px;
+        max-width:
+            410px;
+        font-family:
+            'Anton',
+            sans-serif;
+        font-size:
+            clamp(
+                2.1rem,
+                4vw,
+                3.25rem
+            );
+        font-weight:
+            400;
+        line-height:
+            .98;
+        letter-spacing:
+            .01em;
+        text-transform:
+            uppercase;
+    }
+
+body.page-login .t2c-login-content h2 .accent {
+        color:
+            var(--t2c-orange);
+    }
+
+body.page-login .t2c-login-content p {
+        max-width:
+            365px;
+        margin:
+            0;
+        color:
+            var(--t2c-muted);
+        font-size:
+            14px;
+        line-height:
+            1.75;
+    }
+
+body.page-login .t2c-login-points {
+        list-style:
+            none;
+        margin:
+            30px 0 0;
+        padding:
+            0;
+        display:
+            grid;
+        gap:
+            13px;
+    }
+
+body.page-login .t2c-login-points li {
+        display:
+            flex;
+        align-items:
+            center;
+        gap:
+            11px;
+        color:
+            #B5B8C0;
+        font-size:
+            13px;
+        line-height:
+            1.4;
+    }
+
+body.page-login .t2c-login-points li::before {
+        content:
+            "✓";
+        width:
+            22px;
+        height:
+            22px;
+        display:
+            grid;
+        place-items:
+            center;
+        flex-shrink:
+            0;
+        border-radius:
+            7px;
+        background:
+            rgba(255,81,47,.10);
+        border:
+            1px solid
+            rgba(255,81,47,.16);
+        color:
+            var(--t2c-orange);
+        font-size:
+            11px;
+        font-weight:
+            800;
+    }
+
+body.page-login .t2c-login-bottom {
+        color:
+            var(--t2c-muted-2);
+        font-size:
+            10px;
+        font-weight:
+            800;
+        letter-spacing:
+            .09em;
+        position:
+            relative;
+        z-index:
+            3;
+    }
+
+body.page-login .t2c-login-form {
+        padding:
+            58px
+            clamp(30px, 5vw, 70px);
+        display:
+            flex;
+        flex-direction:
+            column;
+        justify-content:
+            center;
+        min-width:
+            0;
+        background:
+            var(--t2c-panel);
+        position:
+            relative;
+    }
+
+body.page-login .t2c-login-form::after {
+        content:
+            "";
+        position:
+            absolute;
+        width:
+            260px;
+        height:
+            260px;
+        right:
+            -170px;
+        top:
+            -170px;
+        border-radius:
+            50%;
+        background:
+            rgba(255,81,47,.035);
+        filter:
+            blur(40px);
+        pointer-events:
+            none;
+    }
+
+body.page-login .t2c-login-heading {
+        margin-bottom:
+            30px;
+        position:
+            relative;
+        z-index:
+            2;
+    }
+
+body.page-login .t2c-login-heading h1 {
+        margin:
+            0 0 8px;
+        color:
+            var(--t2c-text);
+        font-family:
+            'Anton',
+            sans-serif;
+        font-size:
+            2.15rem;
+        font-weight:
+            400;
+        line-height:
+            1.15;
+        letter-spacing:
+            .015em;
+        text-transform:
+            uppercase;
+    }
+
+body.page-login .t2c-login-heading p {
+        margin:
+            0;
+        color:
+            var(--t2c-muted);
+        font-size:
+            13px;
+        line-height:
+            1.6;
+    }
+
+body.page-login .t2c-login-flash {
+        position:
+            relative;
+        z-index:
+            3;
+        margin-bottom:
+            20px;
+        border:
+            1px solid
+            var(--t2c-border);
+        border-radius:
+            10px;
+        background:
+            var(--t2c-panel-2);
+        color:
+            var(--t2c-text);
+        font-size:
+            12px;
+    }
+
+body.page-login .t2c-login-form form {
+        position:
+            relative;
+        z-index:
+            2;
+    }
+
+body.page-login .t2c-login-form form label,
+body.page-login .t2c-login-form form .form-label {
+        display:
+            block;
+        margin-bottom:
+            7px;
+        color:
+            #A7AAB3;
+        font-size:
+            11px;
+        font-weight:
+            800;
+        letter-spacing:
+            .09em;
+        text-transform:
+            uppercase;
+    }
+
+body.page-login .t2c-login-form form .form-control,
+body.page-login .t2c-login-form form .form-select {
+        width:
+            100%;
+        min-height:
+            47px;
+        padding:
+            11px 14px;
+        background:
+            var(--t2c-panel-2);
+        border:
+            1px solid
+            var(--t2c-border);
+        border-radius:
+            11px;
+        color:
+            var(--t2c-text);
+        font-family:
+            'Manrope',
+            sans-serif;
+        font-size:
+            13.5px;
+        font-weight:
+            600;
+        transition:
+            border-color .18s ease,
+            box-shadow .18s ease,
+            background .18s ease;
+    }
+
+body.page-login .t2c-login-form form .form-control:hover,
+body.page-login .t2c-login-form form .form-select:hover {
+        border-color:
+            rgba(255,255,255,.14);
+    }
+
+body.page-login .t2c-login-form form .form-control::placeholder {
+        color:
+            #555A66;
+    }
+
+body.page-login .t2c-login-form form .form-control:focus,
+body.page-login .t2c-login-form form .form-select:focus {
+        background:
+            #181B23;
+        border-color:
+            var(--t2c-orange);
+        color:
+            var(--t2c-text);
+        outline:
+            none;
+        box-shadow:
+            0 0 0 3px
+            rgba(255,81,47,.13);
+    }
+
+body.page-login .t2c-login-form form .form-select option {
+        background:
+            var(--t2c-panel-2);
+        color:
+            var(--t2c-text);
+    }
+
+body.page-login .t2c-login-form form .form-check {
+        margin-top:
+            4px;
+    }
+
+body.page-login .t2c-login-form form .form-check-label {
+        color:
+            var(--t2c-muted);
+        font-size:
+            12.5px;
+        font-weight:
+            500;
+        letter-spacing:
+            0;
+        text-transform:
+            none;
+    }
+
+body.page-login .t2c-login-form form .form-check-input {
+        background-color:
+            var(--t2c-panel-2);
+        border-color:
+            var(--t2c-border);
+    }
+
+body.page-login .t2c-login-form form .form-check-input:checked {
+        background-color:
+            var(--t2c-orange);
+        border-color:
+            var(--t2c-orange);
+    }
+
+body.page-login .t2c-login-form form .form-text {
+        margin-top:
+            5px;
+        color:
+            #777B86;
+        font-size:
+            11px;
+    }
+
+body.page-login .t2c-login-form form .invalid-feedback {
+        color:
+            var(--t2c-danger);
+        font-size:
+            11px;
+    }
+
+body.page-login .t2c-login-form form .mb-3 {
+        margin-bottom:
+            17px !important;
+    }
+
+body.page-login .t2c-login-form form [type="submit"],
+body.page-login .t2c-login-form form .btn-primary {
+        width:
+            100%;
+        min-height:
+            49px;
+        margin-top:
+            7px;
+        border:
+            none;
+        border-radius:
+            11px;
+        background:
+            linear-gradient(
+                135deg,
+                var(--t2c-orange),
+                var(--t2c-orange-light)
+            );
+        color:
+            #170E0A;
+        font-size:
+            13px;
+        font-weight:
+            800;
+        letter-spacing:
+            .045em;
+        text-transform:
+            uppercase;
+        box-shadow:
+            0 10px 25px
+            rgba(255,81,47,.16);
+        cursor:
+            pointer;
+        transition:
+            transform .15s ease,
+            box-shadow .15s ease,
+            filter .15s ease;
+    }
+
+body.page-login .t2c-login-form form [type="submit"]:hover,
+body.page-login .t2c-login-form form .btn-primary:hover {
+        filter:
+            brightness(1.06);
+        transform:
+            translateY(-1px);
+        box-shadow:
+            0 14px 30px
+            rgba(255,81,47,.22);
+    }
+
+body.page-login .t2c-login-form form [type="submit"]:active,
+body.page-login .t2c-login-form form .btn-primary:active {
+        transform:
+            translateY(0);
+    }
+
+body.page-login .t2c-login-divider {
+        display:
+            flex;
+        align-items:
+            center;
+        gap:
+            12px;
+        margin:
+            25px 0 0;
+        color:
+            #454A55;
+        font-size:
+            10px;
+        font-weight:
+            800;
+        letter-spacing:
+            .12em;
+        text-transform:
+            uppercase;
+    }
+
+body.page-login .t2c-login-divider::before,
+body.page-login .t2c-login-divider::after {
+        content:
+            "";
+        height:
+            1px;
+        flex:
+            1;
+        background:
+            var(--t2c-border);
+    }
+
+body.page-login .t2c-register-link {
+        margin:
+            17px 0 0;
+        color:
+            var(--t2c-muted);
+        font-size:
+            12.5px;
+        text-align:
+            center;
+    }
+
+body.page-login .t2c-register-link a {
+        color:
+            var(--t2c-gold);
+        font-weight:
+            800;
+        text-decoration:
+            none;
+        transition:
+            color .18s ease;
+    }
+
+body.page-login .t2c-register-link a:hover {
+        color:
+            #F0C766;
+        text-decoration:
+            none;
+    }
+
+body.page-login .t2c-login-security {
+        margin-top:
+            25px;
+        padding-top:
+            20px;
+        border-top:
+            1px solid
+            var(--t2c-border);
+        color:
+            var(--t2c-muted-2);
+        font-size:
+            10.5px;
+        line-height:
+            1.65;
+        text-align:
+            center;
+    }
+
+@media (max-width: 850px) {
+body.page-login .t2c-login {
+            padding:
+                26px 16px;
+        }
+body.page-login .t2c-login-card {
+            width:
+                min(570px, 100%);
+            min-height:
+                auto;
+            grid-template-columns:
+                1fr;
+        }
+body.page-login .t2c-login-brand {
+            display:
+                none;
+        }
+body.page-login .t2c-login-form {
+            padding:
+                44px 30px;
+        }
+}
+
+@media (max-width: 600px) {
+body.page-login .t2c-login {
+            min-height:
+                100vh;
+            padding:
+                18px 12px;
+            align-items:
+                flex-start;
+        }
+body.page-login .t2c-login-card {
+            border-radius:
+                20px;
+        }
+body.page-login .t2c-login-form {
+            padding:
+                38px 22px;
+        }
+body.page-login .t2c-login-heading {
+            margin-bottom:
+                27px;
+        }
+body.page-login .t2c-login-heading h1 {
+            font-size:
+                1.9rem;
+        }
+body.page-login .t2c-login-heading p {
+            font-size:
+                12.5px;
+        }
+}
+
+@media (max-width: 360px) {
+body.page-login .t2c-login {
+            padding:
+                14px 9px;
+        }
+body.page-login .t2c-login-form {
+            padding:
+                32px 17px;
+        }
+body.page-login .t2c-login-heading h1 {
+            font-size:
+                1.72rem;
+        }
+}
+
+@media (prefers-reduced-motion: reduce) {
+body.page-login .t2c-login-card {
+            animation:
+                none;
+        }
+body.page-login *,
+body.page-login *::before,
+body.page-login *::after {
+            scroll-behavior:
+                auto !important;
+        }
+}

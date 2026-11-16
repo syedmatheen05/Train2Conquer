@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.name }} | Train2Conquer Admin</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
+            <h1>{{ user.name }}</h1>
+        </div>
+        <a class="t2c-admin-back" href="{{ url_for('admin_users') }}">← Back to users</a>
+    </div>
+
+    <div class="t2c-admin-actions">
+        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_user_edit', user_id=user.id) }}">Edit user</a>
+        {% if user.id != current_user.id %}
+        <form method="POST" action="{{ url_for('admin_user_delete', user_id=user.id) }}"
+              onsubmit="return confirm('Delete {{ user.name|e }} and all their fitness data? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="t2c-admin-btn t2c-admin-btn-danger">Delete user</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <section class="t2c-admin-section">
+        <h2>Account</h2>
+        <dl class="t2c-admin-dl">
+            <div><dt>User ID</dt><dd>{{ user.id }}</dd></div>
+            <div><dt>Name</dt><dd>{{ user.name }}</dd></div>
+            <div><dt>E-mail</dt><dd>{{ user.email }}</dd></div>
+            <div><dt>Role</dt><dd><span class="t2c-admin-pill">{{ "admin" if user.is_admin else "user" }}</span></dd></div>
+        </dl>
+    </section>
+
+    <section class="t2c-admin-section">
+        <h2>Fitness profile</h2>
+        {% if profile %}
+        <dl class="t2c-admin-dl">
+            <div><dt>Date of birth</dt><dd>{{ profile.dob.strftime("%d %b %Y") }} ({{ age }} yrs)</dd></div>
+            <div><dt>Gender</dt><dd>{{ profile.gender|title }}</dd></div>
+            <div><dt>Height</dt><dd>{{ profile.height }} cm</dd></div>
+            <div><dt>Weight</dt><dd>{{ profile.weight }} kg</dd></div>
+            <div><dt>Goal</dt><dd>{{ profile.goal|replace("_", " ")|title }}</dd></div>
+            <div><dt>Experience</dt><dd>{{ profile.experience|title }}</dd></div>
+            <div><dt>Progression score</dt><dd>{{ profile.progression_score }}</dd></div>
+            <div><dt>Workout days / week</dt><dd>{{ profile.workout_days }}</dd></div>
+            <div class="t2c-admin-dl-wide"><dt>Equipment</dt>
+                <dd>{% if equipment %}{% for item in equipment %}<span class="t2c-admin-pill">{{ item|replace("_", " ") }}</span> {% endfor %}{% else %}None{% endif %}</dd></div>
+        </dl>
+        {% else %}
+        <p class="t2c-admin-empty-inline">This user hasn't filled in a fitness profile yet.</p>
+        {% endif %}
+    </section>
+
+    <section class="t2c-admin-section">
+        <h2>Workout plan</h2>
+        {% if plan %}
+        <dl class="t2c-admin-dl">
+            <div><dt>Status</dt><dd><span class="t2c-admin-pill t2c-pill-{{ plan.status }}">{{ plan.status }}</span></dd></div>
+            <div><dt>Created</dt><dd>{{ plan.created_at.strftime("%d %b %Y, %H:%M") }} UTC</dd></div>
+            <div><dt>Completed days</dt><dd>{% if completed_days %}{{ completed_days|join(", ") }}{% else %}None yet{% endif %}</dd></div>
+            {% if plan.error_message %}
+            <div class="t2c-admin-dl-wide"><dt>Error</dt><dd class="t2c-admin-error-text">{{ plan.error_message }}</dd></div>
+            {% endif %}
+        </dl>
+        {% if plan_error %}<p class="t2c-admin-error-text">{{ plan_error }}</p>{% endif %}
+        {% for day in plan_days %}
+        <details class="t2c-admin-day">
+            <summary>
+                <strong>Day {{ day.number }}</strong>
+                <span>{{ day.meta[0] }}{% if day.meta|length > 1 %} · {{ day.meta[1] }}{% endif %}</span>
+                <span class="t2c-admin-muted">{{ day.exercises|length }} exercises</span>
+                {% if day.number in completed_days %}<span class="t2c-admin-pill t2c-pill-ready">done</span>{% endif %}
+            </summary>
+            {% if day.exercises %}
+            <div class="t2c-admin-table-wrap">
+                <table class="t2c-admin-table">
+                    <thead><tr><th>Exercise</th><th>Reps</th><th>Seconds</th><th>Rest</th></tr></thead>
+                    <tbody>
+                    {% for ex in day.exercises %}
+                        <tr>
+                            <td data-label="Exercise">{{ exercise_names.get(ex.exercise, ex.exercise) }}</td>
+                            <td data-label="Reps">{{ ex.reps }}</td>
+                            <td data-label="Seconds">{{ ex.seconds }}</td>
+                            <td data-label="Rest">{{ ex.rest }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="t2c-admin-empty-inline">Rest day.</p>
+            {% endif %}
+        </details>
+        {% endfor %}
+        {% else %}
+        <p class="t2c-admin-empty-inline">No workout plan generated yet.</p>
+        {% endif %}
+    </section>
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

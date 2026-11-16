@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    {{ bootstrap.load_css() }}
+
+    <link
+        rel="icon"
+        href="{{ url_for('static', filename='assets/img/logo.png') }}"
+    >
+
+    <title>Trainers | Train2Conquer</title>
+
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/trainer_results.css') }}">
+</head>
+
+
+<body class="page-trainer-results">
+
+
+{% include 'navbar.html' %}
+
+{% include 'loader.html' %}
+
+
+<!-- =========================================================
+     FLASH MESSAGES
+========================================================= -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        <div class="container-fluid px-3 pt-3">
+
+            {% for category, message in messages %}
+
+                <div
+                    data-flash-message
+                    class="alert alert-{{ category }} mb-2"
+                    role="alert"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<!-- =========================================================
+     RESULTS PAGE
+========================================================= -->
+
+<section class="trainer-results-page">
+
+    <div class="trainer-results-container">
+
+
+        {% if trainers %}
+
+
+            <!-- HEADER -->
+
+            <header class="trainer-results-header">
+
+                <div class="trainer-kicker">
+                    TRAIN2CONQUER COACHING
+                </div>
+
+                <h1>
+                    TRAINERS
+                    <span>FOUND</span>
+                </h1>
+
+                <p>
+
+                    {% if mode == "online" %}
+
+                        Here are trainers available for
+                        online coaching. Choose someone
+                        who fits your training goals and
+                        get started.
+
+                    {% else %}
+
+                        Here are trainers near your location.
+                        All trainers shown below are within
+                        your 5 km search radius.
+
+                    {% endif %}
+
+                </p>
+
+            </header>
+
+
+            <!-- SEARCH SUMMARY -->
+
+            <div class="trainer-search-summary">
+
+                <div class="trainer-search-summary-left">
+
+                    <div class="summary-icon">
+
+                        {% if mode == "online" %}
+
+                            🌐
+
+                        {% else %}
+
+                            📍
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="summary-text">
+
+                        <strong>
+
+                            {% if mode == "online" %}
+
+                                Online Trainers
+
+                            {% else %}
+
+                                Trainers Near You
+
+                            {% endif %}
+
+                        </strong>
+
+                        <span>
+
+                            {% if mode == "online" %}
+
+                                Distance doesn't matter
+
+                            {% else %}
+
+                                Searching within 5 km
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    href="{{ url_for('find_trainer') }}"
+                    class="search-again"
+                >
+                    Change Search
+                </a>
+
+            </div>
+
+
+            <!-- TRAINER CARDS -->
+
+            <div class="trainer-results-grid">
+
+
+                {% for trainer in trainers %}
+
+
+                <article class="trainer-card">
+
+
+                    <!-- CARD HEADER -->
+
+                    <div class="trainer-card-top">
+
+                        <div class="trainer-avatar">
+
+                            {{ trainer.name[0]|upper }}
+
+                        </div>
+
+
+                        <div class="trainer-info">
+
+                            <h3>
+                                {{ trainer.name }}
+                            </h3>
+
+                            <p>
+                                Personal Trainer
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CARD BODY -->
+
+                    <div class="trainer-card-body">
+
+
+                        <!-- MODE -->
+
+                        <div class="trainer-badges">
+
+                            {% if mode == "online" %}
+
+                                <span class="trainer-badge online">
+
+                                    <span
+                                        class="trainer-badge-dot"
+                                    ></span>
+
+                                    Online Training
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="trainer-badge offline">
+
+                                    <span
+                                        class="trainer-badge-dot"
+                                    ></span>
+
+                                    Nearby Trainer
+
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- LOCATION -->
+
+                        <div class="trainer-location">
+
+                            <div class="trainer-location-icon">
+
+                                {% if mode == "online" %}
+
+                                    🌐
+
+                                {% else %}
+
+                                    📍
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <span>
+
+                                {% if mode == "online" %}
+
+                                    Available Online
+
+                                {% else %}
+
+                                    {{ trainer.location }}
+
+                                {% endif %}
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- ABOUT -->
+
+                        {% if trainer.about %}
+
+                            <p class="trainer-about">
+
+                                {{ trainer.about }}
+
+                            </p>
+
+                        {% else %}
+
+                            <p class="trainer-about">
+
+                                Personal training and
+                                fitness coaching through
+                                Train2Conquer.
+
+                            </p>
+
+                        {% endif %}
+
+
+                        <!-- CONTACT -->
+
+                        <a
+                            href="{{ url_for('contact') }}"
+                            class="trainer-contact"
+                        >
+
+                            Contact Trainer
+
+                            <span>→</span>
+
+                        </a>
+
+
+                    </div>
+
+
+                </article>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <!-- =================================================
+                 EMPTY STATE
+            ================================================= -->
+
+            <div class="trainer-empty">
+
+                <div class="trainer-empty-icon">
+                    !
+                </div>
+
+
+                <h2>
+                    No Trainer Found
+                </h2>
+
+
+                {% if mode == "offline" %}
+
+                    <p>
+
+                        We couldn't find a matching trainer
+                        within 5 km of your location right now.
+
+                        Try another location or switch to
+                        online training.
+
+                    </p>
+
+                {% else %}
+
+                    <p>
+
+                        We couldn't find a matching online
+                        trainer right now.
+
+                        Please try again later or check
+                        back soon.
+
+                    </p>
+
+                {% endif %}
+
+
+                <a
+                    href="{{ url_for('find_trainer') }}"
+                    class="back-search"
+                >
+                    ← Search Again
+                </a>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+</section>
+
+
+{% include 'footer.html' %}
+
+
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+</body>
+
+</html>

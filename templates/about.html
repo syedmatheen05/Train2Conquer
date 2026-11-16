@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>About | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/about.css') }}">
+</head>
+
+
+<body class="page-about">
+{% include "navbar.html" %}
+
+        {% include "loader.html" %}
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="t2c-about-hero">
+
+        <div class="t2c-about-hero-content">
+
+            <div class="t2c-about-kicker">
+                Train With Purpose
+            </div>
+
+            <h1>
+                Built To
+                <span>Conquer</span>
+            </h1>
+
+            <p>
+                Train2Conquer is built to help you train consistently,
+                understand your progress and become stronger every day.
+                Your goals are the destination. Your discipline is the journey.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="t2c-about-main">
+
+
+        <!-- =================================================
+             OUR STORY
+        ================================================== -->
+
+        <section class="t2c-story">
+
+            <div>
+
+                <div class="t2c-section-label">
+                    Why Train2Conquer
+                </div>
+
+                <h2>
+                    Your Training.
+                    <span>Your Rules.</span>
+                </h2>
+
+                <p>
+                    Train2Conquer is designed to make fitness
+                    simple, structured and consistent.
+                </p>
+
+                <p>
+                    Instead of wondering what to train every day,
+                    your fitness profile helps create a workout
+                    plan around your goals, experience, training
+                    days and available equipment.
+                </p>
+
+                <p>
+                    Whether you're starting from zero or pushing
+                    toward your next level, the goal remains the
+                    same — train harder, stay consistent and conquer.
+                </p>
+
+            </div>
+
+
+            <div class="t2c-story-stats">
+
+                <div class="t2c-stat">
+
+                    <strong>7</strong>
+
+                    <span>
+                        Day Workout Plans
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-stat">
+
+                    <strong>24/7</strong>
+
+                    <span>
+                        Train Anytime
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-stat">
+
+                    <strong>100%</strong>
+
+                    <span>
+                        Goal Focused
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-stat">
+
+                    <strong>∞</strong>
+
+                    <span>
+                        Progress Ahead
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             TEAM
+        ================================================== -->
+
+        <section>
+
+            <div class="t2c-team-header">
+
+                <div class="t2c-section-label">
+                    The People Behind It
+                </div>
+
+                <h2>
+                    Meet The
+                    <span>Team</span>
+                </h2>
+
+                <p>
+                    The people working behind the platform
+                    to make your training experience better.
+                </p>
+
+            </div>
+
+
+            <div class="t2c-team-grid">
+
+
+                <!-- =================================================
+                     MEMBER 1
+                ================================================== -->
+
+                <article class="t2c-team-card">
+
+                    <div class="t2c-team-image">
+
+                        <img
+                            src="{{ url_for(
+                                'static',
+                                filename='assets/img/syedmatheen.jpeg'
+                            ) }}"
+                            alt="Syed Matheen"
+                            loading="lazy"
+                        >
+
+                    </div>
+
+
+                    <div class="t2c-team-body">
+
+                        <h3>
+                            Syed Matheen
+                        </h3>
+
+                        <div class="t2c-team-role">
+                            CEO & Founder
+                        </div>
+
+                        <p class="t2c-team-description">
+                            Building Train2Conquer with a focus
+                            on technology, fitness and a better
+                            training experience.
+                        </p>
+
+                        <div class="t2c-team-email">
+                            syedmatheen2910@gmail.com
+                        </div>
+
+                        <a
+                            href="mailto:syedmatheen2910@gmail.com"
+                            class="t2c-contact-btn"
+                        >
+                            Contact
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <!-- =================================================
+                     MEMBER 2
+                ================================================== -->
+
+                <article class="t2c-team-card">
+
+                    <div class="t2c-team-image">
+
+                        <img
+                            src="{{ url_for(
+                                'static',
+                                filename='assets/img/haneef.jpg'
+                            ) }}"
+                            alt="Syed Mohammed Haneef"
+                            loading="lazy"
+                        >
+
+                    </div>
+
+
+                    <div class="t2c-team-body">
+
+                        <h3>
+                            Syed Haneef
+                        </h3>
+
+                        <div class="t2c-team-role">
+                            Director
+                        </div>
+
+                        <p class="t2c-team-description">
+                            Focused on creating a clean,
+                            engaging and motivating visual
+                            experience.
+                        </p>
+
+                        <div class="t2c-team-email">
+                            syedmohammadhaneef48@gmail.com
+                        </div>
+
+                        <a
+                            href="mailto:syedmohammadhaneef48@gmail.com"
+                            class="t2c-contact-btn"
+                        >
+                            Contact
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CTA
+        ================================================== -->
+
+        <section class="t2c-about-cta">
+
+            <h2>
+                Ready To
+                <span>Conquer?</span>
+            </h2>
+
+            <p>
+                Stop waiting for the perfect time.
+                Start training, stay consistent and
+                become stronger one workout at a time.
+            </p>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    {% include 'footer.html' %}
+
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    ></script>
+
+
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

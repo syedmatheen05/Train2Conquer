@@ -1,0 +1,126 @@
+{# Shared by home.html and fitness-profile.html.
+   Shows the three plan choices. Only plan names are shown to users. #}
+<section class="t2c-plan-options" id="plan-options"
+         data-csrf="{{ csrf_token() }}"
+         data-create-url="{{ url_for('create_payment_order') }}"
+         data-verify-url="{{ url_for('verify_payment') }}"
+         data-cancel-url="{{ url_for('cancel_payment') }}">
+
+    <h3>{% if options_context == 'profile' %}Choose your plan{% else %}Finish the week. Unlock the next.{% endif %}</h3>
+    <p class="t2c-plan-sub">
+        Pick a plan each time. You only pay when you create a new paid plan.
+        Plans you already generated stay available for free.
+    </p>
+
+    {% if failed_plan %}
+        <div class="t2c-plan-banner t2c-plan-banner-warn">
+            {% if failed_plan.payment_id %}
+                <strong>Your {{ tier_labels[failed_plan.tier] }} didn't finish building.</strong>
+                {% if retry_exhausted %}
+                    Your payment is safe and you won't be charged again.
+                    <a href="{{ url_for('contact') }}">Contact us</a> and we'll sort it out, or request a refund.
+                {% else %}
+                    Your payment is safe &mdash; retry below at no extra charge.
+                {% endif %}
+            {% else %}
+                <strong>Your Basic Plan didn't finish building.</strong> Please try again.
+            {% endif %}
+            {% if not retry_exhausted %}
+            <form method="POST" action="{{ url_for('retry_plan', plan_id=failed_plan.id) }}" data-loader-message="Trying again...">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary">{% if failed_plan.payment_id %}Retry &mdash; no extra charge{% else %}Try again{% endif %}</button>
+            </form>
+            {% endif %}
+            {% if refund_payment and failed_plan.payment_id %}
+                {% if refund_payment.refund_status == 'none' %}
+                <form method="POST" action="{{ url_for('request_refund', payment_id=refund_payment.id) }}" data-loader-message="Sending request..."
+                      onsubmit="return confirm('Request a refund for this plan? Our team will review it.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-secondary">Request a refund</button>
+                </form>
+                {% elif refund_payment.refund_status == 'requested' %}
+                <p class="t2c-plan-fine">Refund requested &mdash; we'll review it and email you.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if pending_payment %}
+        <div class="t2c-plan-banner t2c-plan-banner-ok">
+            <strong>Payment received for your {{ tier_labels[pending_payment.tier] }}.</strong>
+            Tap below to build it &mdash; you won't be charged again.
+            <form method="POST" action="{{ url_for('start_paid_plan', payment_id=pending_payment.id) }}" data-loader-message="Building your plan...">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary">Build my plan</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="t2c-plan-grid">
+
+        <article class="t2c-plan-card">
+            <h4>Basic Plan</h4>
+            <div class="t2c-plan-price">Free</div>
+            <ul>
+                <li>7-day plan built from your profile</li>
+                <li>Builds on last week's plan</li>
+                <li>Great for getting started</li>
+            </ul>
+            <form method="POST" action="{{ url_for('generate_basic_plan') }}" data-loader-message="Building your plan...">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary" {% if options_context == 'home' %}id="next-week-button"{% endif %}
+                        {% if not free_unlocked %}disabled{% endif %}>
+                    {% if options_context == 'profile' %}Generate Basic Plan &mdash; Free{% else %}Load Basic Plan &mdash; Free{% endif %}
+                </button>
+            </form>
+            {% if not free_unlocked %}<small class="t2c-plan-hint">Unlocks when you finish all 7 days.</small>{% endif %}
+        </article>
+
+        <article class="t2c-plan-card">
+            <h4>Personalized Plan</h4>
+            <div class="t2c-plan-price">{{ price_labels['personalized'] }} <span>per plan</span></div>
+            <ul>
+                <li>Adapts to how many workouts you actually finished</li>
+                <li>Raises or lowers effort automatically</li>
+                <li>Respects your injuries and preferences</li>
+            </ul>
+            <button type="button" class="btn btn-primary t2c-buy" data-tier="personalized" {% if not payments_ready %}disabled{% endif %}>
+                {% if payments_ready %}Get Personalized Plan &mdash; {{ price_labels['personalized'] }}{% else %}Unavailable right now{% endif %}
+            </button>
+        </article>
+
+        <article class="t2c-plan-card t2c-plan-card-featured">
+            <span class="t2c-plan-badge">Most complete</span>
+            <h4>Advanced Plan</h4>
+            <div class="t2c-plan-price">{{ price_labels['advanced'] }} <span>per plan</span></div>
+            <ul>
+                <li>Multi-week progression with planned easier weeks</li>
+                <li>Rotates exercises to keep training fresh</li>
+                <li>Fine-tuned sets, reps and rest for you</li>
+                <li>Coach notes explaining what changed</li>
+            </ul>
+            <button type="button" class="btn btn-primary t2c-buy" data-tier="advanced" {% if not payments_ready %}disabled{% endif %}>
+                {% if payments_ready %}Get Advanced Plan &mdash; {{ price_labels['advanced'] }}{% else %}Unavailable right now{% endif %}
+            </button>
+        </article>
+
+    </div>
+
+    <label class="t2c-plan-notes-label" for="plan-notes">
+        Anything we should know for a paid plan? <span>(optional &mdash; injuries, preferences)</span>
+    </label>
+    <textarea id="plan-notes" class="t2c-plan-notes" maxlength="300" rows="2"
+              placeholder="e.g. sore left knee, prefer short workouts"></textarea>
+    <p class="t2c-plan-fine">Plans are general fitness guidance, not medical advice. Stop if something hurts and talk to a doctor.</p>
+
+    <ol id="plan-state" class="t2c-plan-state" aria-label="Progress">
+        <li data-step="select">Select plan</li>
+        <li data-step="creating">Creating payment</li>
+        <li data-step="processing">Payment processing</li>
+        <li data-step="success">Payment successful</li>
+        <li data-step="generating">Generating workout</li>
+        <li data-step="ready">Workout ready</li>
+    </ol>
+    <div id="plan-message" class="t2c-plan-message" role="status" aria-live="polite"></div>
+</section>
+<script src="{{ url_for('static', filename='js/plans.js') }}" defer></script>

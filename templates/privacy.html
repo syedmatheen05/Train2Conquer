@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy & Security | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    <!-- Bootstrap intentionally NOT loaded on this page: it uses zero
+         Bootstrap classes/components, so shipping its ~232KB CSS here
+         would be pure dead weight. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/privacy.css') }}">
+</head>
+<body class="page-privacy">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+<main class="t2c-info-page">
+  <p style="color:#D7AA48;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Privacy & security</p>
+  <h1>Your data. <span style="color:#FF512F">Your control.</span></h1>
+  <p>Train2Conquer should collect only what is needed to provide its features and protect account access.</p>
+  <h2>Account information</h2><p>Your account uses your name and email address for authentication and account functionality.</p>
+  <h2>Fitness profile</h2><p>Your fitness profile is used to generate and personalize your workout plan. Keep your information accurate and update it whenever your goals change.</p>
+  <h2>Contact messages</h2><p>Guest contact requests use email verification before the message is delivered. Contact details are kept temporarily in the session during verification.</p>
+  <h2>Security</h2><p>Use a strong secret key in production, HTTPS, protected form submissions, and secure environment variables for database and email credentials.</p>
+  <h2>Account deletion</h2><p>You can delete your account from the profile menu. Account-related workout/profile records are removed by the application.</p>
+</main>
+{% include "footer.html" %}
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

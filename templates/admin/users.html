@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
+            <h1>Users</h1>
+        </div>
+        <a class="t2c-admin-back" href="{{ url_for('admin_dashboard') }}">← Admin dashboard</a>
+    </div>
+
+    <div class="t2c-admin-actions">
+        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_user_new') }}">+ Add User</a>
+    </div>
+
+    <form class="t2c-admin-search" method="GET" action="{{ url_for('admin_users') }}">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search by name or e-mail...">
+        <button type="submit" class="t2c-admin-btn">Search</button>
+    </form>
+
+    <div class="t2c-admin-table-wrap">
+        {% if rows %}
+        <table class="t2c-admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>E-mail</th>
+                    <th>Role</th>
+                    <th>Goal</th>
+                    <th>Level</th>
+                    <th>Plan</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user, goal, experience, plan_status in rows %}
+                <tr>
+                    <td data-label="Name"><a class="t2c-admin-link" href="{{ url_for('admin_user_detail', user_id=user.id) }}">{{ user.name }}</a>{% if user.id == current_user.id %} <span class="t2c-admin-pill">You</span>{% endif %}</td>
+                    <td data-label="E-mail">{{ user.email }}</td>
+                    <td data-label="Role"><span class="t2c-admin-pill">{{ "admin" if user.is_admin else "user" }}</span></td>
+                    <td data-label="Goal">{{ (goal or "—")|replace("_", " ")|title }}</td>
+                    <td data-label="Level">{{ (experience or "—")|title }}</td>
+                    <td data-label="Plan">{% if plan_status %}<span class="t2c-admin-pill t2c-pill-{{ plan_status }}">{{ plan_status }}</span>{% else %}—{% endif %}</td>
+                    <td data-label="Actions">
+                        <div class="t2c-admin-row-actions">
+                            <a class="t2c-admin-btn" href="{{ url_for('admin_user_detail', user_id=user.id) }}">View</a>
+                            <a class="t2c-admin-btn" href="{{ url_for('admin_user_edit', user_id=user.id) }}">Edit</a>
+                            {% if user.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('admin_user_delete', user_id=user.id) }}"
+                                  onsubmit="return confirm('Delete {{ user.name|e }} and all their fitness data? This cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="t2c-admin-btn t2c-admin-btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="t2c-admin-empty">
+            {% if search %}No users match "{{ search }}".{% else %}No users yet.{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% include "admin/_pagination.html" %}
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

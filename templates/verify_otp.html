@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+{{ bootstrap.load_css() }}
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/verify_otp.css') }}">
+</head>
+
+<body class="page-verify-otp">
+        {% include 'navbar.html'%}
+    {% include "loader.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+
+<div class="t2c-auth">
+
+<div class="t2c-auth-card">
+
+
+    <!-- =====================================================
+         LOGO
+    ====================================================== -->
+
+    <a
+        class="t2c-logo"
+        href="{{ url_for('home') }}"
+        aria-label="Train2Conquer Home"
+    >
+
+        <svg
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+        >
+
+            <path
+                d="M3 24 L11 13 L16 18 L29 4"
+                stroke="#FF512F"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+            <path
+                d="M21 4 H29 V12"
+                stroke="#D7AA48"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+        </svg>
+
+
+        <span class="t2c-logo-text">
+
+            TRAIN2<span class="t2c-logo-accent">CONQUER</span>
+
+        </span>
+
+    </a>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    data-flash-message
+                    class="alert alert-{{ category }}"
+                    role="alert"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         LOGIN ICON
+    ====================================================== -->
+
+    <div class="t2c-auth-icon">
+
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+
+            <rect
+                x="4"
+                y="3"
+                width="16"
+                height="18"
+                rx="3"
+                stroke="#FF512F"
+                stroke-width="1.7"
+            />
+
+            <path
+                d="M9 8H15"
+                stroke="#D7AA48"
+                stroke-width="1.7"
+                stroke-linecap="round"
+            />
+
+            <path
+                d="M9 12H15"
+                stroke="#D7AA48"
+                stroke-width="1.7"
+                stroke-linecap="round"
+            />
+
+            <circle
+                cx="12"
+                cy="17"
+                r="1"
+                fill="#FF512F"
+            />
+
+        </svg>
+
+    </div>
+
+
+    <!-- =====================================================
+         HEADING
+    ====================================================== -->
+
+    <h1>
+        Verify Your Email
+    </h1>
+
+
+    <p class="t2c-description">
+
+        Enter the 6-digit verification code we sent to
+        <span class="t2c-email">{{ email }}</span>
+        to continue securely.
+
+    </p>
+
+
+    <!-- =====================================================
+         FORM
+    ====================================================== -->
+
+    <div class="t2c-auth-form">
+
+        {{ render_form(form) }}
+
+    </div>
+
+    <p id="otp-timer" class="t2c-otp-timer">
+        Resend code in <span id="otp-countdown" class="t2c-otp-countdown">{{ resend_remaining }}</span> seconds
+    </p>
+
+    <form method="POST" action="{{ url_for('resend_otp') }}" class="t2c-resend-form" data-loader-message="Sending a new verification code...">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" id="otp-resend-btn" class="t2c-resend-btn" {% if resend_remaining > 0 %}disabled style="display:none"{% endif %}>↻ &nbsp; Resend verification code</button>
+    </form>
+
+
+    <!-- =====================================================
+         DIVIDER
+    ====================================================== -->
+
+    <div class="t2c-divider">
+        Secure access
+    </div>
+
+
+    <!-- =====================================================
+         BACK
+    ====================================================== -->
+
+    <a
+        href="{{ url_for('home') }}"
+        class="t2c-back-link"
+    >
+        ← Back to Train2Conquer
+    </a>
+
+
+    <!-- =====================================================
+         SECURITY
+    ====================================================== -->
+
+    <div class="t2c-security-note">
+
+        🔒 Your email is used only for authentication.
+        <br>
+
+        We never share your login information.
+
+    </div>
+
+
+</div>
+
+</div>
+
+{% include "footer.html" %}
+
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
+<script>
+(() => {
+    // This countdown is ONLY for resending the OTP.
+    // OTP expiry is handled independently on the server.
+    let seconds = {{ resend_remaining | tojson }};
+    const timer = document.getElementById("otp-timer");
+    const countdown = document.getElementById("otp-countdown");
+    const resend = document.getElementById("otp-resend-btn");
+
+    const tick = () => {
+        if (seconds <= 0) {
+            if (timer) timer.style.display = "none";
+            if (resend) {
+                resend.disabled = false;
+                resend.style.display = "inline-flex";
+            }
+            return;
+        }
+        if (countdown) countdown.textContent = seconds;
+        seconds -= 1;
+        window.setTimeout(tick, 1000);
+    };
+    tick();
+
+})();
+</script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

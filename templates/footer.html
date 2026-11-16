@@ -1,0 +1,32 @@
+<footer class="t2c-footer">
+    <div class="t2c-footer-inner">
+
+        <div class="t2c-footer-top">
+            <div>
+                <a class="t2c-footer-brand" href="{{ url_for('home') }}">
+                    <span class="t2c-footer-mark" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 24 L11 13 L16 18 L29 4" stroke="#FF4B26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 4 H29 V12" stroke="#D9A83B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="t2c-footer-word">TRAIN2<span>CONQUER</span></span>
+                </a>
+                <p class="t2c-footer-tagline">Your home workout &amp; fitness companion.</p>
+            </div>
+
+            <ul class="t2c-footer-links">
+                <li><a class="t2c-footer-link" href="{{ url_for('home') }}">Home</a></li>
+                <li><a class="t2c-footer-link" href="{{ url_for('home') }}">Workouts</a></li>
+                <li><a class="t2c-footer-link" href="{{ url_for('about') }}">About</a></li>
+                <li><a class="t2c-footer-link" href="{{ url_for('contact') }}">Contact</a></li>
+            </ul>
+        </div>
+
+        <div class="t2c-footer-bottom">
+            <p class="t2c-footer-copy">© {{ current_year }} Train2Conquer. All rights reserved.</p>
+            <p class="t2c-footer-signature"><span class="dot"></span> Built to conquer, one rep at a time.</p>
+        </div>
+
+    </div>
+</footer>

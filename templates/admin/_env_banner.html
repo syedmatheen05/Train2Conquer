@@ -1,0 +1,6 @@
+<div class="t2c-fin-env t2c-fin-env-{{ env_info.environment }}">
+    Running in <strong>{{ env_info.environment|upper }}</strong> mode &middot;
+    Razorpay key: <strong>{{ env_info.razorpay_mode }}</strong> &middot;
+    Generation: <strong>{{ env_info.generation_mode }}</strong>
+</div>
+{% for w in env_info.warnings %}<div class="alert alert-warning">{{ w }}</div>{% endfor %}

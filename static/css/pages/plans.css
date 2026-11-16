@@ -1,0 +1,55 @@
+/* Plan choices (Basic / Personalized / Advanced) -- shared by home + profile.
+   Uses the same dark + orange look as the rest of Train2Conquer. */
+.t2c-plan-options {
+    margin: 38px auto 0;
+    padding: 28px;
+    max-width: 1100px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255,81,47,.05), rgba(215,170,72,.03)), var(--t2c-panel, #101217);
+    border: 1px solid var(--t2c-border, rgba(255,255,255,.08));
+    border-radius: 18px;
+    color: var(--t2c-text, #F4F3EF);
+}
+.t2c-plan-options h3 { font-family: 'Anton', sans-serif; font-size: 21px; font-weight: 400; text-transform: uppercase; margin: 0 0 7px; }
+.t2c-plan-sub, .t2c-plan-fine { color: var(--t2c-muted, #8E929D); font-size: 12px; margin: 0 0 18px; }
+.t2c-plan-fine { margin: 10px 0 0; font-size: 11px; }
+.t2c-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; }
+.t2c-plan-card { position: relative; display: flex; flex-direction: column; padding: 20px; background: var(--t2c-panel-2, #151820); border: 1px solid var(--t2c-border, rgba(255,255,255,.08)); border-radius: 14px; }
+.t2c-plan-card-featured { border-color: rgba(255,81,47,.55); }
+.t2c-plan-card h4 { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; margin: 0 0 6px; }
+.t2c-plan-price { font-family: 'Anton', sans-serif; font-size: 28px; color: var(--t2c-gold, #D9A83B); margin-bottom: 12px; }
+.t2c-plan-price span { font-family: inherit; font-size: 12px; color: var(--t2c-muted, #8E929D); }
+.t2c-plan-card ul { list-style: none; padding: 0; margin: 0 0 16px; flex: 1; color: var(--t2c-muted, #8E929D); font-size: 12.5px; line-height: 1.5; }
+.t2c-plan-card li { padding-left: 16px; position: relative; margin-bottom: 6px; }
+.t2c-plan-card li::before { content: "\2713"; position: absolute; left: 0; color: var(--t2c-orange, #FF512F); }
+.t2c-plan-card .btn, .t2c-plan-banner .btn { width: 100%; min-height: 45px; border-radius: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; border: none; background: linear-gradient(135deg, var(--t2c-orange, #FF512F), #FF8A3D); color: #170E0A; }
+.t2c-plan-card .btn:disabled, .t2c-plan-banner .btn:disabled { background: #252830; color: #555A66; cursor: not-allowed; opacity: 1; }
+.t2c-plan-badge { position: absolute; top: -10px; right: 14px; background: var(--t2c-orange, #FF512F); color: #170E0A; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+.t2c-plan-hint { display: block; margin-top: 8px; color: var(--t2c-muted, #8E929D); font-size: 11px; text-align: center; }
+.t2c-plan-notes-label { display: block; margin: 18px 0 6px; font-size: 12px; color: var(--t2c-muted, #8E929D); text-align: left; }
+.t2c-plan-notes-label span { opacity: .7; }
+.t2c-plan-notes { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--t2c-border, rgba(255,255,255,.12)); background: #0B0C0F; color: inherit; font-size: 13px; resize: vertical; }
+.t2c-plan-message { min-height: 20px; margin-top: 12px; font-size: 13px; color: var(--t2c-muted, #8E929D); }
+.t2c-plan-message.error { color: #FF6860; }
+.t2c-plan-banner { margin: 0 0 18px; padding: 14px 16px; border-radius: 12px; font-size: 13px; text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.t2c-plan-banner form { margin: 0; flex: 0 0 auto; min-width: 200px; }
+.t2c-plan-banner-warn { background: rgba(255,104,96,.08); border: 1px solid rgba(255,104,96,.35); }
+.t2c-plan-banner-ok { background: rgba(215,170,72,.08); border: 1px solid rgba(215,170,72,.35); }
+.t2c-coach-notes { margin: 0 0 24px; padding: 16px 18px; border-left: 3px solid var(--t2c-orange, #FF512F); background: var(--t2c-panel, #101217); border-radius: 0 12px 12px 0; font-size: 13px; line-height: 1.6; color: var(--t2c-muted, #8E929D); }
+.t2c-coach-notes strong { color: var(--t2c-text, #F4F3EF); }
+.t2c-plan-history { margin: 24px 0 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--t2c-muted, #8E929D); }
+.t2c-plan-history a { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--t2c-border, rgba(255,255,255,.12)); color: inherit; text-decoration: none; }
+.t2c-plan-history a.active { border-color: var(--t2c-orange, #FF512F); color: var(--t2c-text, #F4F3EF); }
+.t2c-profile-options-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 40px; }
+@media (max-width: 860px) {
+    .t2c-plan-grid { grid-template-columns: 1fr; }
+    .t2c-plan-options { padding: 20px 16px; }
+}
+
+/* Payment / generation progress strip */
+.t2c-plan-state { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; padding: 0; margin: 14px 0 0; font-size: 12px; color: var(--t2c-muted, #8E929D); }
+.t2c-plan-state li::before { content: "\25CB\00a0"; }
+.t2c-plan-state li.done { color: #7BD389; }
+.t2c-plan-state li.done::before { content: "\2713\00a0"; }
+.t2c-plan-state li.active { color: #FF5A36; font-weight: 600; }
+.t2c-plan-state li.active::before { content: "\25CF\00a0"; }

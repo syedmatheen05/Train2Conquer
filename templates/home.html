@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    {{ bootstrap.load_css() }}
+
+    <title>Train2Conquer | Workout Plan</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/plans.css') }}">
+</head>
+
+<body class="d-flex flex-column min-vh-100 page-home">
+
+
+{% include 'navbar.html' %}
+    {% include "loader.html" %}
+
+<!-- =========================================================
+     DASHBOARD
+========================================================= -->
+
+<main class="t2c-dashboard">
+
+    <div class="t2c-dashboard-inner">
+
+
+        <!-- =====================================================
+             FLASH MESSAGES
+        ====================================================== -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        data-flash-message
+                        class="alert alert-{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+
+        {% if workout_plan and workout_plan.status == 'ready' and workout_plan_data %}
+
+
+        <!-- =====================================================
+             HEADER
+        ====================================================== -->
+
+        <header class="t2c-dashboard-header">
+
+
+            <div class="t2c-header-left">
+
+                <div class="t2c-eyebrow">
+                    Week {{ workout_plan.week_number }} &middot; {{ tier_labels[workout_plan.tier] }}
+                </div>
+
+
+                <h1>
+
+                    Your 7-Day
+                    <span class="accent">
+                        Workout Plan
+                    </span>
+
+                </h1>
+
+
+                <p>
+
+                    Train consistently. Stay strong.
+                    Conquer your goals one day at a time.
+
+                </p>
+
+            </div>
+
+
+            <!-- Progress -->
+
+            <div class="t2c-progress-summary">
+
+                <div class="t2c-progress-label">
+                    Weekly progress
+                </div>
+
+
+                <div class="t2c-progress-number">
+
+                    <strong id="completed-count">
+                        {{ completed_days|length }}
+                    </strong>
+
+                    <span>
+                        / 7 completed
+                    </span>
+
+                </div>
+
+
+                <div class="t2c-progress-bar">
+
+                    <div
+                        class="t2c-progress-fill"
+                        id="progress-fill"
+                        style="width: {{ (completed_days|length / 7 * 100)|round }}%;"
+                    >
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        {% if workout_plan.coach_notes %}
+        <div class="t2c-coach-notes">
+            <strong>Coach notes:</strong> {{ workout_plan.coach_notes }}
+        </div>
+        {% endif %}
+
+        {% if plan_history|length > 1 %}
+        <nav class="t2c-plan-history" aria-label="Your previous weeks">
+            Your weeks (always free to view):
+            {% for item in plan_history|reverse %}
+                <a href="{{ url_for('home', plan=item.id) }}"
+                   class="{% if item.id == workout_plan.id %}active{% endif %}">Week {{ item.week_number }} &middot; {{ tier_labels[item.tier] }}</a>
+            {% endfor %}
+        </nav>
+        <br>
+        {% endif %}
+
+
+
+        <!-- =====================================================
+             WORKOUT DAYS
+        ====================================================== -->
+
+        <div class="workout-plan">
+
+
+            {% for day_key, day in workout_plan_data.items() %}
+
+                {% set day_number = day_key.replace('day_', '') | int %}
+
+                <div class="workout-row">
+
+
+                    <!-- IMAGE -->
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='assets/img/' ~ day[0][2]
+                        ) }}"
+                        class="workout-image"
+                        alt="{{ day[0][0] }}"
+                        loading="lazy"
+                    >
+
+
+                    <!-- CONTENT -->
+
+                    <div class="workout-info">
+
+                        <span class="workout-day">
+                            Day {{ day_number }}
+                        </span>
+
+
+                        <h2>
+                            Day {{ day_number }}
+                        </h2>
+
+
+                        <h4>
+                            {{ day[0][0] }}
+                        </h4>
+
+
+                        <p>
+                            {{ day[0][1] }}
+                        </p>
+
+                    </div>
+
+
+                    <!-- ACTION -->
+
+                    <div class="workout-action">
+
+
+                        {% if day_number in completed_days %}
+
+                            <button
+                                class="btn btn-success"
+                                disabled
+                            >
+                                ✓ Completed
+                            </button>
+
+
+                        {% elif viewing_old %}
+
+                            <button class="btn btn-secondary" disabled>
+                                Past week
+                            </button>
+
+                        {% else %}
+
+                            <a
+                                href="{{ url_for(
+                                    'start_workout',
+                                    day=day_number
+                                ) }}"
+                                class="btn btn-primary"
+                            >
+                                Start Training →
+                            </a>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+
+        <!-- =====================================================
+             NEXT WEEK
+        ====================================================== -->
+
+        {% if viewing_old %}
+        <div class="t2c-next-week">
+            <h3>Viewing a previous week</h3>
+            <p>Old plans stay available for free. Your current week is waiting.</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary">Back to current week &rarr;</a>
+        </div>
+        {% else %}
+            {% include "_plan_options.html" %}
+        {% endif %}
+
+
+        {% elif workout_plan and workout_plan.status == 'generating' %}
+
+
+        <!-- =====================================================
+             GENERATING STATE
+             The AI call runs in a background thread (see
+             start_plan_generation in main.py) so this page polls
+             /workout-plan/status and reloads once it's ready
+             instead of the request itself blocking (and risking a
+             504 Gateway Timeout).
+        ====================================================== -->
+
+        <div class="t2c-empty" id="plan-generating-state">
+
+            <div class="t2c-empty-icon">
+                ⏳
+            </div>
+
+            <h3>
+                Building Your Workout Plan
+            </h3>
+
+            <p>
+                Our AI is putting together your personalized 7-day
+                plan. This usually takes under a minute -- feel free
+                to stay on this page, it'll update automatically.
+            </p>
+
+        </div>
+
+        <script>
+            (() => {
+                const poll = () => {
+                    fetch("{{ url_for('workout_plan_status') }}")
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.status && data.status !== "generating") {
+                                window.location.reload();
+                                return;
+                            }
+                            window.setTimeout(poll, 4000);
+                        })
+                        .catch(() => {
+                            window.setTimeout(poll, 6000);
+                        });
+                };
+                window.setTimeout(poll, 4000);
+            })();
+        </script>
+
+
+        {% else %}
+
+
+        <!-- =====================================================
+             EMPTY STATE
+        ====================================================== -->
+
+        <div class="t2c-empty">
+
+
+            <div class="t2c-empty-icon">
+
+                +
+                
+            </div>
+
+
+            <h3>
+                No Workout Plan Yet
+            </h3>
+
+
+            <p>
+                Complete your fitness profile and we'll
+                create a workout plan designed for you.
+            </p>
+
+
+            <a
+                href="{{ url_for('fitness_profile') }}"
+                class="btn btn-primary"
+            >
+                {% if has_profile %}Edit Fitness Profile →{% else %}Create Workout Plan →{% endif %}
+            </a>
+
+
+        </div>
+
+
+        {% endif %}
+
+        {% if not workout_plan_data and not (workout_plan and workout_plan.status == 'generating') and has_profile %}
+            {% include "_plan_options.html" %}
+        {% endif %}
+
+    </div>
+
+</main>
+
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+{% include "footer.html" %}
+
+
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
+
+
+<script>
+
+    /* =========================================================
+       FLASH MESSAGE
+    ========================================================= */
+/* =========================================================
+       WORKOUT PROGRESS
+    ========================================================= */
+
+    const completedDays =
+        {{ completed_days | tojson }};
+
+
+    const nextWeekButton =
+        document.getElementById(
+            "next-week-button"
+        );
+
+
+    const completedCount =
+        document.getElementById(
+            "completed-count"
+        );
+
+
+    const progressFill =
+        document.getElementById(
+            "progress-fill"
+        );
+
+
+    /* Update progress */
+
+    if(completedCount){
+
+        completedCount.textContent =
+            completedDays.length;
+    }
+
+
+    if(progressFill){
+
+        const percentage =
+            (completedDays.length / 7) * 100;
+
+        progressFill.style.width =
+            percentage + "%";
+    }
+
+
+    /* Enable next week */
+
+    if(
+        nextWeekButton &&
+        completedDays.length === 7
+    ){
+
+        nextWeekButton.disabled = false;
+
+    }
+
+</script>
+
+
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

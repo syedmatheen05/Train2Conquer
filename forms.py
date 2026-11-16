@@ -1,0 +1,245 @@
+from flask_wtf import FlaskForm
+from wtforms import BooleanField, EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Regexp
+from wtforms.widgets import ListWidget, CheckboxInput
+# NOTE: TrainerSearchForm/TrainerForm below used to re-import FlaskForm,
+# SelectField/StringField/SubmitField and DataRequired a second time
+# (this file was originally pasted together from two source files).
+# Those imports are already covered above, so the duplicates were removed.
+class Loginform(FlaskForm):
+    email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
+    submit=SubmitField("verify")
+
+class OTPform(FlaskForm):
+    verification_code=StringField("Verification code",
+                                      render_kw={"autocomplete": "one-time-code", "inputmode": "numeric", "maxlength": 6},
+                                      validators=[DataRequired(),
+                                                  Length(min=6,max=6, message="Verification code must be exactly 6 digits."),
+                                                      Regexp(r"^\d{6}$", message="Verification code must contain exactly 6 digits.")])
+    submit=SubmitField("Verify & Continue")
+
+class Registerform(FlaskForm):
+    name=StringField("Full Name",validators=[DataRequired()], render_kw={"autocomplete": "name"})
+    email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
+    submit=SubmitField("verify")
+
+class FitnessProfileform(FlaskForm):
+    dob=DateField("Date of Birth",format="%Y-%m-%d",validators=[DataRequired()])
+    height=IntegerField("Height (cm)", validators=[DataRequired(),NumberRange(min=100,max=250)])
+    weight=IntegerField("Weight (kg)",validators=[DataRequired(),NumberRange(20,200)])
+    gender=SelectField("Gender",choices=[("male","Male"),("female","Female"),("other","Other")],validators=[DataRequired()])
+    goal=SelectField("Fitness Goal",  choices=[
+            ("muscle", "Build Muscle"),
+            ("fat_muscle", "Lose Fat and Build Muscle"),
+            ("lose_weight", "Lose Weight"),
+            ("gain_weight", "Gain Weight"),
+            ("strength", "Get Stronger"),
+            ("endurance", "Improve Endurance"),
+            ("fitness", "Improve Fitness"),
+            ("maintain", "Maintain Weight")],validators=[DataRequired()])
+    experience = SelectField("Fitness Level",choices=[("beginner", "Beginner"),
+                                                      ("intermediate", "Intermediate"),
+                                                      ("advanced", "Advanced")],
+                                            validators=[DataRequired()])
+    workout_days = SelectField("Workout Days Per Week",choices=[("2", "2 days"),
+                                                                ("3", "3 days"),
+                                                                ("4", "4 days"),
+                                                                ("5", "5 days"),
+                                                                ("6", "6 days"),
+                                                                ("7", "Every day")],
+                                                        validators=[DataRequired()])
+    equipment = SelectMultipleField("Equipment Available",choices=[("none", "No equipment"),
+                                                                   ("dumbbells", "Dumbbells"),
+                                                                   ("bands", "Resistance bands"),
+                                                                   ("pullup", "Pull-up bar"),
+                                                                   ("bench", "Bench"),
+                                                                   ("kettlebell", "Kettlebell"),
+                                                                   ("barbell", "Barbell")],
+                                                        option_widget=CheckboxInput(),
+                                                        widget=ListWidget(prefix_label=False))
+    submit = SubmitField("Save Profile")
+
+class ContactForm(FlaskForm):
+    name = StringField(
+        "Name",
+        render_kw={"autocomplete": "name"},
+        validators=[
+            DataRequired(),
+            Length(min=2, max=100)
+        ]
+    )
+
+    email = StringField(
+        "Email",
+        render_kw={"autocomplete": "email"},
+        validators=[
+            DataRequired(),
+            Email()
+        ]
+    )
+
+    message = TextAreaField(
+        "Message",
+        render_kw={"maxlength": 1200},
+        validators=[
+            DataRequired(),
+            Length(min=10, max=1200)
+        ]
+    )
+
+    submit = SubmitField("Verify Email")
+
+class ContactOTPForm(FlaskForm):
+    verification_code=StringField("Verification code",
+                                      render_kw={"autocomplete": "one-time-code", "inputmode": "numeric", "maxlength": 6},
+                                          validators=[DataRequired(),
+                                                      Length(min=6,max=6, message="Verification code must be exactly 6 digits."),
+                                                      Regexp(r"^\d{6}$", message="Verification code must contain exactly 6 digits.")])
+    submit=SubmitField("Verify")
+
+
+class TrainerSearchForm(FlaskForm):
+
+    gender = SelectField(
+        "Gender",
+        choices=[
+            ("male", "Male"),
+            ("female", "Female"),
+            ("other","Other")
+        ],
+        validators=[DataRequired()]
+    )
+
+    location = StringField(
+        "Location",
+        validators=[DataRequired()]
+    )
+
+    mode = SelectField(
+        "Training Mode",
+        choices=[
+            ("online", "Online"),
+            ("offline", "Offline")
+        ],
+        validators=[DataRequired()]
+    )
+
+    submit = SubmitField("Find Trainer")
+
+class TrainerForm(FlaskForm):
+
+    about = TextAreaField(
+        "About Yourself",
+        validators=[
+            DataRequired(message="Please tell us something about yourself."),
+            Length(min=20, max=1000)
+        ],
+        render_kw={
+            "placeholder": "Tell users about yourself, your experience, training style, etc.",
+            "rows": 6
+        }
+    )
+
+    location = StringField(
+        "Location",
+        validators=[
+            DataRequired(message="Please enter your location."),
+            Length(max=100)
+        ],
+        render_kw={
+            "placeholder": "e.g. Bengaluru, Karnataka"
+        }
+    )
+
+    gender = SelectField(
+        "Gender",
+        choices=[
+            ("", "Select Gender"),
+            ("Male", "Male"),
+            ("Female", "Female"),
+            ("Other", "Other")
+        ],
+        validators=[
+            DataRequired(message="Please select your gender.")
+        ]
+    )
+    phone_number = StringField(
+        "Phone Number",
+        validators=[
+            DataRequired(message="Please enter your phone number."),
+            Regexp(
+                r"^\d{10}$",
+                message="Phone number must contain exactly 10 digits."
+            )
+        ],
+        render_kw={
+            "placeholder": "10-digit phone number",
+            "maxlength": "10",
+            "inputmode": "numeric"
+        }
+    )
+
+    submit = SubmitField("Become a Trainer")
+
+
+class AdminTrainerForm(FlaskForm):
+    """Used by the admin panel to add/edit rows in the Trainer table.
+
+    Distinct from TrainerForm (the public "become a trainer" application,
+    which only emails the site owner and never touches the Trainer table).
+    Gender choices match the lowercase values already used elsewhere
+    (FitnessProfileform, TrainerSearchForm) so gender filtering stays
+    consistent across the app.
+    """
+
+    name = StringField(
+        "Full Name",
+        validators=[DataRequired(), Length(max=100)],
+        render_kw={"placeholder": "e.g. Priya Sharma"},
+    )
+
+    gender = SelectField(
+        "Gender",
+        choices=[("male", "Male"), ("female", "Female"), ("other", "Other")],
+        validators=[DataRequired()],
+    )
+
+    location = StringField(
+        "Location",
+        validators=[DataRequired(), Length(max=200)],
+        render_kw={"placeholder": "e.g. Koramangala, Bengaluru"},
+    )
+
+    about = TextAreaField(
+        "About",
+        validators=[Length(max=300)],
+        render_kw={"placeholder": "Short bio shown to users (optional)", "rows": 4},
+    )
+
+    submit = SubmitField("Save Trainer")
+
+
+class AdminUserForm(FlaskForm):
+    """Used by the admin panel to add/edit rows in the User table.
+
+    Accounts are passwordless (email OTP login), so there is no password
+    field: an admin only manages name, email and the admin flag. Email is
+    normalised to lowercase in the route, matching how login/register
+    look users up.
+    """
+
+    name = StringField(
+        "Full Name",
+        validators=[DataRequired(), Length(max=100)],
+        render_kw={"placeholder": "e.g. Syed Matheen", "autocomplete": "off"},
+    )
+
+    email = EmailField(
+        "E-mail",
+        validators=[DataRequired(), Email(), Length(max=200)],
+        render_kw={"placeholder": "name@example.com", "autocomplete": "off"},
+    )
+
+    is_admin = BooleanField("Admin access")
+
+    submit = SubmitField("Save User")

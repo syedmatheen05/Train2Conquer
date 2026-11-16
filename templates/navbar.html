@@ -1,0 +1,112 @@
+<nav class="t2c-nav">
+    <div class="t2c-nav-inner">
+
+        <!-- Brand -->
+        <a class="t2c-brand" href="{{ url_for('home') }}">
+            <span class="t2c-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 24 L11 13 L16 18 L29 4" stroke="#FF4B26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 4 H29 V12" stroke="#D9A83B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span class="t2c-brand-word">TRAIN2<span>CONQUER</span></span>
+        </a>
+
+        <!-- Mobile toggle -->
+        <button class="t2c-toggle" id="t2cToggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span></span>
+        </button>
+
+        <!-- Center links -->
+        <ul class="t2c-links" id="t2cLinks">
+            <li><a id="home" class="t2c-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a></li>
+            <li><a class="t2c-link {% if request.endpoint == 'nutrition' %}active{% endif %}" href="{{ url_for('nutrition') }}">Nutrition</a></li>
+            <li><a class="t2c-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') }}">About</a></li>
+            <li><a class="t2c-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('contact') }}">Contact</a></li>
+            {% if not current_user.is_authenticated %}
+            <li class="t2c-link-mobile-login"><a class="t2c-link" href="{{ url_for('login') }}">Log in</a></li>
+            {% endif %}
+        </ul>
+
+        <!-- Right side -->
+        <div class="t2c-right">
+            {% if current_user.is_authenticated %}
+            <div class="t2c-profile">
+                <button class="t2c-profile-trigger" id="t2cProfileTrigger" aria-haspopup="true" aria-expanded="false">
+                    <span class="t2c-avatar">{{ current_user.email[0].upper() }}</span>
+                    <span class="t2c-profile-name">{{ current_user.name }}</span>
+                    <svg class="t2c-caret" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+
+                <div class="t2c-dropdown" id="t2cDropdown">
+                    <div class="t2c-dropdown-header">{{ current_user.email }}</div>
+                    <hr class="t2c-dropdown-divider">
+                    <a class="t2c-dropdown-item" href="{{ url_for('fitness_profile') }}">✏️ Edit profile</a>
+                    <a class="t2c-dropdown-item" href="{{ url_for('find_trainer') }}">🏋️‍♂️ Find Personal Trainer</a>
+                    <a class="t2c-dropdown-item" href="{{ url_for('become_trainer') }}">🙎 Become a Trainer</a>
+                    {% if current_user.is_admin %}
+                    <a class="t2c-dropdown-item" href="{{ url_for('admin_dashboard') }}">🛠️ Admin Panel</a>
+                    {% endif %}
+                    <hr class="t2c-dropdown-divider">
+                    <form action="{{ url_for('logout') }}" method="POST" data-loader-message="Signing you out...">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="t2c-dropdown-item" type="submit">🚪 Log out</button>
+                    </form>
+                    <form id="deleteAccountForm"
+      action="{{ url_for('delete_account') }}"
+      method="POST"
+      data-loader-message="Deleting your account...">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <button class="t2c-dropdown-item danger" type="button" id="deleteAccountBtn">
+        🗑️ Delete account
+    </button>
+</form>
+                </div>
+            </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="t2c-btn t2c-btn-ghost">Log in</a>
+                <a href="{{ url_for('register') }}" class="t2c-btn t2c-btn-solid">Sign up</a>
+            {% endif %}
+        </div>
+
+    </div>
+</nav>
+
+<!-- Delete Account Confirmation Modal.
+     Lives here (not in a single page template) because the Delete
+     Account button above is rendered by navbar.html on every page --
+     the confirmation UI needs to be available wherever the button is. -->
+{% if current_user.is_authenticated %}
+<div class="t2c-confirm-overlay" id="deleteConfirmModal">
+    <div class="t2c-confirm-box">
+
+        <div class="t2c-confirm-icon">
+            🗑️
+        </div>
+
+        <h3>Delete your account?</h3>
+
+        <p>
+            Are you sure you want to permanently delete your
+            Train2Conquer account?
+        </p>
+
+        <p class="t2c-confirm-warning">
+            This action cannot be undone.
+        </p>
+
+        <div class="t2c-confirm-actions">
+            <button type="button" class="t2c-confirm-cancel" id="cancelDelete">
+                Cancel
+            </button>
+
+            <button type="button" class="t2c-confirm-delete" id="confirmDelete">
+                Yes, Delete
+            </button>
+        </div>
+
+    </div>
+</div>
+{% endif %}

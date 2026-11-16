@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Register | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+
+{{ bootstrap.load_css() }}
+
+<!-- =========================================================
+     FONTS
+========================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/register.css') }}">
+</head>
+
+<body class="page-register">
+{% include "loader.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+<div class="t2c-auth">
+
+<div class="t2c-auth-shell">
+
+
+    <!-- =====================================================
+         LEFT BRAND / EXPERIENCE PANEL
+    ====================================================== -->
+
+    <section class="t2c-auth-brand">
+
+
+        <!-- Decorative climbing path -->
+
+        <svg
+            class="t2c-auth-climb"
+            viewBox="0 0 400 650"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+        >
+
+            <path
+                d="
+                    M0,560
+                    L70,560
+                    L125,430
+                    L180,485
+                    L245,270
+                    L310,335
+                    L400,100
+                "
+                fill="none"
+                stroke="url(#t2cRegisterGradient)"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <defs>
+
+                <linearGradient
+                    id="t2cRegisterGradient"
+                    x1="0"
+                    y1="1"
+                    x2="1"
+                    y2="0"
+                >
+
+                    <stop
+                        offset="0%"
+                        stop-color="#D7AA48"
+                        stop-opacity=".25"
+                    />
+
+                    <stop
+                        offset="100%"
+                        stop-color="#FF512F"
+                        stop-opacity=".42"
+                    />
+
+                </linearGradient>
+
+            </defs>
+
+        </svg>
+
+
+        <!-- =================================================
+             LOGO
+        ================================================== -->
+
+        <a
+            class="t2c-auth-mark"
+            href="{{ url_for('home') }}"
+            aria-label="Train2Conquer Home"
+        >
+
+            <svg
+                viewBox="0 0 32 32"
+                fill="none"
+                aria-hidden="true"
+            >
+
+                <path
+                    d="M3 24 L11 13 L16 18 L29 4"
+                    stroke="#FF512F"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+
+                <path
+                    d="M21 4 H29 V12"
+                    stroke="#D7AA48"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+
+            </svg>
+
+
+            <span>
+
+                TRAIN2<span class="accent">
+                    CONQUER
+                </span>
+
+            </span>
+
+        </a>
+
+
+        <!-- =================================================
+             BRAND MESSAGE
+        ================================================== -->
+
+        <div class="t2c-auth-content">
+
+
+            <div class="t2c-auth-eyebrow">
+
+                Train with purpose
+
+            </div>
+
+
+            <div class="t2c-auth-headline">
+
+                <h2>
+
+                    Build your
+
+                    <span class="accent">
+                        stronger
+                    </span>
+
+                    self.
+
+                </h2>
+
+
+                <p>
+
+                    Create your account and turn your fitness
+                    goals into a routine you can actually stick with.
+
+                </p>
+
+
+                <ul class="t2c-auth-points">
+
+                    <li>
+                        Personalized workout plans
+                    </li>
+
+                    <li>
+                        Track your progress and streaks
+                    </li>
+
+                    <li>
+                        Train anywhere, anytime
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             BRAND FOOTER
+        ================================================== -->
+
+        <div class="t2c-auth-quote">
+
+            CONSISTENCY
+            &nbsp;•&nbsp;
+            DISCIPLINE
+            &nbsp;•&nbsp;
+            PROGRESS
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         REGISTER FORM PANEL
+    ====================================================== -->
+
+    <section class="t2c-auth-form-panel">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="t2c-auth-form-head">
+
+            <h1>
+                Create account
+            </h1>
+
+
+            <p class="t2c-auth-sub">
+
+                Start your journey with Train2Conquer.
+
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             FLASH MESSAGES
+        ================================================== -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        data-flash-message
+                        class="alert alert-{{ category }}"
+                        role="alert"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- =================================================
+             REGISTER FORM
+        ================================================== -->
+
+        {{ render_form(form) }}
+
+
+        <!-- =================================================
+             LOGIN DIVIDER
+        ================================================== -->
+
+        <div class="t2c-auth-divider">
+
+            Already a member?
+
+        </div>
+
+
+        <!-- =================================================
+             LOGIN LINK
+        ================================================== -->
+
+        <p class="t2c-auth-footer-line">
+
+            <a href="{{ url_for('login') }}">
+
+                Log in to your account →
+
+            </a>
+
+        </p>
+
+
+        <!-- =================================================
+             SECURITY NOTE
+        ================================================== -->
+
+        <div class="t2c-auth-security">
+
+            🔒 Your account information is protected and used
+            only to provide your Train2Conquer experience.
+
+            <br>
+
+            By creating an account, you agree to use the platform
+            responsibly.
+
+        </div>
+
+
+    </section>
+
+
+</div>
+
+</div>
+
+<!-- Bootstrap JS intentionally NOT loaded on this page: it uses no
+     data-bs-* components (modal/dropdown/collapse/etc); flash-message
+     dismissal here is handled by our own loader.js, so the 60KB bundle
+     would be dead weight. -->
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

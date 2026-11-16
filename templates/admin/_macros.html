@@ -1,0 +1,27 @@
+{% macro select(name, label, options, current) %}
+<label>{{ label }}
+    <select name="{{ name }}">
+        <option value="">All</option>
+        {% for value in options %}<option value="{{ value }}" {% if current == value %}selected{% endif %}>{{ value|replace('_', ' ')|title }}</option>{% endfor %}
+    </select>
+</label>
+{% endmacro %}
+
+{% macro confirm_delete(action, word, label, warning) %}
+<form method="POST" action="{{ action }}" class="t2c-admin-danger-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p class="t2c-admin-error-text">{{ warning }}</p>
+    <label>Type <strong>{{ word }}</strong> to confirm
+        <input type="text" name="confirm" autocomplete="off" required>
+    </label>
+    <button type="submit" class="t2c-admin-btn t2c-admin-btn-danger">{{ label }}</button>
+</form>
+{% endmacro %}
+
+{% macro post_button(action, label, value=None, danger=False) %}
+<form method="POST" action="{{ action }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if value %}<input type="hidden" name="action" value="{{ value }}">{% endif %}
+    <button type="submit" class="t2c-admin-btn {% if danger %}t2c-admin-btn-danger{% endif %}">{{ label }}</button>
+</form>
+{% endmacro %}

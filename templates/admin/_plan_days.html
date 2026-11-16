@@ -1,0 +1,19 @@
+{% if plan_error %}<p class="t2c-admin-error-text">{{ plan_error }}</p>{% endif %}
+{% for day in plan_days %}
+<details class="t2c-admin-day">
+    <summary>
+        <strong>Day {{ day.number }}</strong>
+        <span>{{ day.meta[0] }}{% if day.meta|length > 1 %} · {{ day.meta[1] }}{% endif %}</span>
+        <span class="t2c-admin-muted">{{ day.exercises|length }} exercises</span>
+        {% if day.number in completed_days %}<span class="t2c-admin-pill t2c-pill-ready">done</span>{% endif %}
+    </summary>
+    {% if day.exercises %}
+    <div class="t2c-admin-table-wrap"><table class="t2c-admin-table">
+        <thead><tr><th>Exercise</th><th>Reps</th><th>Seconds</th><th>Rest</th></tr></thead>
+        <tbody>{% for ex in day.exercises %}
+            <tr><td data-label="Exercise">{{ exercise_names.get(ex.exercise, ex.exercise) }}</td><td data-label="Reps">{{ ex.reps }}</td>
+                <td data-label="Seconds">{{ ex.seconds }}</td><td data-label="Rest">{{ ex.rest }}</td></tr>
+        {% endfor %}</tbody></table></div>
+    {% else %}<p class="t2c-admin-empty-inline">Rest day.</p>{% endif %}
+</details>
+{% endfor %}

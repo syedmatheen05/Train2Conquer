@@ -1,0 +1,48 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import post_button %}
+{% block title %}Payment #{{ payment.id }}{% endblock %}
+{% block kicker %}Payment (read-only){% endblock %}
+{% block heading %}Payment #{{ payment.id }}{% endblock %}
+{% block header_extra %}<a class="t2c-admin-back" href="{{ url_for('admin.payments') }}">← Back to payments</a>{% endblock %}
+{% block content %}
+<section class="t2c-admin-section"><h2>Summary</h2>
+<dl class="t2c-admin-dl">
+    <div><dt>Result</dt><dd><span class="t2c-admin-pill">{{ bucket }}</span></dd></div>
+    <div><dt>User</dt><dd>{% if owner %}<a class="t2c-admin-link" href="{{ url_for('admin.user_detail', user_id=owner.id) }}">{{ owner.name }}</a> ({{ owner.email }}){% else %}deleted account{% endif %}</dd></div>
+    <div><dt>Plan type</dt><dd>{{ payment.tier }}</dd></div>
+    <div><dt>Amount</dt><dd>{{ payment.amount_paise|inr_paise }} ({{ payment.currency }})</dd></div>
+    <div><dt>Created</dt><dd>{{ payment.created_at.strftime("%d %b %Y, %H:%M") }} UTC</dd></div>
+    <div><dt>Paid</dt><dd>{{ payment.paid_at.strftime("%d %b %Y, %H:%M") ~ " UTC" if payment.paid_at else "—" }}</dd></div>
+</dl></section>
+<section class="t2c-admin-section"><h2>Gateway &amp; verification</h2>
+<dl class="t2c-admin-dl">
+    <div><dt>Razorpay order</dt><dd><code>{{ payment.gateway_order_id }}</code></dd></div>
+    <div><dt>Razorpay payment</dt><dd><code>{{ payment.gateway_payment_id or "—" }}</code></dd></div>
+    <div><dt>Our status</dt><dd>{{ payment.status }}</dd></div>
+    <div><dt>Gateway status</dt><dd>{{ payment.payment_status }}</dd></div>
+    <div><dt>Verification</dt><dd>{{ payment.payment_verification_status }}</dd></div>
+    <div><dt>Method</dt><dd>{{ payment.payment_method or "—" }}</dd></div>
+    <div><dt>Failure code</dt><dd>{{ payment.failure_code or "—" }}</dd></div>
+    <div><dt>Gateway fee / tax</dt><dd>{{ payment.fee_paise|inr_paise if payment.fee_paise is not none else "unknown" }} / {{ payment.tax_paise|inr_paise if payment.tax_paise is not none else "unknown" }}</dd></div>
+    <div><dt>Generation tries</dt><dd>{{ payment.attempts }}</dd></div>
+</dl></section>
+<section class="t2c-admin-section"><h2>Refund</h2>
+<dl class="t2c-admin-dl">
+    <div><dt>Refund status</dt><dd>{{ payment.refund_status }}</dd></div>
+    <div><dt>Refunded amount</dt><dd>{{ payment.refund_amount_paise|inr_paise }}</dd></div>
+    <div><dt>Razorpay refund</dt><dd><code>{{ payment.gateway_refund_id or "—" }}</code></dd></div>
+</dl>
+{% if payment.refund_status == "requested" %}
+<form method="POST" action="{{ url_for('admin.issue_refund', payment_id=payment.id) }}" onsubmit="return confirm('Refund {{ payment.amount_paise|inr_paise }} to this customer via Razorpay?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="t2c-admin-btn t2c-admin-btn-solid">Approve refund via Razorpay</button>
+</form>
+{% endif %}</section>
+<section class="t2c-admin-section"><h2>Workout plans from this payment</h2>
+{% if plans %}<ul>{% for p in plans %}<li><a class="t2c-admin-link" href="{{ url_for('admin.plan_detail', plan_id=p.id) }}">Plan #{{ p.id }}</a> · week {{ p.week_number }} · {{ p.status }}</li>{% endfor %}</ul>
+{% else %}<p class="t2c-admin-empty-inline">No plan is linked (not built yet, or deleted).</p>{% endif %}</section>
+{% if events %}<section class="t2c-admin-section"><h2>Gateway events</h2><ul>
+{% for e in events %}<li>{{ e.received_at.strftime("%Y-%m-%d %H:%M") }} · {{ e.event_type }}</li>{% endfor %}</ul></section>{% endif %}
+{% if usage %}<section class="t2c-admin-section"><h2>AI attempts</h2><ul>
+{% for u in usage %}<li>Attempt {{ u.attempt_number }} · {{ u.status }}</li>{% endfor %}</ul></section>{% endif %}
+{% endblock %}

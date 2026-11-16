@@ -1,65 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Train2Conquer</title>
-    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
-    {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-</head>
-<body class="page-admin">
-{% include "loader.html" %}
-{% include "navbar.html" %}
+{% extends "admin/_layout.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block kicker %}Train2Conquer{% endblock %}
+{% block heading %}Admin Dashboard{% endblock %}
+{% block content %}
+{% macro stat(value, label, href=None) %}
+<div class="t2c-admin-stat">{% if href %}<a href="{{ href }}">{% endif %}<strong>{{ value }}</strong><span>{{ label }}</span>{% if href %}</a>{% endif %}</div>
+{% endmacro %}
 
-<main class="t2c-admin">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+<h2 class="t2c-fin-title">Users &amp; trainers</h2>
+<div class="t2c-admin-stats">
+    {{ stat(stats.users_total, 'Users', url_for('admin.users')) }}
+    {{ stat(stats.users_active, 'Active users', url_for('admin.users', status='active')) }}
+    {{ stat(stats.users_inactive, 'Inactive users', url_for('admin.users', status='inactive')) }}
+    {{ stat(stats.admins, 'Admins', url_for('admin.users', role='admin')) }}
+    {{ stat(stats.trainers_total, 'Trainers', url_for('admin.trainers')) }}
+    {{ stat(stats.trainers_active, 'Active trainers', url_for('admin.trainers', status='active')) }}
+    {{ stat(stats.trainers_inactive, 'Inactive trainers', url_for('admin.trainers', status='inactive')) }}
+    {{ stat(stats.profiles_total, 'Fitness profiles') }}
+</div>
 
-    <div class="t2c-admin-header">
-        <div>
-            <p class="t2c-admin-kicker">Train2Conquer</p>
-            <h1>Admin Dashboard</h1>
-        </div>
-    </div>
+<h2 class="t2c-fin-title">Workout plans</h2>
+<div class="t2c-admin-stats">
+    {{ stat(stats.plans_total, 'Total plans', url_for('admin.plans')) }}
+    {{ stat(stats.plans_free, 'Free plans', url_for('admin.plans', tier='basic')) }}
+    {{ stat(stats.plans_premium, 'Premium plans', url_for('admin.plans', tier='premium')) }}
+    {{ stat(stats.plans_failed, 'Failed plans', url_for('admin.plans', status='failed')) }}
+    {{ stat(stats.plans_generating, 'Generating now', url_for('admin.plans', status='generating')) }}
+</div>
 
-    <div class="t2c-admin-stats">
-        <div class="t2c-admin-stat">
-            <strong>{{ trainer_count }}</strong>
-            <span>Trainers</span>
-        </div>
-        <div class="t2c-admin-stat">
-            <strong>{{ user_count }}</strong>
-            <span>Users</span>
-        </div>
-        <div class="t2c-admin-stat">
-            <strong>{{ admin_count }}</strong>
-            <span>Admins</span>
-        </div>
-    </div>
+<h2 class="t2c-fin-title">Payments</h2>
+<div class="t2c-admin-stats">
+    {{ stat(stats.payments_total, 'All payments', url_for('admin.payments')) }}
+    {{ stat(stats.payments_successful, 'Successful', url_for('admin.payments', status='successful')) }}
+    {{ stat(stats.payments_failed, 'Failed', url_for('admin.payments', status='failed')) }}
+    {{ stat(stats.payments_pending, 'Pending', url_for('admin.payments', status='pending')) }}
+    {{ stat(stats.payments_refunded, 'Refunded', url_for('admin.payments', status='refunded')) }}
+    {{ stat(stats.refunds_requested, 'Refunds awaiting approval', url_for('admin.finance_overview')) }}
+</div>
 
-    {% include "admin/_env_banner.html" %}
-    {% include "admin/_finance_summary.html" %}
+{% include "admin/_env_banner.html" %}
+{% include "admin/_finance_summary.html" %}
 
-    <div class="t2c-admin-actions">
-        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_finance') }}">Financial Report &amp; Transactions</a>
-        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_trainers') }}">Manage Trainers</a>
-        <a class="t2c-admin-btn" href="{{ url_for('admin_trainer_new') }}">+ Add Trainer</a>
-        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_users') }}">Manage Users</a>
-        <a class="t2c-admin-btn" href="{{ url_for('admin_user_new') }}">+ Add User</a>
-        <a class="t2c-admin-btn" href="{{ url_for('home') }}">← Back to site</a>
-    </div>
-</main>
+<section class="t2c-admin-section">
+    <h2>Recent admin activity</h2>
+    {% if recent_actions %}
+    <div class="t2c-admin-table-wrap"><table class="t2c-admin-table">
+        <thead><tr><th>When (UTC)</th><th>Admin</th><th>Action</th><th>Details</th></tr></thead>
+        <tbody>{% for e in recent_actions %}
+            <tr><td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ e.admin_email or '—' }}</td><td>{{ e.action }}</td><td>{{ e.details or '' }}</td></tr>
+        {% endfor %}</tbody></table></div>
+    <p><a class="t2c-admin-link" href="{{ url_for('admin.audit_log') }}">Full audit log →</a></p>
+    {% else %}<p class="t2c-admin-empty-inline">No admin actions recorded yet.</p>{% endif %}
+</section>
 
-{% include "footer.html" %}
-{{ bootstrap.load_js() }}
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
-</body>
-</html>
+<div class="t2c-admin-actions">
+    <a class="t2c-admin-btn" href="{{ url_for('admin.trainer_new') }}">+ Add Trainer</a>
+    <a class="t2c-admin-btn" href="{{ url_for('admin.user_new') }}">+ Add User</a>
+    <a class="t2c-admin-btn" href="{{ url_for('home') }}">← Back to site</a>
+</div>
+{% endblock %}

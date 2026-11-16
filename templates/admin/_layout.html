@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin{% endblock %} | Train2Conquer</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="page-admin">
+{% include "loader.html" %}
+{% include "navbar.html" %}
+
+<main class="t2c-admin">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <nav class="t2c-admin-nav" aria-label="Admin sections">
+        {% set here = request.blueprint ~ '.' ~ (request.endpoint or '').split('.')[-1] %}
+        {% for label, endpoint, prefix in [
+            ('Dashboard', 'admin.dashboard', 'admin.dashboard'), ('Users', 'admin.users', 'admin.user'),
+            ('Trainers', 'admin.trainers', 'admin.trainer'), ('Workout plans', 'admin.plans', 'admin.plan'),
+            ('Payments', 'admin.payments', 'admin.payment'), ('Finance', 'admin.finance_overview', 'admin.finance'),
+            ('Audit log', 'admin.audit_log', 'admin.audit')] %}
+            <a class="t2c-admin-btn {% if here.startswith(prefix) %}t2c-admin-btn-solid{% endif %}" href="{{ url_for(endpoint) }}">{{ label }}</a>
+        {% endfor %}
+    </nav>
+
+    <div class="t2c-admin-header">
+        <div>
+            <p class="t2c-admin-kicker">{% block kicker %}Train2Conquer Admin{% endblock %}</p>
+            <h1>{% block heading %}{% endblock %}</h1>
+        </div>
+        {% block header_extra %}{% endblock %}
+    </div>
+
+    {% block content %}{% endblock %}
+</main>
+
+{% include "footer.html" %}
+{{ bootstrap.load_js() }}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+</body>
+</html>

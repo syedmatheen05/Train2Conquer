@@ -1,0 +1,38 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import confirm_delete %}
+{% block title %}Plan #{{ plan.id }}{% endblock %}
+{% block kicker %}Workout plan{% endblock %}
+{% block heading %}Plan #{{ plan.id }}{% endblock %}
+{% block header_extra %}<a class="t2c-admin-back" href="{{ url_for('admin.plans') }}">← Back to plans</a>{% endblock %}
+{% block content %}
+<section class="t2c-admin-section">
+    <h2>Details</h2>
+    <dl class="t2c-admin-dl">
+        <div><dt>User</dt><dd>{% if owner %}<a class="t2c-admin-link" href="{{ url_for('admin.user_detail', user_id=owner.id) }}">{{ owner.name }}</a> ({{ owner.email }}){% else %}—{% endif %}</dd></div>
+        <div><dt>Type</dt><dd>{{ "Free" if plan.tier == "basic" else "Premium · " ~ plan.tier }}</dd></div>
+        <div><dt>Week</dt><dd>{{ plan.week_number }}</dd></div>
+        <div><dt>Status</dt><dd><span class="t2c-admin-pill t2c-pill-{{ plan.status }}">{{ plan.status }}</span></dd></div>
+        <div><dt>Created</dt><dd>{{ plan.created_at.strftime("%d %b %Y, %H:%M") }} UTC</dd></div>
+        <div><dt>Completed days</dt><dd>{% if completed_days %}{{ completed_days|join(", ") }}{% else %}None yet{% endif %}</dd></div>
+        <div><dt>Payment</dt><dd>{% if payment %}<a class="t2c-admin-link" href="{{ url_for('admin.payment_detail', payment_id=payment.id) }}">#{{ payment.id }}</a>{% else %}— (free plan){% endif %}</dd></div>
+        {% if plan.error_message %}<div class="t2c-admin-dl-wide"><dt>Error</dt><dd class="t2c-admin-error-text">{{ plan.error_message }}</dd></div>{% endif %}
+        {% if plan.coach_notes %}<div class="t2c-admin-dl-wide"><dt>Coach notes</dt><dd>{{ plan.coach_notes }}</dd></div>{% endif %}
+    </dl>
+</section>
+<section class="t2c-admin-section"><h2>Days</h2>
+    {% if plan_days or plan_error %}{% include "admin/_plan_days.html" %}{% else %}<p class="t2c-admin-empty-inline">No readable plan content ({{ plan.status }}).</p>{% endif %}
+</section>
+{% if usage %}
+<section class="t2c-admin-section"><h2>AI attempts</h2>
+    <div class="t2c-admin-table-wrap"><table class="t2c-admin-table">
+        <thead><tr><th>#</th><th>Model</th><th>Result</th><th>In tokens</th><th>Out tokens</th></tr></thead>
+        <tbody>{% for u in usage %}<tr><td>{{ u.attempt_number }}</td><td>{{ u.model }}</td><td>{{ u.status }}</td>
+            <td>{{ u.input_tokens if u.input_tokens is not none else "unknown" }}</td><td>{{ u.output_tokens if u.output_tokens is not none else "unknown" }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+{% endif %}
+<section class="t2c-admin-section"><h2>Delete plan</h2>
+    {{ confirm_delete(url_for('admin.plan_delete', plan_id=plan.id), delete_word, 'Delete plan permanently',
+        'Deletes this plan only. The payment record is kept untouched' ~ (' - and it stays marked as used, so the customer is NOT automatically re-credited. Use the refund workflow if they should be refunded.' if plan.tier != 'basic' else '.')) }}
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import select %}
+{% block title %}Workout plans{% endblock %}
+{% block heading %}Workout plans{% endblock %}
+{% block content %}
+<form class="t2c-admin-search" method="GET" action="{{ url_for('admin.plans') }}">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search by user name or e-mail...">
+    {{ select('tier', 'Plan type', tiers, tier) }}
+    {{ select('status', 'Status', statuses, status) }}
+    <button type="submit" class="t2c-admin-btn">Filter</button>
+    <a class="t2c-admin-btn" href="{{ url_for('admin.plans') }}">Reset</a>
+</form>
+<div class="t2c-admin-table-wrap">
+{% if rows %}
+<table class="t2c-admin-table">
+    <thead><tr><th>Plan</th><th>User</th><th>Week</th><th>Type</th><th>Status</th><th>Created (UTC)</th><th></th></tr></thead>
+    <tbody>{% for r in rows %}<tr>
+        <td data-label="Plan">#{{ r.id }}</td>
+        <td data-label="User"><a class="t2c-admin-link" href="{{ url_for('admin.user_detail', user_id=r.user_id) }}">{{ r.user_name }}</a><br><small class="t2c-admin-muted">{{ r.user_email }}</small></td>
+        <td data-label="Week">{{ r.week_number }}</td>
+        <td data-label="Type"><span class="t2c-admin-pill">{{ "free" if r.tier == "basic" else "premium · " ~ r.tier }}</span></td>
+        <td data-label="Status"><span class="t2c-admin-pill t2c-pill-{{ r.status }}">{{ r.status }}</span></td>
+        <td data-label="Created">{{ r.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td><a class="t2c-admin-btn" href="{{ url_for('admin.plan_detail', plan_id=r.id) }}">View</a></td>
+    </tr>{% endfor %}</tbody>
+</table>
+{% else %}<div class="t2c-admin-empty">No plans match these filters.</div>{% endif %}
+</div>
+{% include "admin/_pagination.html" %}
+{% endblock %}

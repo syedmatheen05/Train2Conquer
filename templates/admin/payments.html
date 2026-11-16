@@ -1,0 +1,32 @@
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import select %}
+{% block title %}Payments{% endblock %}
+{% block heading %}Payments{% endblock %}
+{% block content %}
+<p class="t2c-fin-note">Read-only. Payment records can't be edited or deleted here: they are the financial audit trail. Refunds are approved on the <a class="t2c-admin-link" href="{{ url_for('admin.finance_overview') }}">Finance</a> page and go through Razorpay only.</p>
+<form class="t2c-admin-search" method="GET" action="{{ url_for('admin.payments') }}">
+    <input type="text" name="q" value="{{ search }}" placeholder="Payment ID, Razorpay order/payment ID, user...">
+    {{ select('status', 'Status', buckets, status) }}
+    {{ select('tier', 'Plan', tiers, tier) }}
+    <button type="submit" class="t2c-admin-btn">Filter</button>
+    <a class="t2c-admin-btn" href="{{ url_for('admin.payments') }}">Reset</a>
+</form>
+<div class="t2c-admin-table-wrap">
+{% if rows %}
+<table class="t2c-admin-table">
+    <thead><tr><th>ID</th><th>Date (UTC)</th><th>User</th><th>Plan</th><th>Amount</th><th>Status</th><th>Gateway order</th><th></th></tr></thead>
+    <tbody>{% for payment, user_name, user_email in rows %}<tr>
+        <td data-label="ID">#{{ payment.id }}</td>
+        <td data-label="Date">{{ payment.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td data-label="User">{% if user_name %}{{ user_name }}<br><small class="t2c-admin-muted">{{ user_email }}</small>{% else %}<span class="t2c-admin-muted">deleted account</span>{% endif %}</td>
+        <td data-label="Plan">{{ payment.tier }}</td>
+        <td data-label="Amount">{{ payment.amount_paise|inr_paise }}</td>
+        <td data-label="Status"><span class="t2c-admin-pill">{{ payment_bucket(payment) }}</span></td>
+        <td data-label="Gateway order"><code>{{ payment.gateway_order_id }}</code></td>
+        <td><a class="t2c-admin-btn" href="{{ url_for('admin.payment_detail', payment_id=payment.id) }}">View</a></td>
+    </tr>{% endfor %}</tbody>
+</table>
+{% else %}<div class="t2c-admin-empty">No payments match these filters.</div>{% endif %}
+</div>
+{% include "admin/_pagination.html" %}
+{% endblock %}

@@ -1,55 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user.name }} | Train2Conquer Admin</title>
-    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
-    {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-</head>
-<body class="page-admin">
-{% include "loader.html" %}
-{% include "navbar.html" %}
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import confirm_delete, post_button %}
+{% block title %}{{ user.name }}{% endblock %}
+{% block kicker %}User #{{ user.id }}{% endblock %}
+{% block heading %}{{ user.name }}{% endblock %}
+{% block header_extra %}<a class="t2c-admin-back" href="{{ url_for('admin.users') }}">← Back to users</a>{% endblock %}
+{% block content %}
+<div class="t2c-admin-actions">
+    <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin.user_edit', user_id=user.id) }}">Edit user</a>
+    {% if user.id != current_user.id %}
+        {% if user.is_active %}{{ post_button(url_for('admin.user_set_status', user_id=user.id), 'Deactivate account', 'deactivate') }}
+        {% else %}{{ post_button(url_for('admin.user_set_status', user_id=user.id), 'Activate account', 'activate') }}{% endif %}
+    {% endif %}
+</div>
 
-<main class="t2c-admin">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="t2c-admin-header">
-        <div>
-            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
-            <h1>{{ user.name }}</h1>
-        </div>
-        <a class="t2c-admin-back" href="{{ url_for('admin_users') }}">← Back to users</a>
-    </div>
-
-    <div class="t2c-admin-actions">
-        <a class="t2c-admin-btn t2c-admin-btn-solid" href="{{ url_for('admin_user_edit', user_id=user.id) }}">Edit user</a>
-        {% if user.id != current_user.id %}
-        <form method="POST" action="{{ url_for('admin_user_delete', user_id=user.id) }}"
-              onsubmit="return confirm('Delete {{ user.name|e }} and all their fitness data? This cannot be undone.');">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="t2c-admin-btn t2c-admin-btn-danger">Delete user</button>
-        </form>
-        {% endif %}
-    </div>
-
-    <section class="t2c-admin-section">
-        <h2>Account</h2>
-        <dl class="t2c-admin-dl">
-            <div><dt>User ID</dt><dd>{{ user.id }}</dd></div>
-            <div><dt>Name</dt><dd>{{ user.name }}</dd></div>
-            <div><dt>E-mail</dt><dd>{{ user.email }}</dd></div>
-            <div><dt>Role</dt><dd><span class="t2c-admin-pill">{{ "admin" if user.is_admin else "user" }}</span></dd></div>
-        </dl>
-    </section>
+<section class="t2c-admin-section">
+    <h2>Account</h2>
+    <dl class="t2c-admin-dl">
+        <div><dt>User ID</dt><dd>{{ user.id }}</dd></div>
+        <div><dt>Name</dt><dd>{{ user.name }}</dd></div>
+        <div><dt>E-mail</dt><dd>{{ user.email }}</dd></div>
+        <div><dt>Role</dt><dd><span class="t2c-admin-pill">{{ "admin" if user.is_admin else "user" }}</span></dd></div>
+        <div><dt>Status</dt><dd><span class="t2c-admin-pill {% if user.is_active %}t2c-pill-ready{% else %}t2c-pill-failed{% endif %}">{{ "active" if user.is_active else "inactive" }}</span></dd></div>
+        <div><dt>Joined</dt><dd>{{ user.created_at.strftime("%d %b %Y") if user.created_at else "before tracking began" }}</dd></div>
+    </dl>
+</section>
 
     <section class="t2c-admin-section">
         <h2>Fitness profile</h2>
@@ -71,56 +45,56 @@
         {% endif %}
     </section>
 
-    <section class="t2c-admin-section">
-        <h2>Workout plan</h2>
-        {% if plan %}
-        <dl class="t2c-admin-dl">
-            <div><dt>Status</dt><dd><span class="t2c-admin-pill t2c-pill-{{ plan.status }}">{{ plan.status }}</span></dd></div>
-            <div><dt>Created</dt><dd>{{ plan.created_at.strftime("%d %b %Y, %H:%M") }} UTC</dd></div>
-            <div><dt>Completed days</dt><dd>{% if completed_days %}{{ completed_days|join(", ") }}{% else %}None yet{% endif %}</dd></div>
-            {% if plan.error_message %}
-            <div class="t2c-admin-dl-wide"><dt>Error</dt><dd class="t2c-admin-error-text">{{ plan.error_message }}</dd></div>
-            {% endif %}
-        </dl>
-        {% if plan_error %}<p class="t2c-admin-error-text">{{ plan_error }}</p>{% endif %}
-        {% for day in plan_days %}
-        <details class="t2c-admin-day">
-            <summary>
-                <strong>Day {{ day.number }}</strong>
-                <span>{{ day.meta[0] }}{% if day.meta|length > 1 %} · {{ day.meta[1] }}{% endif %}</span>
-                <span class="t2c-admin-muted">{{ day.exercises|length }} exercises</span>
-                {% if day.number in completed_days %}<span class="t2c-admin-pill t2c-pill-ready">done</span>{% endif %}
-            </summary>
-            {% if day.exercises %}
-            <div class="t2c-admin-table-wrap">
-                <table class="t2c-admin-table">
-                    <thead><tr><th>Exercise</th><th>Reps</th><th>Seconds</th><th>Rest</th></tr></thead>
-                    <tbody>
-                    {% for ex in day.exercises %}
-                        <tr>
-                            <td data-label="Exercise">{{ exercise_names.get(ex.exercise, ex.exercise) }}</td>
-                            <td data-label="Reps">{{ ex.reps }}</td>
-                            <td data-label="Seconds">{{ ex.seconds }}</td>
-                            <td data-label="Rest">{{ ex.rest }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="t2c-admin-empty-inline">Rest day.</p>
-            {% endif %}
-        </details>
-        {% endfor %}
-        {% else %}
-        <p class="t2c-admin-empty-inline">No workout plan generated yet.</p>
-        {% endif %}
-    </section>
-</main>
 
-{% include "footer.html" %}
-{{ bootstrap.load_js() }}
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
-</body>
-</html>
+<section class="t2c-admin-section">
+    <h2>Latest workout plan <span class="t2c-admin-muted">({{ plan_count }} total)</span></h2>
+    {% if plan %}
+    <dl class="t2c-admin-dl">
+        <div><dt>Status</dt><dd><span class="t2c-admin-pill t2c-pill-{{ plan.status }}">{{ plan.status }}</span></dd></div>
+        <div><dt>Created</dt><dd>{{ plan.created_at.strftime("%d %b %Y, %H:%M") }} UTC</dd></div>
+        <div><dt>Completed days</dt><dd>{% if completed_days %}{{ completed_days|join(", ") }}{% else %}None yet{% endif %}</dd></div>
+        {% if plan.error_message %}<div class="t2c-admin-dl-wide"><dt>Error</dt><dd class="t2c-admin-error-text">{{ plan.error_message }}</dd></div>{% endif %}
+    </dl>
+    {% include "admin/_plan_days.html" %}
+    {% else %}<p class="t2c-admin-empty-inline">No workout plan generated yet.</p>{% endif %}
+</section>
+
+<section class="t2c-admin-section">
+    <h2>All plans</h2>
+    {% if recent_plans %}
+    <div class="t2c-admin-table-wrap"><table class="t2c-admin-table">
+        <thead><tr><th>Plan</th><th>Week</th><th>Tier</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody>{% for p in recent_plans %}<tr>
+            <td><a class="t2c-admin-link" href="{{ url_for('admin.plan_detail', plan_id=p.id) }}">#{{ p.id }}</a></td>
+            <td>{{ p.week_number }}</td><td>{{ p.tier }}</td>
+            <td><span class="t2c-admin-pill t2c-pill-{{ p.status }}">{{ p.status }}</span></td>
+            <td>{{ p.created_at.strftime("%Y-%m-%d") }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="t2c-admin-empty-inline">None.</p>{% endif %}
+</section>
+
+<section class="t2c-admin-section">
+    <h2>Payments</h2>
+    {% if recent_payments %}
+    <div class="t2c-admin-table-wrap"><table class="t2c-admin-table">
+        <thead><tr><th>Payment</th><th>Tier</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody>{% for p in recent_payments %}<tr>
+            <td><a class="t2c-admin-link" href="{{ url_for('admin.payment_detail', payment_id=p.id) }}">#{{ p.id }}</a></td>
+            <td>{{ p.tier }}</td><td>{{ p.amount_paise|inr_paise }}</td>
+            <td><span class="t2c-admin-pill">{{ payment_bucket(p) }}</span></td>
+            <td>{{ p.created_at.strftime("%Y-%m-%d") }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="t2c-admin-empty-inline">No payments.</p>{% endif %}
+</section>
+
+<section class="t2c-admin-section">
+    <h2>Trainer enquiries</h2>
+    <p class="t2c-admin-empty-inline">Messages to trainers are e-mailed and are not stored in the database, so there is no history to show here.</p>
+</section>
+
+{% if user.id != current_user.id %}
+<section class="t2c-admin-section">
+    <h2>Delete user</h2>
+    {{ confirm_delete(url_for('admin.user_delete', user_id=user.id), user.email, 'Delete user permanently',
+        'Deletes the account, fitness profile and workout plans. Payment records are kept (detached) for the financial audit trail. Consider deactivating instead.') }}
+</section>
+{% endif %}
+{% endblock %}

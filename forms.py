@@ -214,6 +214,14 @@ class AdminTrainerForm(FlaskForm):
         render_kw={"placeholder": "Short bio shown to users (optional)", "rows": 4},
     )
 
+    contact_email = EmailField(
+        "Trainer's e-mail (optional)",
+        validators=[Optional(), Email(), Length(max=200)],
+        render_kw={"placeholder": "If set, 'Contact Trainer' messages are e-mailed to this address", "autocomplete": "off"},
+    )
+
+    is_active = BooleanField("Active (shown in Find Trainers)")
+
     submit = SubmitField("Save Trainer")
 
 
@@ -239,5 +247,6 @@ class AdminUserForm(FlaskForm):
     )
 
     is_admin = BooleanField("Admin access")
+    is_active = BooleanField("Account active (can log in)")
 
     submit = SubmitField("Save User")

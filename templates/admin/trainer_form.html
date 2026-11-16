@@ -1,35 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ "Edit" if mode == "edit" else "Add" }} Trainer | Train2Conquer</title>
-    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
-    {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-</head>
-<body class="page-admin">
-{% include "loader.html" %}
-{% include "navbar.html" %}
-
-<main class="t2c-admin">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="t2c-admin-header">
-        <div>
-            <p class="t2c-admin-kicker">Train2Conquer Admin</p>
-            <h1>{{ "Edit Trainer" if mode == "edit" else "Add Trainer" }}</h1>
-        </div>
-        <a class="t2c-admin-back" href="{{ url_for('admin_trainers') }}">← Back to trainers</a>
-    </div>
-
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import confirm_delete %}
+{% block title %}{{ "Edit Trainer" if mode == "edit" else "Add Trainer" }}{% endblock %}
+{% block heading %}{{ "Edit Trainer" if mode == "edit" else "Add Trainer" }}{% endblock %}
+{% block header_extra %}<a class="t2c-admin-back" href="{{ url_for('admin.trainers') }}">← Back to trainers</a>{% endblock %}
+{% block content %}
     <div class="t2c-admin-form-card">
         <form method="POST" novalidate>
             {{ form.hidden_tag() }}
@@ -70,17 +44,29 @@
             </ul>
             {% endif %}
 
+            {{ form.contact_email.label }}
+            {{ form.contact_email() }}
+            {% if form.contact_email.errors %}
+            <ul class="t2c-admin-errors">{% for error in form.contact_email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+            <small style="color:var(--t2c-muted);font-size:12px;">
+                If set, a user's name, e-mail and message are sent to this address (site inbox in copy). If empty, messages go to the site inbox only.
+            </small>
+
+            <label class="t2c-admin-check">{{ form.is_active() }} Active (shown in Find Trainers)</label>
+
             <div class="t2c-admin-form-actions">
                 {{ form.submit() }}
-                <a class="t2c-admin-btn" href="{{ url_for('admin_trainers') }}">Cancel</a>
+                <a class="t2c-admin-btn" href="{{ url_for('admin.trainers') }}">Cancel</a>
             </div>
         </form>
     </div>
-</main>
 
-{% include "footer.html" %}
-{{ bootstrap.load_js() }}
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
-</body>
-</html>
+    {% if mode == "edit" %}
+    <section class="t2c-admin-section">
+        <h2>Delete trainer</h2>
+        {{ confirm_delete(url_for('admin.trainer_delete', trainer_id=trainer.id), 'DELETE', 'Delete trainer permanently',
+            'This removes the trainer profile for good. Deactivating (uncheck Active above) hides them without deleting.') }}
+    </section>
+    {% endif %}
+{% endblock %}

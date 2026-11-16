@@ -1,0 +1,20 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Audit log{% endblock %}
+{% block heading %}Audit log{% endblock %}
+{% block content %}
+<form class="t2c-admin-search" method="GET" action="{{ url_for('admin.audit_log') }}">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search action, admin, details...">
+    <button type="submit" class="t2c-admin-btn">Search</button>
+</form>
+<div class="t2c-admin-table-wrap">
+{% if entries %}
+<table class="t2c-admin-table">
+    <thead><tr><th>When (UTC)</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th><th>IP</th></tr></thead>
+    <tbody>{% for e in entries %}<tr>
+        <td>{{ e.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td><td>{{ e.admin_email or "—" }}</td><td>{{ e.action }}</td>
+        <td>{{ e.entity_type }}{% if e.entity_id %} #{{ e.entity_id }}{% endif %}</td><td>{{ e.details or "" }}</td><td>{{ e.ip_address or "" }}</td></tr>{% endfor %}</tbody>
+</table>
+{% else %}<div class="t2c-admin-empty">No audit entries.</div>{% endif %}
+</div>
+{% include "admin/_pagination.html" %}
+{% endblock %}

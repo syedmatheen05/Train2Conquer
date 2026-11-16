@@ -20,8 +20,7 @@ load_dotenv()   # must run before config/billing read the environment
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_bootstrap import Bootstrap5
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+from extensions import limiter
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy.pagination import SelectPagination
 from flask_wtf import CSRFProtect
@@ -29,7 +28,8 @@ from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.middleware.proxy_fix import ProxyFix
 from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm, AdminTrainerForm, AdminUserForm
-from services import otp as otp_service, trainers as trainer_service
+from exercises import EXERCISE_NAMES, EXERCISE_VIDEOS
+from services import accounts as account_service, otp as otp_service, trainers as trainer_service
 from ai import generate_fitness_plan
 import ai_paid, billing, config, costing, finance, migrations, usage
 from database import build_database_config
@@ -67,15 +67,11 @@ login_manager.login_message_category = "warning"
 login_manager.init_app(app)
 
 
-def _limit_key():
-    """Rate limits are per logged-in user (falls back to the visitor's address)."""
-    if current_user and current_user.is_authenticated:
-        return f"user:{current_user.id}"
-    return get_remote_address()
+app.config["RATELIMIT_STORAGE_URI"] = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+limiter.init_app(app)
 
-
-limiter = Limiter(_limit_key, app=app, default_limits=[],
-                  storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://"))
+from admin import bp as admin_blueprint  # noqa: E402  (needs `app` extensions set up first)
+app.register_blueprint(admin_blueprint)
 
 
 # Lightweight response compression using only the standard library (no
@@ -188,30 +184,11 @@ def healthz():
                    payments_enabled=billing.is_configured())
 
 # AUTH HELPERS
-ADMIN_PAGE_SIZE = 20
-
 @login_manager.user_loader
 def load_user(user_id):
     user = db.session.get(User, int(user_id))
     # A suspended account loses its session on the very next request.
     return user if user is not None and user.is_active else None
-
-def admin_required(function):
-    """Server-side admin gate. Stacks under @login_required on every
-    /admin/... route. Never relies on hiding a button in the template --
-    unauthorized users get redirected here regardless of what the
-    frontend shows them."""
-    @wraps(function)
-    def decorator_function(*args, **kwargs):
-        if not current_user.is_authenticated or not getattr(current_user, "is_admin", False):
-            # Not an admin: no admin-only data is ever exposed to this
-            # response. Authenticated non-admins get a safe redirect back
-            # home; anyone unauthenticated goes through the normal login
-            # flow via login_required (which always runs first).
-            flash("You don't have access to the admin panel.", "danger")
-            return redirect(url_for("home"))
-        return function(*args, **kwargs)
-    return decorator_function
 
 def send_trainer_application(email,name,about,location,gender,phone_number):
     """Send trainer application to the site owner/admin."""
@@ -1275,40 +1252,6 @@ def request_refund(payment_id):
     return redirect(url_for("home"))
 
 
-@app.route("/admin/payments/<int:payment_id>/refund", methods=["POST"])
-@login_required
-@admin_required
-@limiter.limit("20 per hour")
-def admin_issue_refund(payment_id):
-    """The ONLY place a refund is created: an admin presses the button for a requested refund."""
-    payment = db.session.get(Payment, payment_id)
-    if not payment or payment.refund_status != "requested" or payment.status != "paid" or not payment.gateway_payment_id:
-        flash("That refund can't be issued (not requested, or already handled).", "danger")
-        return redirect(url_for("admin_finance"))
-    # Claim first so a double click can't send two refunds; also blocks plan generation meanwhile.
-    claimed = db.session.execute(update(Payment).where(Payment.id == payment.id, Payment.refund_status == "requested").values(
-        refund_status="processing", status="refunded")).rowcount
-    db.session.commit()
-    if not claimed:
-        flash("That refund is already being processed.", "info")
-        return redirect(url_for("admin_finance"))
-    try:
-        refund = billing.create_refund(payment.gateway_payment_id, payment.amount_paise,
-                                       {"reason": "plan not delivered", "payment_row": str(payment.id)})
-        payment.gateway_refund_id = str(refund.get("id") or "")[:64] or None
-        if refund.get("status") == "processed":
-            payment.refund_status, payment.refund_amount_paise, payment.refunded_at = "refunded", payment.amount_paise, utcnow()
-            payment.payment_status = "refunded"
-        db.session.commit()
-        flash("Refund sent to Razorpay.", "success")
-    except billing.BillingError as exc:
-        print("REFUND ERROR:", exc)
-        db.session.execute(update(Payment).where(Payment.id == payment.id).values(refund_status="requested", status="paid"))
-        db.session.commit()
-        flash("Razorpay didn't accept the refund. Nothing was changed -- try again later.", "danger")
-    return redirect(url_for("admin_finance"))
-
-
 @app.route("/plans/basic", methods=["POST"])
 @login_required
 @limiter.limit("10 per minute")
@@ -1330,102 +1273,19 @@ def logout():
 def delete_account():
     user_id = current_user.id
     try:
-        FitnessProfile.query.filter_by(user_id=user_id).delete(synchronize_session=False)
-        WorkoutPlan.query.filter_by(user_id=user_id).delete(synchronize_session=False)
-        # Keep payment records for auditing, just detach them from the account.
-        Payment.query.filter_by(user_id=user_id).update({"user_id": None}, synchronize_session=False)
-        User.query.filter_by(id=user_id).delete(synchronize_session=False)
+        account_service.delete_user_account(user_id)
         db.session.commit()
         logout_user()
         clear_otp_session()
         flash("Your account has been deleted.", "info")
     except Exception as exc:
         db.session.rollback()
-        print("DELETE ACCOUNT ERROR:", exc)
+        app.logger.error("Account deletion failed: %s", type(exc).__name__)
         flash("We couldn't delete your account right now.", "danger")
     return redirect(url_for("home"))
 
 
 # WORKOUT
-EXERCISE_VIDEOS = {
-    "jumping-jacks": "/static/assets/videos/jumping_jacks.mp4",
-    "push-ups": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1788422205/Push-ups.mp4",
-    "pull-ups":"https://res.cloudinary.com/mj0fhq0h/video/upload/v1788687647/Create_a_professional_exercise_1.mp4"
-}
-
-
-EXERCISE_NAMES = {
-    "jumping-jacks": "Jumping Jacks",
-    "high-knees": "High Knees",
-    "push-ups": "Push Ups",
-    "pull-ups": "Pull Ups",
-    "side-lunges": "Side Lunges",
-    "hindu-push-ups": "Hindu Push Ups",
-    "military-push-ups": "Military Push Ups",
-    "calf-raises": "Calf Raises",
-    "single-leg-calf-raises": "Single Leg Calf Raises",
-    "lying-leg-raises": "Lying Leg Raises",
-    "reverse-crunches": "Reverse Crunches",
-    "pike-push-ups": "Pike Push Ups",
-    "incline-push-ups": "Incline Push Ups",
-    "decline-push-ups": "Decline Push Ups",
-    "superman": "Superman",
-    "bird-dog": "Bird Dog",
-    "bulgarian-split-squats": "Bulgarian Split Squats",
-    "burpees": "Burpees",
-    "mountain-climbers": "Mountain Climbers",
-    "diamond-push-ups": "Diamond Push Ups",
-    "cobra-stretch": "Cobra Stretch",
-    "dumbbell-front-raises": "Dumbbell Front Raises",
-    "dumbbell-rear-delt-fly": "Dumbbell Rear Delt Fly",
-    "sit-ups": "Sit Ups",
-    "bicycle-crunches": "Bicycle Crunches",
-    "v-up": "V Ups",
-    "russian-twist": "Russian Twists",
-    "butt-bridge": "Glute Bridge",
-    "dumbbell-lateral-raises": "Dumbbell Lateral Raises",
-    "plank": "Plank",
-    "skipping": "Skipping",
-    "skipping-without-rope": "Skipping Without Rope",
-    "alternating-hooks": "Alternating Hooks",
-    "dumbell-bicep-curls": "Dumbbell Bicep Curls",
-    "tricep-kickbacks": "Tricep Kickbacks",
-    "tricep-overhead-single-arm-dumbell-extension-left": "Tricep Overhead Dumbbell Extension Left",
-    "tricep-overhead-single-arm-dumbell-extension-right": "Tricep Overhead Dumbbell Extension Right",
-    "squats": "Squats",
-    "lunges-with-dumbells": "Lunges With Dumbbells",
-    "lunges-with-bagpack": "Lunges With Backpack",
-    "jumping-squats": "Jumping Squats",
-    "wall-sit": "Wall Sit",
-    "mike-tyson-push-ups": "Mike Tyson Push Ups",
-    "cat-cow-pose": "Cat Cow Pose",
-    "floor-y-raises": "Floor Y Raises",
-    "reverse-snow-angels": "Reverse Snow Angels",
-    "child-pose": "Child's Pose",
-    "explosive-push-ups": "Explosive Push Ups",
-    "flutter-kicks": "Flutter Kicks",
-    "bear-crawl": "Bear Crawl",
-    "tuck-jumps": "Tuck Jumps",
-    "shadow-boxing": "Shadow Boxing",
-    "downward-dog": "Downward Dog",
-    "worlds-greatest-stretch": "World's Greatest Stretch",
-    "pigeon-pose": "Pigeon Pose",
-    "seated-forward-fold": "Seated Forward Fold",
-    "hamstring-stretch-left": "Hamstring Stretch Left",
-    "hamstring-stretch-right": "Hamstring Stretch Right",
-    "quad-stretch-left": "Quad Stretch Left",
-    "quad-stretch-right": "Quad Stretch Right",
-    "hip-flexor-stretch-left": "Hip Flexor Stretch Left",
-    "hip-flexor-stretch-right": "Hip Flexor Stretch Right",
-    "butterfly-stretch": "Butterfly Stretch",
-    "childs-pose": "Child's Pose",
-    "barbell-back-squat": "Barbell Back Squat",
-    "barbell-bent-over-row": "Barbell Bent Over Row",
-    "barbell-overhead-press": "Barbell Overhead Press",
-    "barbell-skull-crushers": "Barbell Skull Crushers"
-}
-
-
 def load_current_plan():
     """The user's newest READY week (the one they are training on)."""
     return db.session.execute(db.select(WorkoutPlan).where(
@@ -1701,322 +1561,6 @@ def become_trainer():
             flash("Something went wrong while sending your application. Please try again.","danger")
     return render_template("become_trainer.html",form=form,profile=profile)
         
-# ADMIN
-# Every /admin/... route is protected by BOTH @login_required and
-# @admin_required (stacked), so authorization is enforced server-side on
-# every request -- never by hiding a link/button in a template. A signed-in
-# non-admin hitting any of these gets redirected with a flash message; an
-# unauthenticated visitor gets sent through the normal login flow first.
-@app.route("/admin")
-@login_required
-@admin_required
-def admin_dashboard():
-    # One round trip instead of three: with NullPool every query on a
-    # cold connection is expensive, so batch the counts into one SELECT.
-    user_count, admin_count, trainer_count = db.session.execute(
-        db.select(
-            db.select(db.func.count(User.id)).scalar_subquery(),
-            db.select(db.func.count(User.id)).where(User.is_admin.is_(True)).scalar_subquery(),
-            db.select(db.func.count(Trainer.id)).scalar_subquery(),
-        )
-    ).one()
-    return render_template(
-        "admin/dashboard.html",
-        trainer_count=trainer_count,
-        user_count=user_count,
-        admin_count=admin_count,
-        fin=finance.overview({}),
-        env_info=_env_info(),
-    )
-
-
-def _env_info():
-    """Shown to admins only: which mode the site is in and any money-settings warnings."""
-    warnings = []
-    problem = billing.config_problem()
-    if problem:
-        warnings.append("Payments are OFF: " + problem)
-    if config.usd_to_inr() is None:
-        warnings.append("OPENAI_USD_TO_INR is not set, so API costs in rupees are unknown.")
-    for tier in billing.PAID_TIERS:
-        if costing.pricing_for(config.plan_model(tier)) is None:
-            warnings.append(f"No price is configured for the {tier} model, so its API cost is recorded as unknown.")
-    if not os.environ.get("OPENAI_API_KEY"):
-        warnings.append("OPENAI_API_KEY is not set: paid plans cannot be generated.")
-    return {"environment": config.app_environment(), "razorpay_mode": config.razorpay_mode(),
-            "generation_mode": config.generation_mode(), "warnings": warnings}
-
-
-@app.route("/admin/finance")
-@login_required
-@admin_required
-def admin_finance():
-    filters = finance.parse_filters(request.args)
-    items, total = finance.transactions(filters)
-    pages = max(1, -(-total // finance.PAGE_SIZE))
-    return render_template(
-        "admin/finance.html", fin=finance.overview(filters), items=items, total=total, filters=filters,
-        pages=pages, env_info=_env_info(), plan_choices=finance.PLAN_CHOICES,
-        payment_status_choices=finance.PAYMENT_STATUS_CHOICES, generation_status_choices=finance.GENERATION_STATUS_CHOICES,
-        raw=request.args)
-
-
-@app.route("/admin/trainers")
-@login_required
-@admin_required
-def admin_trainers():
-    search = request.args.get("q", "").strip()
-    query = db.select(Trainer).order_by(Trainer.name)
-    if search:
-        like = f"%{search}%"
-        query = query.where(db.or_(Trainer.name.ilike(like), Trainer.location.ilike(like)))
-    page = db.paginate(query, page=request.args.get("page", 1, type=int),
-                       per_page=ADMIN_PAGE_SIZE, error_out=False)
-    return render_template("admin/trainers.html", trainers=page.items, page=page, search=search)
-
-
-@app.route("/admin/trainers/new", methods=["GET", "POST"])
-@login_required
-@admin_required
-def admin_trainer_new():
-    form = AdminTrainerForm()
-    if form.validate_on_submit():
-        coordinates = get_coordinates(form.location.data.strip())
-        if not coordinates:
-            flash("Couldn't find that location. Try a more specific address.", "danger")
-            return render_template("admin/trainer_form.html", form=form, mode="new", trainer=None)
-        latitude, longitude = coordinates
-        trainer = Trainer(
-            name=form.name.data.strip(),
-            gender=form.gender.data,
-            location=form.location.data.strip(),
-            latitude=latitude,
-            longitude=longitude,
-            about=form.about.data.strip() if form.about.data else None,
-        )
-        db.session.add(trainer)
-        db.session.commit()
-        flash(f"Trainer \"{trainer.name}\" added.", "success")
-        return redirect(url_for("admin_trainers"))
-    return render_template("admin/trainer_form.html", form=form, mode="new", trainer=None)
-
-
-@app.route("/admin/trainers/<int:trainer_id>/edit", methods=["GET", "POST"])
-@login_required
-@admin_required
-def admin_trainer_edit(trainer_id):
-    trainer = db.session.get(Trainer, trainer_id)
-    if not trainer:
-        return "Trainer not found", 404
-    form = AdminTrainerForm(obj=trainer)
-    if form.validate_on_submit():
-        location_changed = form.location.data.strip() != trainer.location
-        if location_changed:
-            coordinates = get_coordinates(form.location.data.strip())
-            if not coordinates:
-                flash("Couldn't find that location. Try a more specific address.", "danger")
-                return render_template("admin/trainer_form.html", form=form, mode="edit", trainer=trainer)
-            trainer.latitude, trainer.longitude = coordinates
-        trainer.name = form.name.data.strip()
-        trainer.gender = form.gender.data
-        trainer.location = form.location.data.strip()
-        trainer.about = form.about.data.strip() if form.about.data else None
-        db.session.commit()
-        flash(f"Trainer \"{trainer.name}\" updated.", "success")
-        return redirect(url_for("admin_trainers"))
-    return render_template("admin/trainer_form.html", form=form, mode="edit", trainer=trainer)
-
-
-@app.route("/admin/trainers/<int:trainer_id>/delete", methods=["POST"])
-@login_required
-@admin_required
-def admin_trainer_delete(trainer_id):
-    # POST-only (never a GET link), CSRF-protected by the global
-    # CSRFProtect, and the confirmation step lives in the template
-    # (admin/trainers.html) as a JS confirm dialog before the form submits.
-    trainer = db.session.get(Trainer, trainer_id)
-    if not trainer:
-        return "Trainer not found", 404
-    name = trainer.name
-    db.session.delete(trainer)
-    db.session.commit()
-    flash(f"Trainer \"{name}\" deleted.", "info")
-    return redirect(url_for("admin_trainers"))
-
-
-
-# ADMIN: USER CRUD
-class RowPagination(SelectPagination):
-    """db.paginate() keeps only the first column of each row (it calls
-    .scalars()). The admin user list selects several columns, so keep the
-    full rows instead; counting and limit/offset are inherited unchanged."""
-
-    def _query_items(self):
-        select = self._query_args["select"].limit(self.per_page).offset(self._query_offset)
-        return list(self._query_args["session"].execute(select).all())
-
-
-
-def count_admins():
-    return db.session.scalar(
-        db.select(db.func.count(User.id)).where(User.is_admin.is_(True)))
-
-
-def email_taken(email, exclude_id=None):
-    query = db.select(User.id).where(User.email == email)
-    if exclude_id is not None:
-        query = query.where(User.id != exclude_id)
-    return db.session.scalar(query) is not None
-
-
-@app.route("/admin/users")
-@login_required
-@admin_required
-def admin_users():
-    search = request.args.get("q", "").strip()
-    # One query: outer-join the profile and plan so the list can show goal /
-    # experience / plan status without an extra query per row. The heavy
-    # plan JSON column is NOT selected here -- only on the detail page.
-    latest_status = (db.select(WorkoutPlan.status).where(WorkoutPlan.user_id == User.id)
-                     .order_by(WorkoutPlan.id.desc()).limit(1).scalar_subquery())
-    query = (
-        db.select(User, FitnessProfile.goal, FitnessProfile.experience, latest_status)
-        .outerjoin(FitnessProfile, FitnessProfile.user_id == User.id)
-        .order_by(User.name)
-    )
-    if search:
-        like = f"%{search}%"
-        query = query.where(db.or_(User.name.ilike(like), User.email.ilike(like)))
-    page = RowPagination(page=request.args.get("page", 1, type=int), per_page=ADMIN_PAGE_SIZE,
-                         max_per_page=None, error_out=False, count=True,
-                         select=query, session=db.session)
-    return render_template("admin/users.html", rows=page.items, page=page, search=search)
-
-
-@app.route("/admin/users/<int:user_id>")
-@login_required
-@admin_required
-def admin_user_detail(user_id):
-    user = db.session.get(User, user_id)
-    if not user:
-        return "User not found", 404
-    profile = db.session.execute(
-        db.select(FitnessProfile).where(FitnessProfile.user_id == user.id)).scalar_one_or_none()
-    plan_row = latest_plan_row(user.id)
-
-    age = None
-    equipment = []
-    if profile:
-        today = date.today()
-        age = today.year - profile.dob.year - ((today.month, today.day) < (profile.dob.month, profile.dob.day))
-        equipment = [x.strip() for x in profile.equipment.split(",") if x.strip()]
-
-    plan_days = []
-    completed_days = []
-    plan_error = None
-    if plan_row:
-        try:
-            completed = json.loads(plan_row.completed_days or "[]")
-            completed_days = completed if isinstance(completed, list) else []
-        except (TypeError, ValueError):
-            completed_days = []
-        if plan_row.status == "ready":
-            try:
-                parsed = json.loads(plan_row.plan)
-                for key in sorted(parsed, key=lambda k: int(k.split("_")[1])):
-                    day = parsed[key]
-                    plan_days.append({
-                        "number": int(key.split("_")[1]),
-                        "meta": day[0],
-                        "exercises": [e for e in day[1:] if isinstance(e, dict)],
-                    })
-            except (TypeError, ValueError, KeyError, IndexError):
-                plan_error = "This saved plan could not be read (invalid JSON)."
-    return render_template(
-        "admin/user_detail.html", user=user, profile=profile, age=age, equipment=equipment,
-        plan=plan_row, plan_days=plan_days, completed_days=completed_days,
-        plan_error=plan_error, exercise_names=EXERCISE_NAMES,
-    )
-
-
-@app.route("/admin/users/new", methods=["GET", "POST"])
-@login_required
-@admin_required
-def admin_user_new():
-    form = AdminUserForm()
-    if form.validate_on_submit():
-        email = form.email.data.strip().lower()
-        if email_taken(email):
-            form.email.errors.append("A user with this e-mail already exists.")
-            return render_template("admin/user_form.html", form=form, mode="new", user=None)
-        user = User(name=form.name.data.strip(), email=email, is_admin=bool(form.is_admin.data))
-        db.session.add(user)
-        db.session.commit()
-        flash(f"User \"{user.name}\" added.", "success")
-        return redirect(url_for("admin_users"))
-    return render_template("admin/user_form.html", form=form, mode="new", user=None)
-
-
-@app.route("/admin/users/<int:user_id>/edit", methods=["GET", "POST"])
-@login_required
-@admin_required
-def admin_user_edit(user_id):
-    user = db.session.get(User, user_id)
-    if not user:
-        return "User not found", 404
-    form = AdminUserForm(obj=user)
-    if form.validate_on_submit():
-        email = form.email.data.strip().lower()
-        wants_admin = bool(form.is_admin.data)
-        if email_taken(email, exclude_id=user.id):
-            form.email.errors.append("A user with this e-mail already exists.")
-            return render_template("admin/user_form.html", form=form, mode="edit", user=user)
-        # Guard rail: never let the panel lock everyone out. Removing admin
-        # rights from the last admin (including yourself) is refused.
-        if user.is_admin and not wants_admin and count_admins() <= 1:
-            flash("You can't remove admin access from the last remaining admin.", "danger")
-            return render_template("admin/user_form.html", form=form, mode="edit", user=user)
-        user.name = form.name.data.strip()
-        user.email = email
-        user.is_admin = wants_admin
-        db.session.commit()
-        flash(f"User \"{user.name}\" updated.", "success")
-        return redirect(url_for("admin_users"))
-    return render_template("admin/user_form.html", form=form, mode="edit", user=user)
-
-
-@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
-@login_required
-@admin_required
-def admin_user_delete(user_id):
-    # POST-only + CSRF-protected, same as the trainer delete. Extra rules:
-    # an admin can't delete their own account here (use "Delete account"
-    # on the profile page), and the last admin can never be deleted.
-    user = db.session.get(User, user_id)
-    if not user:
-        return "User not found", 404
-    if user.id == current_user.id:
-        flash("You can't delete your own account from the admin panel.", "danger")
-        return redirect(url_for("admin_users"))
-    if user.is_admin and count_admins() <= 1:
-        flash("You can't delete the last remaining admin.", "danger")
-        return redirect(url_for("admin_users"))
-    name = user.name
-    try:
-        # Child rows first -- profiles/workout_plans have FKs to users.id.
-        FitnessProfile.query.filter_by(user_id=user.id).delete(synchronize_session=False)
-        WorkoutPlan.query.filter_by(user_id=user.id).delete(synchronize_session=False)
-        Payment.query.filter_by(user_id=user.id).update({"user_id": None}, synchronize_session=False)
-        User.query.filter_by(id=user.id).delete(synchronize_session=False)
-        db.session.commit()
-        flash(f"User \"{name}\" deleted.", "info")
-    except Exception as exc:
-        db.session.rollback()
-        print("ADMIN DELETE USER ERROR:", exc)
-        flash("We couldn't delete that user right now.", "danger")
-    return redirect(url_for("admin_users"))
-
-
 @app.route("/nutrition")
 def nutrition():
     return render_template("nutrition.html")

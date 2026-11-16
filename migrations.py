@@ -11,8 +11,7 @@ How it works
 """
 from sqlalchemy import inspect, text
 
-from models import (AdminAuditLog, AIUsage, Base, FitnessProfile, OtpCode, Payment, PaymentEvent,  # noqa: F401
-                    Trainer, User, WorkoutPlan)
+from models import AdminAuditLog, Base, OtpCode, WorkoutPlan  # importing models registers every table on Base
 from models import utcnow
 
 ADVISORY_LOCK_ID = 727274   # stops two servers migrating at the same moment (Postgres)

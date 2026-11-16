@@ -8,6 +8,7 @@ import pytest
 import main
 import config
 import costing
+import finance
 from conftest import BASE, buy, fake_response, login, valid_plan_json
 from models import AIUsage, Payment, WorkoutPlan, db
 
@@ -35,7 +36,7 @@ def test_admin_financial_dashboard_numbers(client, gateway, make_user, fake_open
     buy(client, gateway, u2, "advanced", "pay_2"); fake_openai([fake_response("bad", 10000, 5000), fake_response("bad", 10000, 5000)]); main.process_queue()
     login(client, admin)
     with main.app.app_context():
-        f = main.finance.overview({})
+        f = finance.overview({})
     assert f["gross_paise"] == 2000 and f["personalized"] == {"count": 1, "paise": 500} and f["advanced"] == {"count": 1, "paise": 1500}
     luna = costing.compute_cost_usd("gpt-6-luna", 1000, 2000)
     sol = costing.compute_cost_usd("gpt-6.1-sol", 10000, 5000) * 2
@@ -76,7 +77,7 @@ def test_unknown_costs_are_flagged_not_zero(client, gateway, make_user, fake_ope
     u1 = make_user(name="Alice", email="a@x.com")
     buy(client, gateway, u1); fake_openai([fake_response(valid_plan_json())]); main.process_queue()
     with main.app.app_context():
-        f = main.finance.overview({})
+        f = finance.overview({})
     assert f["openai_unknown_attempts"] == 1 and f["costs_complete"] is False
     login(client, admin)
     assert "OPENAI_USD_TO_INR is not set" in client.get("/admin").get_data(as_text=True)

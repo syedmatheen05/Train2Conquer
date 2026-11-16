@@ -7,13 +7,11 @@ import os
 if os.name == "nt":
     os.environ.setdefault("DISABLE_SQLALCHEMY_CEXT_RUNTIME", "1")
 
-import hashlib, html, json, re, requests, secrets, smtplib, socket, threading, time
+import hashlib, html, json, re, secrets, smtplib, socket, threading, time
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from functools import wraps
-from math import radians, sin, cos, sqrt, atan2
 from dotenv import load_dotenv
 
 load_dotenv()   # must run before config/billing read the environment
@@ -22,18 +20,17 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, ses
 from flask_bootstrap import Bootstrap5
 from extensions import limiter
 from flask_login import LoginManager, current_user, fresh_login_required, login_required, login_user, logout_user
-from flask_sqlalchemy.pagination import SelectPagination
 from flask_wtf import CSRFProtect
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.middleware.proxy_fix import ProxyFix
-from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm, AdminTrainerForm, AdminUserForm
+from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm
 from exercises import EXERCISE_NAMES, EXERCISE_VIDEOS
 from services import accounts as account_service, otp as otp_service, trainers as trainer_service
 from ai import generate_fitness_plan
-import ai_paid, billing, config, costing, finance, migrations, usage
+import ai_paid, billing, config, migrations, usage
 from database import build_database_config
-from models import FitnessProfile, Payment, PaymentEvent, Trainer, User, WorkoutPlan, db, utcnow
+from models import FitnessProfile, Payment, PaymentEvent, User, WorkoutPlan, db, utcnow
 
 # APP CONFIGURATION
 IS_PRODUCTION = config.is_production()
@@ -134,9 +131,19 @@ db.init_app(app)
 
 @app.after_request
 def add_security_headers(response):
-    response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
-    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    headers = response.headers
+    headers.setdefault("X-Content-Type-Options", "nosniff")
+    headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(self)")
+    # Only the directives that cannot break the page or Razorpay Checkout (inline scripts and
+    # third-party scripts are still allowed; a stricter script-src would need a nonce rollout).
+    headers.setdefault("Content-Security-Policy", "frame-ancestors 'self'; base-uri 'self'; object-src 'none'")
+    if IS_PRODUCTION:
+        headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    # Private pages must not be kept by the browser/proxies (e.g. Back button after logout).
+    if response.mimetype == "text/html" and (current_user.is_authenticated or request.path.startswith("/admin")):
+        headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -763,7 +770,7 @@ def run_generation(plan_id):
             code = getattr(exc, "code", None)
             if code not in SAFE_ERROR_CODES:
                 code = "invalid_output" if isinstance(exc, ValueError) else "provider_error"
-            print("PLAN GENERATION ERROR:", tier, code, type(exc).__name__)   # server log only
+            app.logger.error("PLAN GENERATION ERROR: %s %s %s", tier, code, type(exc).__name__)   # server log only
             try:
                 plan = db.session.get(WorkoutPlan, plan_id)
                 if plan and plan.status == "generating" and plan.locked_by == token:
@@ -773,7 +780,7 @@ def run_generation(plan_id):
                         usage.refresh_plan_totals(plan_id)
                     db.session.commit()
             except Exception as inner_exc:
-                print("PLAN GENERATION ERROR (could not record failure):", type(inner_exc).__name__)
+                app.logger.error("PLAN GENERATION ERROR (could not record failure): %s", type(inner_exc).__name__)
                 db.session.rollback()
         finally:
             db.session.remove()
@@ -994,7 +1001,7 @@ def create_payment_order():
     if tier not in billing.PAID_TIERS:
         return _json_error("Please choose a valid plan.", 400)
     if not billing.is_configured():
-        print("PAYMENTS DISABLED:", billing.config_problem())   # reason goes to the log, never to the customer
+        app.logger.warning("PAYMENTS DISABLED: %s", billing.config_problem())   # reason goes to the log, never to the customer
         return _json_error("Paid plans aren't available right now. Please try again later.", 503)
     if not get_profile(current_user.id):
         return _json_error("Please save your fitness profile first.", 400)
@@ -1027,7 +1034,7 @@ def create_payment_order():
             order = billing.create_order(amount, f"t2c_{current_user.id}_{secrets.token_hex(6)}",
                                          {"user_id": str(current_user.id), "tier": tier})
         except billing.BillingError as exc:
-            print("PAYMENT ORDER ERROR:", exc)
+            app.logger.error("PAYMENT ORDER ERROR: %s", type(exc).__name__)
             return _json_error("We couldn't start the payment. Please try again.", 502)
         payment = Payment(user_id=current_user.id, tier=tier, amount_paise=amount, currency=billing.CURRENCY,
                           gateway_order_id=order["id"], status="created", user_notes=notes)
@@ -1095,7 +1102,7 @@ def verify_payment():
             details = billing.fetch_payment(pay_id)  # ask Razorpay, don't trust the browser
             if (details.get("order_id") != order_id or details.get("amount") != payment.amount_paise
                     or details.get("currency") != payment.currency):
-                print("PAYMENT MISMATCH for order", order_id)
+                app.logger.error("PAYMENT MISMATCH for order %s", order_id)
                 payment.payment_verification_status = "mismatch"
                 db.session.commit()
                 return _json_error("We couldn't verify your payment.", 400)
@@ -1119,7 +1126,7 @@ def verify_payment():
                 return _json_error("We couldn't verify your payment.", 400)
             db.session.refresh(payment)
     except billing.BillingError as exc:
-        print("PAYMENT VERIFY ERROR:", exc)
+        app.logger.error("PAYMENT VERIFY ERROR: %s", type(exc).__name__)
         return _json_error("We couldn't confirm your payment right now. Please refresh in a minute -- if it went through, your plan will be waiting.", 502)
     if payment.status not in ("paid", "used"):
         return _json_error("We couldn't verify your payment.", 400)
@@ -1216,7 +1223,7 @@ def razorpay_webhook():
         return "", 200               # duplicate delivery: already handled
     except Exception as exc:
         db.session.rollback()
-        print("WEBHOOK ERROR:", type(exc).__name__)
+        app.logger.error("WEBHOOK ERROR: %s", type(exc).__name__)
         return "", 500
     if paid_payment is not None:     # browser may have closed: build the plan anyway
         try:
@@ -1224,7 +1231,7 @@ def razorpay_webhook():
             start_paid_generation(paid_payment)
         except Exception as exc:
             db.session.rollback()
-            print("WEBHOOK START ERROR:", type(exc).__name__)   # customer still has the "Build my plan" button
+            app.logger.error("WEBHOOK START ERROR: %s", type(exc).__name__)   # customer still has the "Build my plan" button
     return "", 200
 
 
@@ -1354,7 +1361,7 @@ def start_workout(day):
         if not workouts:
             return "This workout has no exercises", 404
     except (TypeError, ValueError, json.JSONDecodeError) as exc:
-        print("WORKOUT JSON ERROR:", exc)
+        app.logger.error("WORKOUT JSON ERROR: %s", type(exc).__name__)
         return "Workout data is invalid", 500
     return render_template("workout.html", day_number=day, workouts=workouts)
 
@@ -1416,7 +1423,7 @@ def home():
             workout_plan_data = json.loads(shown.plan)
             completed_days = _completed_list(shown)
         except (TypeError, ValueError, json.JSONDecodeError) as exc:
-            print("HOME PLAN JSON ERROR:", exc)
+            app.logger.error("HOME PLAN JSON ERROR: %s", type(exc).__name__)
             flash("Your saved workout plan is invalid. Please generate a new one.", "danger")
             workout_plan_data = None
     history = db.session.execute(db.select(WorkoutPlan.id, WorkoutPlan.week_number, WorkoutPlan.tier).where(
@@ -1595,7 +1602,7 @@ def become_trainer():
             flash("Your trainer application has been sent successfully!","success")
             return redirect(url_for('home'))
         except Exception as e:
-            print("Trainer email error:", e)
+            app.logger.error("Trainer application e-mail failed: %s", type(e).__name__)
             flash("Something went wrong while sending your application. Please try again.","danger")
     return render_template("become_trainer.html",form=form,profile=profile)
         

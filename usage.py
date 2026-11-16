@@ -12,7 +12,7 @@ from sqlalchemy import func
 
 import config
 import costing
-from models import AIUsage, WorkoutPlan, db, utcnow
+from models import AIUsage, WorkoutPlan, db
 
 
 def record_attempt(*, user_id, plan_id, payment_id, model, tier, attempt_number, status,

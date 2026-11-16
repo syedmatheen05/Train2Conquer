@@ -168,6 +168,15 @@
                          LOGGED-IN USER
                     ================================= -->
 
+                    {% if trainer %}
+                        <div class="contact-trainer-note" role="note">
+                            Messaging trainer <strong>{{ trainer.name }}</strong>.
+                            You can edit the message below before sending.
+                            {% if trainer.contact_email %}
+                                Your name, email and message will be shared with the trainer.
+                            {% endif %}
+                        </div>
+                    {% endif %}
                     {% if current_user.is_authenticated %}
 
                         <div class="form-header">

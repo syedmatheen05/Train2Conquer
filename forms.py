@@ -1,11 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, EmailField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Regexp
+from wtforms import BooleanField, EmailField, HiddenField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Regexp
 from wtforms.widgets import ListWidget, CheckboxInput
-# NOTE: TrainerSearchForm/TrainerForm below used to re-import FlaskForm,
-# SelectField/StringField/SubmitField and DataRequired a second time
-# (this file was originally pasted together from two source files).
-# Those imports are already covered above, so the duplicates were removed.
 class Loginform(FlaskForm):
     email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
     submit=SubmitField("verify")
@@ -87,6 +83,11 @@ class ContactForm(FlaskForm):
         ]
     )
 
+    # Set when the user came from "Contact Trainer". Both are only HINTS: the
+    # server re-loads the trainer from the database and ignores anything invalid.
+    trainer_id = HiddenField(validators=[Optional(), Regexp(r"^\d{1,9}$")])
+    contact_mode = HiddenField(validators=[Optional(), Regexp(r"^(online|offline)$")])
+
     submit = SubmitField("Verify Email")
 
 class ContactOTPForm(FlaskForm):
@@ -99,32 +100,29 @@ class ContactOTPForm(FlaskForm):
 
 
 class TrainerSearchForm(FlaskForm):
-
     gender = SelectField(
         "Gender",
-        choices=[
-            ("male", "Male"),
-            ("female", "Female"),
-            ("other","Other")
-        ],
-        validators=[DataRequired()]
+        choices=[("male", "Male"), ("female", "Female"), ("other", "Other")],
+        validators=[DataRequired()],
     )
 
-    location = StringField(
-        "Location",
-        validators=[DataRequired()]
-    )
+    # Optional here: online training needs no location. Offline requires it (see validate()).
+    location = StringField("Location", validators=[Optional(), Length(max=100)])
 
     mode = SelectField(
         "Training Mode",
-        choices=[
-            ("online", "Online"),
-            ("offline", "Offline")
-        ],
-        validators=[DataRequired()]
+        choices=[("online", "Online"), ("offline", "Offline")],
+        validators=[DataRequired()],
     )
 
     submit = SubmitField("Find Trainer")
+
+    def validate(self, extra_validators=None):
+        valid = super().validate(extra_validators)
+        if valid and self.mode.data == "offline" and not (self.location.data or "").strip():
+            self.location.errors = list(self.location.errors) + ["Please enter your location to find nearby trainers."]
+            return False
+        return valid
 
 class TrainerForm(FlaskForm):
 

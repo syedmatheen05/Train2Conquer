@@ -29,6 +29,10 @@ class User(UserMixin, db.Model):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
     is_admin: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=False)
+    # Added by migration 007. False = the account is suspended: it cannot log in
+    # and an open session is ended on the next request. Data is kept.
+    is_active: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    created_at = db.Column(db.DateTime, nullable=True, default=utcnow)
 
 
 class Trainer(UserMixin, db.Model):
@@ -40,6 +44,10 @@ class Trainer(UserMixin, db.Model):
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     about: Mapped[str] = mapped_column(String(300), nullable=True)
+    # Added by migration 007. Inactive trainers are hidden from "Find Trainers".
+    is_active: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    # Optional (migration 007). If set, "Contact Trainer" messages are e-mailed to the trainer.
+    contact_email: Mapped[str] = mapped_column(String(200), nullable=True)
 
 
 class FitnessProfile(db.Model):
@@ -171,4 +179,41 @@ class AIUsage(db.Model):
     # success | invalid_output | error
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     error_type: Mapped[str] = mapped_column(String(60), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False, index=True)
+
+
+class OtpCode(db.Model):
+    """One row per e-mailed verification code (added by migration 007).
+
+    Only a keyed hash of the code is stored (see services/otp.py) and the
+    attempt counter lives here, on the server. The browser never receives the
+    code or the counter, so it can neither read the code nor reset the counter.
+    """
+    __tablename__ = "otp_codes"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    purpose: Mapped[str] = mapped_column(String(20), nullable=False)      # login | registration | contact
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False, index=True)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    consumed_at = db.Column(db.DateTime, nullable=True)
+
+
+class AdminAuditLog(db.Model):
+    """Who did what in the admin panel (added by migration 007).
+
+    admin_id has no foreign key on purpose: deleting an account must never
+    delete or block the history of what that account did. The e-mail is copied
+    in so the record stays readable. `details` never holds secrets.
+    """
+    __tablename__ = "admin_audit_log"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    admin_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
+    admin_email: Mapped[str] = mapped_column(String(200), nullable=True)
+    action: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    entity_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    entity_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    details: Mapped[str] = mapped_column(String(500), nullable=True)
+    ip_address: Mapped[str] = mapped_column(String(45), nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False, index=True)

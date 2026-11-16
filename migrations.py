@@ -11,7 +11,8 @@ How it works
 """
 from sqlalchemy import inspect, text
 
-from models import AIUsage, Base, FitnessProfile, Payment, PaymentEvent, Trainer, User, WorkoutPlan  # noqa: F401
+from models import (AdminAuditLog, AIUsage, Base, FitnessProfile, OtpCode, Payment, PaymentEvent,  # noqa: F401
+                    Trainer, User, WorkoutPlan)
 from models import utcnow
 
 ADVISORY_LOCK_ID = 727274   # stops two servers migrating at the same moment (Postgres)
@@ -136,6 +137,18 @@ def m006_indexes(conn):
     conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payments_created_at ON payments (created_at)"))
 
 
+def m007_accounts_otp_audit(conn):
+    """Account/trainer suspension flags, server-side OTP storage, admin audit log.
+
+    Add-only: two new columns with safe defaults (everyone stays active) and
+    two new tables. No existing column or row is changed or removed.
+    """
+    _add_columns(conn, "users", {"is_active": "BOOLEAN NOT NULL DEFAULT TRUE", "created_at": "TIMESTAMP"})
+    _add_columns(conn, "trainers", {"is_active": "BOOLEAN NOT NULL DEFAULT TRUE", "contact_email": "VARCHAR(200)"})
+    OtpCode.__table__.create(conn, checkfirst=True)
+    AdminAuditLog.__table__.create(conn, checkfirst=True)
+
+
 MIGRATIONS = [
     (1, "create_missing_tables", m001_create_missing_tables),
     (2, "legacy_fixes", m002_legacy_fixes),
@@ -143,6 +156,7 @@ MIGRATIONS = [
     (4, "workout_plan_columns", m004_workout_plan_columns),
     (5, "backfill_new_columns", m005_backfill),
     (6, "indexes", m006_indexes),
+    (7, "accounts_otp_audit", m007_accounts_otp_audit),
 ]
 LATEST_VERSION = MIGRATIONS[-1][0]
 

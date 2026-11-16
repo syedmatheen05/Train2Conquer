@@ -312,7 +312,7 @@
                         <!-- CONTACT -->
 
                         <a
-                            href="{{ url_for('contact') }}"
+                            href="{{ url_for('contact', trainer=trainer.id, mode=mode) }}"
                             class="trainer-contact"
                         >
 
@@ -333,6 +333,18 @@
 
 
             </div>
+            {% if page and page.pages > 1 %}
+            <nav class="trainer-pager" aria-label="Trainer results pages">
+                {% if page.has_prev %}
+                <a class="search-again" href="{{ url_for('find_trainer', mode=mode, page=page.prev_num) }}">← Previous</a>
+                {% endif %}
+                <span class="trainer-pager-info">Page {{ page.page }} of {{ page.pages }} · {{ page.total }} trainers</span>
+                {% if page.has_next %}
+                <a class="search-again" href="{{ url_for('find_trainer', mode=mode, page=page.next_num) }}">Next →</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+
 
 
         {% else %}

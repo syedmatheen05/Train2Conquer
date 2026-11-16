@@ -265,3 +265,13 @@ body.page-contact .form-header h2 {
         font-size: 32px;
     }
 }
+
+/* Shown when the user arrived from "Contact Trainer" */
+.contact-trainer-note {
+    margin: 0 0 1.25rem;
+    padding: 0.85rem 1rem;
+    border-left: 3px solid currentColor;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}

@@ -546,3 +546,18 @@ body.page-trainer-results .search-again {
                 transition: none;
             }
 }
+
+/* Pagination for online results */
+.trainer-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 2rem 0 0;
+}
+
+.trainer-pager-info {
+    opacity: 0.7;
+    font-size: 0.9rem;
+}

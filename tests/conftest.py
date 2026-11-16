@@ -26,7 +26,8 @@ import pytest  # noqa: E402
 
 import main  # noqa: E402
 import ai as ai_module  # noqa: E402
-from models import AIUsage, FitnessProfile, Payment, PaymentEvent, User, WorkoutPlan, db  # noqa: E402
+from models import (AdminAuditLog, AIUsage, FitnessProfile, OtpCode, Payment, PaymentEvent, Trainer,  # noqa: E402
+                    User, WorkoutPlan, db)
 
 main.app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
 ORIGINAL_CLIENT_FACTORY = main.ai_paid._client_and_model
@@ -80,7 +81,7 @@ def fake_openai(monkeypatch):
 @pytest.fixture(autouse=True)
 def clean(monkeypatch):
     with main.app.app_context():
-        for model in (AIUsage, PaymentEvent, WorkoutPlan, Payment, FitnessProfile, User):
+        for model in (AIUsage, PaymentEvent, WorkoutPlan, Payment, FitnessProfile, User, Trainer, OtpCode, AdminAuditLog):
             db.session.query(model).delete()
         db.session.commit()
     for name in ("OPENAI_DAILY_LIMIT_USD", "OPENAI_PER_GENERATION_LIMIT_USD", "PAID_AI_MAX_ATTEMPTS",
@@ -191,3 +192,24 @@ def buy(client, gateway, user_id, tier="personalized", pay_id="pay_1", notes="")
         "razorpay_order_id": data["order_id"], "razorpay_payment_id": pay_id,
         "razorpay_signature": sign(data["order_id"], pay_id)})
     return order, verify
+
+
+@pytest.fixture
+def sent_codes(monkeypatch):
+    """Replaces the real e-mail sender. Returns the list of (email, code) 'sent'."""
+    sent = []
+    monkeypatch.setattr(main, "send_verification_code", lambda email, code: sent.append((email, code)))
+    return sent
+
+
+@pytest.fixture
+def make_trainer():
+    def make(name="Priya Sharma", gender="female", location="Koramangala", lat=12.9352, lon=77.6245,
+             active=True, about="Strength coach", contact_email=None):
+        with main.app.app_context():
+            trainer = Trainer(name=name, gender=gender, location=location, latitude=lat, longitude=lon,
+                              about=about, is_active=active, contact_email=contact_email)
+            db.session.add(trainer)
+            db.session.commit()
+            return trainer.id
+    return make

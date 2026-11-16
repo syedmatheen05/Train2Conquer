@@ -29,6 +29,7 @@ from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.middleware.proxy_fix import ProxyFix
 from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm, AdminTrainerForm, AdminUserForm
+from services import otp as otp_service, trainers as trainer_service
 from ai import generate_fitness_plan
 import ai_paid, billing, config, costing, finance, migrations, usage
 from database import build_database_config
@@ -191,7 +192,9 @@ ADMIN_PAGE_SIZE = 20
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    user = db.session.get(User, int(user_id))
+    # A suspended account loses its session on the very next request.
+    return user if user is not None and user.is_active else None
 
 def admin_required(function):
     """Server-side admin gate. Stacks under @login_required on every
@@ -281,8 +284,13 @@ def send_verification_code(email, otp):
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, [email], mail.as_string())
 
-def send_contact_info(email, name, contact_message):
-    """Send a verified contact message to the site's owner/admin inbox."""
+def send_contact_info(email, name, contact_message, trainer=None):
+    """E-mail a verified contact message to the site inbox.
+
+    If `trainer` is given, the message is about that trainer: the trainer's name
+    and id are added to the mail and, when the trainer has a contact e-mail on
+    file, the mail is sent to the trainer with the site inbox in copy.
+    """
     sender_email = os.environ.get("EMAIL")
     sender_password = os.environ.get("PASSWORD")
     if not sender_email or not sender_password:
@@ -290,17 +298,26 @@ def send_contact_info(email, name, contact_message):
     safe_email = html.escape(email or "")
     safe_name = html.escape(name or "")
     safe_message = html.escape(contact_message or "").replace("\n", "<br>")
+    trainer_line = ""
+    recipients = [sender_email]
     mail = MIMEMultipart()
     mail["From"] = sender_email
-    mail["To"] = sender_email
     mail["Reply-To"] = email
     mail["Subject"] = "Train2Conquer Contact Message"
+    if trainer is not None:
+        trainer_line = f"<p><strong>For trainer:</strong> {html.escape(trainer.name)} (ID {int(trainer.id)})</p>"
+        mail["Subject"] = "Train2Conquer Trainer Enquiry"
+        if trainer.contact_email:
+            recipients = [trainer.contact_email, sender_email]
+            mail["Cc"] = sender_email
+    mail["To"] = recipients[0]
     body = f"""
     <html>
         <body style="font-family:Arial,sans-serif">
-            <h2>Train2Conquer Contact Message</h2>
+            <h2>{mail["Subject"]}</h2>
             <p><strong>From:</strong> {safe_name}</p>
             <p><strong>Email:</strong> {safe_email}</p>
+            {trainer_line}
             <hr>
             <p>{safe_message}</p>
         </body>
@@ -310,43 +327,20 @@ def send_contact_info(email, name, contact_message):
     with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
         server.starttls()
         server.login(sender_email, sender_password)
-        server.sendmail(sender_email, [sender_email], mail.as_string())
+        server.sendmail(sender_email, recipients, mail.as_string())
 
+def generate_otp(email, purpose="login", deliver=True):
+    """Start a verification: issue a code (see services/otp.py) and remember in
+    the session only which e-mail/purpose it belongs to - never the code.
 
-def generate_otp(email, purpose="login"):
-    """Generate an OTP after enforcing the server-side resend cooldown."""
-    if not email:
-        raise ValueError("An email address is required")
-    created = session.get("otp_created")
-    if created and time.time() - float(created) < OTP_RESEND_COOLDOWN:
-        raise ValueError("Please wait before requesting another verification code.")
-    otp = f"{secrets.randbelow(1_000_000):06d}"
-    # Send first. If email fails, don't create a fake active OTP session.
-    send_verification_code(email, otp)
+    deliver=False stores a decoy code that is never e-mailed. It is used for
+    e-mail addresses with no usable account so that the page looks and behaves
+    exactly the same (no account enumeration).
+    """
+    otp_service.issue_code(email, purpose, send_verification_code if deliver else None)
     session["email"] = email.strip().lower()
-    session["otp"] = otp
-    session["otp_created"] = time.time()
     session["otp_purpose"] = purpose
-    session["otp_attempts"] = 0
 
-def otp_remaining():
-    """Server-side OTP lifetime. Kept separate from the resend countdown."""
-    created = session.get("otp_created")
-    if not created:
-        return 0
-    elapsed = max(0, int(time.time() - float(created)))
-    return max(0, OTP_EXPIRY_SECONDS - elapsed)
-
-def otp_resend_remaining():
-    """Seconds until another OTP may be requested (always max 30 seconds)."""
-    created = session.get("otp_created")
-    if not created:
-        return 0
-    elapsed = max(0, int(time.time() - float(created)))
-    return max(0, OTP_RESEND_COOLDOWN - elapsed)
-
-def otp_is_expired():
-    return otp_remaining() <= 0
 
 def check_existing_user(email):
     if not email:
@@ -354,162 +348,137 @@ def check_existing_user(email):
     return db.session.execute(
         db.select(User).where(User.email == email.strip().lower())).scalar_one_or_none()
 
+
 def clear_otp_session():
-    for key in ("otp","otp_created","otp_purpose","otp_attempts","name","email","message",):
+    for key in ("otp_purpose", "name", "email", "message", "trainer_id", "contact_mode"):
         session.pop(key, None)
 
-def get_coordinates(location):
-    url = "https://nominatim.openstreetmap.org/search"
-    params = {"q": f"{location}, Bengaluru, Karnataka, India","format": "json","limit": 1}
-    headers = {"User-Agent": "Train2Conquer/1.0"}
-    response = requests.get(url, params=params, headers=headers, timeout=10)
-    data = response.json()
-    if not data:
-        return None
-    latitude = float(data[0]["lat"])
-    longitude = float(data[0]["lon"])
-    return latitude, longitude
 
-def calculate_distance(lat1, lon1, lat2, lon2):
-    R = 6371  # Earth radius in km
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = (sin(dlat / 2) ** 2+cos(lat1)* cos(lat2)* sin(dlon / 2) ** 2)
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c
+def _start_login_code(email, purpose):
+    """Issue a login/registration code, or a decoy if the account can't log in.
+    Returns False (after flashing why) only if the e-mail could not be sent."""
+    existing = check_existing_user(email)
+    usable = existing is None if purpose == "registration" else (existing is not None and existing.is_active)
+    try:
+        generate_otp(email, purpose=purpose, deliver=usable)
+    except otp_service.OtpRateLimited as exc:
+        flash(str(exc), "warning")
+        return False
+    except Exception as exc:
+        app.logger.error("Could not send verification code: %s", type(exc).__name__)
+        flash("We couldn't send the verification code. Please try again.", "danger")
+        return False
+    return True
 
-def find_nearby_trainers(location,gender,radius=5):
-    coordinates = get_coordinates(location)
-    if not coordinates:
-        return []
-    user_lat, user_lon = coordinates
-    # Bounding-box pre-filter: instead of loading every trainer of this
-    # gender and Haversine-checking each one in Python (O(T)), first ask
-    # the database for only the trainers whose lat/lon fall inside a
-    # square box around the search point (O(1)-ish via the WHERE clause,
-    # no extra index needed for this table size). Haversine still runs
-    # on the (much smaller) remaining candidate set to get the exact
-    # circular 5 km radius, since a square box slightly over-includes
-    # the corners. 1 degree latitude ~= 111 km everywhere; 1 degree
-    # longitude shrinks with cos(latitude), so it's computed per-search.
-    lat_delta = radius / 111.0
-    lon_delta = radius / (111.0 * max(cos(radians(user_lat)), 0.01))
-    candidates = Trainer.query.filter(
-        Trainer.gender == gender,
-        Trainer.latitude.between(user_lat - lat_delta, user_lat + lat_delta),
-        Trainer.longitude.between(user_lon - lon_delta, user_lon + lon_delta),
-    ).all()
-    nearby = []
-    for trainer in candidates:
-        distance = calculate_distance(user_lat,user_lon,trainer.latitude,trainer.longitude)
-        if distance <= radius:
-            nearby.append(trainer)
-    return nearby
+
+CODE_SENT_MESSAGE = "If this e-mail can be used, we've sent a 6-digit verification code to it."
+
 
 # LOGIN / REGISTRATION
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute;30 per hour", methods=["POST"])
 def login():
     login_form = Loginform()
     if login_form.validate_on_submit():
         email = login_form.email.data.strip().lower()
-        if not check_existing_user(email):
-            flash("You don't have an account. Please register first.", "warning")
-            return redirect(url_for("register"))
-        try:
-            generate_otp(email, purpose="login")
-        except Exception as exc:
-            print("LOGIN OTP ERROR:", exc)
-            flash("We couldn't send the verification code. Please try again.", "danger")
+        if not _start_login_code(email, "login"):
             return redirect(url_for("login"))
+        flash(CODE_SENT_MESSAGE, "info")
         return redirect(url_for("verify_otp"))
     return render_template("login.html", form=login_form)
 
 
 @app.route("/verify-otp", methods=["GET", "POST"])
+@limiter.limit("20 per minute;100 per hour", methods=["POST"])
 def verify_otp():
     email = session.get("email")
     purpose = session.get("otp_purpose")
-    if not email or purpose not in {"login", "registration"} or not session.get("otp"):
+    if not email or purpose not in {"login", "registration"}:
         flash("Your verification session has expired. Please request a new code.", "warning")
         return redirect(url_for("login"))
     verify_otp_form = OTPform()
-    remaining = otp_remaining()
-    resend_remaining = otp_resend_remaining()
     if verify_otp_form.validate_on_submit():
-        if otp_is_expired():
+        result, _attempts_left = otp_service.verify_code(email, purpose, verify_otp_form.verification_code.data)
+        if result == otp_service.EXPIRED:
             flash("That verification code has expired. Please request a new one.", "warning")
-        elif verify_otp_form.verification_code.data.strip() != session.get("otp"):
-            attempts = int(session.get("otp_attempts", 0)) + 1
-            session["otp_attempts"] = attempts
-            if attempts >= 5:
-                clear_otp_session()
-                flash("Too many incorrect attempts. Please request a new code.", "danger")
-                return redirect(url_for("login"))
-            flash(f"Invalid OTP. {5 - attempts} attempts remaining.", "danger")
+        elif result == otp_service.LOCKED:
+            clear_otp_session()
+            flash("Too many incorrect attempts. Please request a new code.", "danger")
+            return redirect(url_for("login"))
+        elif result != otp_service.OK:
+            flash("That code isn't correct. Please check it and try again.", "danger")
         else:
             user = check_existing_user(email)
             if not user:
                 name = session.get("name")
-                if not name:
+                if purpose != "registration" or not name:
                     flash("Registration information is missing. Please register again.", "danger")
                     clear_otp_session()
                     return redirect(url_for("register"))
-                user = User(name=name.strip(), email=email.strip().lower())
+                user = User(name=name.strip(), email=email)
                 db.session.add(user)
-                db.session.commit()
-            login_user(user)
+                try:
+                    db.session.commit()
+                except IntegrityError:          # two requests registered the same e-mail
+                    db.session.rollback()
+                    user = check_existing_user(email)
+            if user is None or not login_user(user):          # login_user refuses suspended accounts
+                clear_otp_session()
+                flash("We couldn't sign you in. Please contact support.", "danger")
+                return redirect(url_for("login"))
             was_registration = purpose == "registration"
             clear_otp_session()
             flash("Email verified successfully!", "success")
             if was_registration and not FitnessProfile.query.filter_by(user_id=user.id).first():
                 return redirect(url_for("fitness_profile"))
             return redirect(url_for("home"))
-    return render_template("verify_otp.html",form=verify_otp_form,remaining=remaining,resend_remaining=resend_remaining,email=email,)
+    return render_template("verify_otp.html", form=verify_otp_form,
+                           remaining=otp_service.seconds_until_expiry(email, purpose),
+                           resend_remaining=otp_service.seconds_until_resend(email), email=email)
 
 
 @app.route("/resend-otp", methods=["POST"])
+@limiter.limit("5 per minute;20 per hour")
 def resend_otp():
     email = session.get("email")
     purpose = session.get("otp_purpose")
     if not email or purpose not in {"login", "registration", "contact"}:
         flash("No verification request was found. Please start again.", "warning")
         return redirect(url_for("login"))
-    try:
-        generate_otp(email, purpose=purpose)
+    if purpose == "contact":
+        sent = generate_otp_or_flash(email, purpose, deliver=True)
+    else:
+        sent = _start_login_code(email, purpose)
+    if sent:
         flash("A new verification code has been sent.", "info")
-    except ValueError as exc:
+    return redirect(url_for("verify_contact" if purpose == "contact" else "verify_otp"))
+
+
+def generate_otp_or_flash(email, purpose, deliver=True):
+    """generate_otp() that turns failures into flash messages. True if a code was issued."""
+    try:
+        generate_otp(email, purpose=purpose, deliver=deliver)
+        return True
+    except otp_service.OtpRateLimited as exc:
         flash(str(exc), "warning")
     except Exception as exc:
-        print("RESEND OTP ERROR:", exc)
-        flash("We couldn't send a new code right now. Please try again.", "danger")
-    if purpose == "contact":
-        return redirect(url_for("verify_contact"))
-    return redirect(url_for("verify_otp"))
+        app.logger.error("Could not send verification code: %s", type(exc).__name__)
+        flash("We couldn't send the verification code. Please try again.", "danger")
+    return False
 
 
 @app.route("/register", methods=["GET", "POST"])
+@limiter.limit("10 per minute;30 per hour", methods=["POST"])
 def register():
     register_form = Registerform()
     if register_form.validate_on_submit():
         email = register_form.email.data.strip().lower()
-        name = register_form.name.data.strip()
-        existing = check_existing_user(email)
-        session["name"] = name
-        if existing:
-            flash("An account already exists. We'll send you a login code.", "info")
-            purpose = "login"
-        else:
-            purpose = "registration"
-        try:
-            generate_otp(email, purpose=purpose)
-        except Exception as exc:
-            print("REGISTER OTP ERROR:", exc)
-            flash("We couldn't send the verification code. Please try again.", "danger")
+        session["name"] = register_form.name.data.strip()
+        # Existing accounts get a login code; the page says the same thing either way.
+        purpose = "login" if check_existing_user(email) else "registration"
+        if not _start_login_code(email, purpose):
             return redirect(url_for("register"))
+        flash(CODE_SENT_MESSAGE, "info")
         return redirect(url_for("verify_otp"))
     return render_template("register.html", form=register_form)
 
@@ -1575,121 +1544,131 @@ def workout_plan_status():
     return {"status": latest.status}
 
 
+def _trainer_from_request():
+    """Trainer chosen via 'Contact Trainer' (?trainer=ID&mode=...). Loaded from the
+    database; None if missing/unknown/inactive. Query values are only hints."""
+    return trainer_service.get_contactable_trainer(request.args.get("trainer", type=int))
+
+
 @app.route("/contact", methods=["GET", "POST"])
+@limiter.limit("10 per minute;30 per hour", methods=["POST"])
 def contact():
     form = ContactForm()
+    if current_user.is_authenticated:
+        del form.name, form.email      # identity comes from the account, not from the browser
+    trainer = None
+    if request.method == "GET":
+        if request.args.get("trainer"):
+            trainer = _trainer_from_request()
+            if trainer is None:
+                flash("That trainer is no longer available. You can still send us a general message.", "warning")
+        if trainer is not None:
+            mode = request.args.get("mode") if request.args.get("mode") in trainer_service.MODES else "offline"
+            form.trainer_id.data = str(trainer.id)
+            form.contact_mode.data = mode
+            form.message.data = trainer_service.build_contact_message(
+                trainer.name, trainer.location, online=(mode == "online"))
+    elif form.trainer_id.data:
+        # POST: never trust the id from the page - look the trainer up again.
+        raw_id = form.trainer_id.data.strip()
+        trainer = trainer_service.get_contactable_trainer(int(raw_id)) if raw_id.isdigit() and len(raw_id) < 10 else None
+        if trainer is None:
+            flash("That trainer is no longer available. Please go back and choose another trainer.", "danger")
+            return render_template("contact.html", form=form, trainer=None)
+
     if current_user.is_authenticated:
         if form.validate_on_submit():
             message = form.message.data.strip()
             try:
-                send_contact_info(email=current_user.email, name=current_user.name, contact_message=message)
+                send_contact_info(email=current_user.email, name=current_user.name, contact_message=message, trainer=trainer)
                 flash("Your message has been sent successfully!", "success")
                 return redirect(url_for("contact"))
             except Exception as exc:
-                print("CONTACT EMAIL ERROR:", exc)
+                app.logger.error("Contact e-mail failed: %s", type(exc).__name__)
                 flash("We couldn't send your message right now. Please try again.", "danger")
-        return render_template("contact.html", form=form)
+        return render_template("contact.html", form=form, trainer=trainer)
 
     if form.validate_on_submit():
-        name = form.name.data.strip()
+        session["name"] = form.name.data.strip()
+        session["message"] = form.message.data.strip()
+        session["trainer_id"] = trainer.id if trainer else None
         email = form.email.data.strip().lower()
-        message = form.message.data.strip()
-        session["name"] = name
-        session["email"] = email
-        session["message"] = message
-        try:
-            generate_otp(email, purpose="contact")
-        except Exception as exc:
-            print("CONTACT OTP ERROR:", exc)
-            flash("We couldn't send the verification code. Please try again.", "danger")
+        if not generate_otp_or_flash(email, "contact"):
             return redirect(url_for("contact"))
         flash("A verification code has been sent to your email.", "info")
         return redirect(url_for("verify_contact"))
-    return render_template("contact.html", form=form)
+    return render_template("contact.html", form=form, trainer=trainer)
 
 
 @app.route("/verify-contact", methods=["GET", "POST"])
+@limiter.limit("20 per minute;100 per hour", methods=["POST"])
 def verify_contact():
-    if session.get("otp_purpose") != "contact":
+    email = session.get("email")
+    if session.get("otp_purpose") != "contact" or not email:
         flash("No contact verification request found.", "warning")
         return redirect(url_for("contact"))
-
-    email = session.get("email")
-    if not email or not session.get("otp"):
-        flash("Your verification session has expired. Please try again.", "warning")
-        return redirect(url_for("contact"))
-
     form = ContactOTPForm()
-    # The resend countdown must use the 30-second resend cooldown, NOT
-    # the 10-minute OTP lifetime (otp_remaining()). These are different
-    # concepts: otp_remaining() is only used server-side to decide
-    # whether the submitted code has expired.
-    resend_remaining = otp_resend_remaining()
     if form.validate_on_submit():
-        if otp_is_expired():
+        result, _attempts_left = otp_service.verify_code(email, "contact", form.verification_code.data)
+        if result == otp_service.EXPIRED:
             flash("That verification code has expired. Please request a new one.", "warning")
-        elif form.verification_code.data.strip() != session.get("otp"):
-            attempts = int(session.get("otp_attempts", 0)) + 1
-            session["otp_attempts"] = attempts
-            if attempts >= 5:
-                clear_otp_session()
-                flash("Too many incorrect attempts. Please start the contact request again.", "danger")
-                return redirect(url_for("contact"))
-            flash(f"Invalid OTP. {5 - attempts} attempts remaining.", "danger")
+        elif result == otp_service.LOCKED:
+            clear_otp_session()
+            flash("Too many incorrect attempts. Please start the contact request again.", "danger")
+            return redirect(url_for("contact"))
+        elif result != otp_service.OK:
+            flash("That code isn't correct. Please check it and try again.", "danger")
         else:
+            trainer = trainer_service.get_contactable_trainer(session.get("trainer_id"))
             try:
-                send_contact_info(email=email,name=session.get("name", ""),contact_message=session.get("message", ""),)
+                send_contact_info(email=email, name=session.get("name", ""),
+                                  contact_message=session.get("message", ""), trainer=trainer)
                 flash("Your message has been sent successfully!", "success")
                 clear_otp_session()
                 return redirect(url_for("home"))
             except Exception as exc:
-                print("CONTACT DELIVERY ERROR:", exc)
+                app.logger.error("Contact delivery failed: %s", type(exc).__name__)
                 flash("We verified your email, but couldn't send the message. Please try again.", "danger")
-    return render_template("verify_contact.html",form=form,resend_remaining=resend_remaining,email=email,)
+    return render_template("verify_contact.html", form=form,
+                           resend_remaining=otp_service.seconds_until_resend(email), email=email)
+
 
 @app.route("/find-trainer", methods=["GET", "POST"])
 def find_trainer():
-    # 1. USER MUST BE LOGGED I
+    """Search form (POST) -> redirect to the results (GET, so pages can be linked/paged)."""
     if not current_user.is_authenticated:
-        flash("Please log in or register to find a personal trainer.","warning")
+        flash("Please log in or register to find a personal trainer.", "warning")
         return redirect(url_for("register"))
-    # 2. CHECK FITNESS PROFIL
-    profile = FitnessProfile.query.filter_by(user_id=current_user.id).first()
-    form = TrainerSearchForm()
-    # 3. IF PROFILE EXISTS
-    #    DON'T ASK GENDE
+    profile = db.session.scalar(db.select(FitnessProfile).where(FitnessProfile.user_id == current_user.id))
+    searching = request.method == "GET" and request.args.get("mode") is not None
+    form = TrainerSearchForm(formdata=request.args, meta={"csrf": False}) if searching else TrainerSearchForm()
     if profile:
-        # Use gender from existing profile
-        user_gender = profile.gender
-        # Remove gender field from the form visually
-        del form.gender
-    # 4. IF PROFILE DOESN'T EXIST
-    #    USER MUST ENTER GENDE
-    else:
-        user_gender = None
+        del form.gender           # gender comes from the saved profile, never from the browser
 
-    # 5. FORM SUBMISSIO
-    if form.validate_on_submit():
-        # Profile already contains gender
-        if profile:
-            gender = profile.gender
-        # No profile → gender came from form
-        else:
-            gender = form.gender.data
-        location = form.location.data.strip()
+    if request.method == "POST" and form.validate_on_submit():
+        params = {"mode": form.mode.data}
+        if form.mode.data == "offline":
+            params["location"] = form.location.data.strip()
+        if not profile:
+            params["gender"] = form.gender.data
+        return redirect(url_for("find_trainer", **params))
+
+    if searching and form.validate():
+        gender = profile.gender if profile else form.gender.data
         mode = form.mode.data
-        # FIND TRAINERS
-        trainers = Trainer.query.filter_by(gender=gender).all()
-        # ONLINE
+        location = (form.location.data or "").strip()
         if mode == "online":
-            # No distance checking
-            pass
-        # OFFLINE
-        elif mode == "offline":
-            trainers = find_nearby_trainers(location=location,gender=gender)
-        # RESULTS
-        return render_template("trainer_results.html",trainers=trainers,mode=mode,location=location)
-    return render_template("find_trainer.html",form=form,profile=profile)
+            # Online: location and distance are ignored; no coordinates needed.
+            page = trainer_service.find_online_trainers(gender, page=request.args.get("page", 1, type=int))
+            return render_template("trainer_results.html", trainers=page.items, page=page, mode=mode, location="")
+        try:
+            trainers = trainer_service.find_nearby_trainers(location, gender)
+        except trainer_service.GeocodingError:
+            flash("We couldn't look up that location right now. Please try again, or choose online training.", "danger")
+            return render_template("find_trainer.html", form=form, profile=profile)
+        return render_template("trainer_results.html", trainers=trainers, page=None, mode=mode, location=location)
+    return render_template("find_trainer.html", form=form, profile=profile)
+
 
 @app.route("/become-trainer", methods=["GET", "POST"])
 @login_required

@@ -28,7 +28,7 @@ Data model (relevant relationships): `users` 1-1 `profiles`; `users` 1-N `workou
 ## B. Files
 Created: `admin/__init__.py`, `admin/routes.py`, `services/*.py`, `extensions.py`, `exercises.py`,
 `templates/admin/{_layout,_macros,_plan_days,plans,plan_detail,payments,payment_detail,audit_log}.html`
-(`_env_banner.html`/`_finance_summary.html` are included by the dashboard - see Known gaps), tests
+(the dashboard reuses the existing `_env_banner.html`/`_finance_summary.html`), tests
 `test_auth_otp.py`, `test_trainers.py`, `test_admin.py`, `test_remember_me.py`, `test_security_headers.py`,
 `REFACTOR_REPORT.md`.
 Modified: `main.py`, `models.py`, `migrations.py` (007), `forms.py`, `config.py`, admin templates, results/contact

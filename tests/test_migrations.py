@@ -44,6 +44,10 @@ def test_old_database_upgrades_without_losing_data(tmp_path):
     # many plans per user now allowed; new tables exist
     con.execute("insert into workout_plans (user_id, created_at, plan) values (1, '2026-02-01', '{}')")
     assert {"ai_usage", "payment_events", "schema_migrations"} <= {r[0] for r in con.execute("select name from sqlite_master where type='table'")}
+    # migration 007 (add-only): everyone stays active, new tables/columns exist, old values untouched
+    assert con.execute("select name, email, is_admin, is_active from users where id=1").fetchone() == ("Old User", "old@example.com", 0, 1)
+    assert {"otp_codes", "admin_audit_log"} <= {r[0] for r in con.execute("select name from sqlite_master where type='table'")}
+    assert {"is_active", "contact_email"} <= {r[1] for r in con.execute("pragma table_info(trainers)")}
     con.close()
     again = _manage(["migrate"], path)
     assert "already up to date" in again.stdout                          # safe to run twice

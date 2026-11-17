@@ -30,3 +30,7 @@ Thumbs.db
 
 # Vercel
 .vercel/
+
+# Local tooling
+gunicorn.ctl
+*.db-journal

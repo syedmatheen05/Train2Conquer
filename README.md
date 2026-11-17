@@ -153,40 +153,60 @@ Edit the table at the top of `costing.py` (or set `MODEL_PRICING_JSON`). A model
 
 ``` text
 Train2Conquer/
-├── main.py
-├── ai.py
-├── forms.py
-├── requirements.txt
-├── templates/
-│   ├── base.html
-│   ├── navbar.html
-│   ├── footer.html
-│   ├── loader.html
-│   ├── home.html
-│   ├── register.html
-│   ├── login.html
-│   ├── verify_otp.html
-│   ├── verify_contact.html
-│   ├── fitness-profile.html
-│   ├── dashboard.html
-│   ├── workout.html
-│   ├── nutrition.html
-│   ├── find_trainer.html
-│   ├── trainer_results.html
-│   ├── become_trainer.html
-│   ├── contact.html
-│   ├── about.html
-│   ├── privacy.html
-│   └── error.html
-└── static/
-    ├── css/
-    │   ├── main.css
-    │   └── pages.css
-    └── js/
-        ├── main.js
-        ├── loader.js
-        └── workout.js
+├── main.py              # app setup + public/user routes (auth, workouts, payments, contact, trainer search)
+├── extensions.py        # rate limiter (shared, avoids circular imports)
+├── config.py            # all environment settings
+├── models.py            # all database tables
+├── database.py          # database URL / engine setup
+├── migrations.py        # numbered, add-only schema upgrades (run via manage.py)
+├── manage.py            # `python manage.py migrate` (backs up first)
+├── forms.py             # Flask-WTF forms and their validation
+├── exercises.py         # exercise names / video catalogue
+├── ai.py, ai_paid.py    # Gemini (free plan) and OpenAI (paid plans) generation
+├── billing.py, costing.py, usage.py, finance.py, worker.py   # payments, costs, accounting, background worker
+├── admin/               # admin panel Blueprint (/admin/...), one guard for every route
+├── services/
+│   ├── otp.py           # e-mail verification codes (hashed, server-side, rate-limited)
+│   ├── trainers.py      # trainer search (online/offline) + contact message
+│   ├── accounts.py      # account deletion (shared by user and admin)
+│   ├── admin_stats.py   # dashboard numbers and payment status definitions
+│   └── audit.py         # admin audit trail
+├── templates/ (+ admin/)   static/ (css, js)
+└── tests/               # pytest suite (148 tests, all external services mocked)
 ```
+
+## Admin panel
+
+Open `/admin` while logged in as an admin (set `ADMIN_EMAIL` or edit a user). Pages:
+dashboard (counters), users, trainers, workout plans, payments (read-only), finance
+(costs/refunds), audit log. Rules: every admin route is guarded in one place
+(`admin/routes.py: require_admin`); every change is a CSRF-protected POST; deletes need a typed
+confirmation; you cannot deactivate/delete yourself or the last active admin; every important
+change is written to the audit log; **payments can never be edited or deleted** and refunds go
+only through Razorpay. Deactivated users and trainers keep their data but cannot log in / are hidden.
+Because the admin panel is sensitive, a login restored from a Remember Me cookie must confirm by
+e-mail code again before it can open `/admin`.
+
+## Login, OTP and Remember Me
+
+Login is passwordless: an e-mail code (6 digits, valid 10 minutes, 5 attempts, one use). Only a
+keyed hash of the code is stored in the `otp_codes` table, never in the browser cookie.
+The login page says the same thing for known and unknown e-mails.
+
+**Remember Me** (checkbox, unchecked by default) uses Flask-Login's signed `remember_token`
+cookie - no extra table. It is created only after the e-mail code is verified. Cookie settings:
+HttpOnly, SameSite=Lax, Secure in production, path `/`, no Domain, fixed lifetime
+`REMEMBER_ME_DAYS` (default 30, max 90, not extended by visiting). The cookie holds
+`<user id>:<login time>` plus an HMAC signature made with `SECRET_KEY`; the server re-checks the
+database on every request, so deleted/deactivated users and changed admin rights take effect at
+once, and logins older than the lifetime are rejected by the server. Logout clears the cookie.
+Sessions restored from the cookie are "not fresh": deleting an account, requesting a refund and
+the admin panel ask for a new e-mail code first.
+
+Limitation: the cookie is stateless, so a copy stolen *before* logout stays valid until it
+expires or `SECRET_KEY` changes (rotating it signs everybody out). Per-user revocation ("sign out
+everywhere") would need one extra column on `users`; it was not added because you asked for no
+schema changes for Remember Me.
 
 ## How It Works
 
@@ -360,19 +380,19 @@ directly inside the source code.
 
 ## Security
 
-The application includes:
+Implemented (see `REFACTOR_REPORT.md` for the audit and what remains):
 
--   CSRF protection
--   Flask-Login authentication
--   HTTP-only session cookies
--   SameSite cookie configuration
--   Production secure cookies
--   Security response headers
--   Environment-based secrets
--   HTML escaping for user-provided email content
+-   CSRF protection on every state-changing request (Flask-WTF)
+-   Flask-Login; HttpOnly, SameSite=Lax, Secure (production) cookies
+-   Verification codes stored hashed on the server with attempt/expiry/rate limits
+-   No account enumeration on login/register
+-   Server-side authorization for all admin routes, audit log, safeguards for the last admin
+-   Razorpay signature verification, server-side amounts, idempotent processing (existing)
+-   Security headers (nosniff, frame-ancestors, referrer/permissions policy, HSTS in production,
+    `no-store` on private pages)
+-   Secrets only in environment variables
 
-For production, use a strong randomly generated `SECRET_KEY` and keep
-all credentials outside the repository.
+For production, use a strong random `SECRET_KEY` and keep all credentials outside the repository.
 
 ## Main Application Files
 

@@ -26,9 +26,9 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.middleware.proxy_fix import ProxyFix
 from forms import ContactForm, ContactOTPForm, FitnessProfileform, Loginform, OTPform, Registerform, TrainerSearchForm, TrainerForm
 from exercises import EXERCISE_NAMES, EXERCISE_VIDEOS
-from services import accounts as account_service, otp as otp_service, trainers as trainer_service
-from ai import generate_fitness_plan
-import ai_paid, billing, config, migrations, usage
+from services import accounts as account_service, emails as email_templates, otp as otp_service, redirects, trainers as trainer_service
+import gemini_service  # noqa: F401  (tests patch main.gemini_service)
+import plan_cycle, plan_generator, billing, config, equipment as equipment_service, migrations, usage
 from database import build_database_config
 from models import FitnessProfile, Payment, PaymentEvent, User, WorkoutPlan, db, utcnow
 
@@ -275,33 +275,23 @@ def send_trainer_application(email,name,about,location,gender,phone_number):
         server.sendmail(sender_email,[sender_email],mail.as_string())
 
 # EMAIL / OTP
-OTP_EXPIRY_SECONDS = 10 * 60
-OTP_RESEND_COOLDOWN = 30
+OTP_EXPIRY_SECONDS = otp_service.OTP_LIFETIME_SECONDS   # one source of truth: the e-mail text follows the real lifetime
+OTP_RESEND_COOLDOWN = otp_service.RESEND_COOLDOWN_SECONDS
 def send_verification_code(email, otp):
+    """E-mail a verification code (same Gmail SMTP account as before).
+
+    The message layout lives in services/emails.py. The code is never logged:
+    callers log only the exception TYPE if sending fails.
+    """
     sender_email = os.environ.get("EMAIL")
     sender_password = os.environ.get("PASSWORD")
     if not sender_email or not sender_password:
         raise RuntimeError("EMAIL and PASSWORD environment variables are required")
-    mail = MIMEMultipart()
-    mail["From"] = sender_email
-    mail["To"] = email
-    mail["Subject"] = "Train2Conquer Verification Code"
-    body = f"""
-    <html>
-        <body style="font-family:Arial,sans-serif;background:#08090C;color:#F5F5F3;padding:24px">
-            <h2>Train2Conquer</h2>
-            <p>Your verification code is:</p>
-            <h1 style="letter-spacing:8px">{otp}</h1>
-            <p>This code expires in 10 minutes.</p>
-            <p>If you did not request this code, you can safely ignore this email.</p>
-        </body>
-    </html>
-    """
-    mail.attach(MIMEText(body, "html"))
+    message = email_templates.build_otp_message(sender_email, email, otp, OTP_EXPIRY_SECONDS)
     with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
         server.starttls()
         server.login(sender_email, sender_password)
-        server.sendmail(sender_email, [email], mail.as_string())
+        server.sendmail(sender_email, [email], message.as_string())
 
 def send_contact_info(email, name, contact_message, trainer=None):
     """E-mail a verified contact message to the site inbox.
@@ -369,7 +359,7 @@ def check_existing_user(email):
 
 
 def clear_otp_session():
-    for key in ("otp_purpose", "name", "email", "message", "trainer_id", "contact_mode", "remember_me"):
+    for key in ("otp_purpose", "name", "email", "message", "trainer_id", "contact_mode", "remember_me", redirects.SESSION_KEY):
         session.pop(key, None)
 
 
@@ -394,9 +384,18 @@ CODE_SENT_MESSAGE = "If this e-mail can be used, we've sent a 6-digit verificati
 
 
 # LOGIN / REGISTRATION
+def _remember_destination():
+    """?next=/admin/... (set by Flask-Login) is kept so verification can send the user there."""
+    if request.method == "GET":
+        destination = redirects.safe_next(request.args.get("next"), request.host)
+        if destination:
+            session[redirects.SESSION_KEY] = destination
+
+
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("10 per minute;30 per hour", methods=["POST"])
 def login():
+    _remember_destination()
     login_form = Loginform()
     if login_form.validate_on_submit():
         email = login_form.email.data.strip().lower()
@@ -448,11 +447,12 @@ def verify_otp():
                 flash("We couldn't sign you in. Please contact support.", "danger")
                 return redirect(url_for("login"))
             was_registration = purpose == "registration"
+            destination = redirects.safe_next(session.pop(redirects.SESSION_KEY, None), request.host)
             clear_otp_session()
             flash("Email verified successfully!", "success")
             if was_registration and not FitnessProfile.query.filter_by(user_id=user.id).first():
                 return redirect(url_for("fitness_profile"))
-            return redirect(url_for("home"))
+            return redirect(destination or url_for("home"))
     return render_template("verify_otp.html", form=verify_otp_form,
                            remaining=otp_service.seconds_until_expiry(email, purpose),
                            resend_remaining=otp_service.seconds_until_resend(email), email=email)
@@ -491,6 +491,7 @@ def generate_otp_or_flash(email, purpose, deliver=True):
 @app.route("/register", methods=["GET", "POST"])
 @limiter.limit("10 per minute;30 per hour", methods=["POST"])
 def register():
+    _remember_destination()
     register_form = Registerform()
     if register_form.validate_on_submit():
         email = register_form.email.data.strip().lower()
@@ -516,15 +517,17 @@ def profile_to_dict(profile):
         "experience": profile.experience,
         "progression_score": profile.progression_score,
         "workout_days": profile.workout_days,
-        "equipment": [x for x in profile.equipment.split(",") if x],
+        "equipment": equipment_service.parse_stored(profile.equipment),   # blank (legacy) = ["none"]
     }
 
 
-def validate_and_serialize_plan(ai_result, expected_workout_days):
-    """Validate a raw Gemini JSON string and return the serialized plan.
+def validate_and_serialize_plan(ai_result, expected_workout_days, equipment=None):
+    """Validate a raw AI JSON string and return the serialized plan.
     Pulled out of run_generation so the validation rules
     (used to check the AI response) live in exactly one place. Raises
     ValueError on anything invalid -- callers decide how to surface that.
+    `equipment` (the user's saved list) makes the plan fail if it uses an
+    exercise that needs equipment the user does not have.
     """
     parsed = json.loads(ai_result)
     if not isinstance(parsed, dict):
@@ -564,6 +567,10 @@ def validate_and_serialize_plan(ai_result, expected_workout_days):
                 raise ValueError(f"{day_key} contains invalid timer values")
     if workout_day_count != expected_workout_days:
         raise ValueError(f"AI generated {workout_day_count} main workout days; expected {expected_workout_days}")
+    if equipment is not None:
+        unavailable = equipment_service.disallowed_exercises(parsed, equipment)
+        if unavailable:
+            raise ValueError("Plan uses equipment the user does not have: " + ", ".join(unavailable))
     return json.dumps(parsed)
 
 
@@ -597,7 +604,8 @@ def get_profile(user_id):
 
 def latest_plan_row(user_id):
     """Newest plan row of any status (ready / generating / failed)."""
-    return db.session.execute(db.select(WorkoutPlan).where(WorkoutPlan.user_id == user_id).order_by(WorkoutPlan.id.desc())).scalars().first()
+    return db.session.execute(db.select(WorkoutPlan).where(
+        WorkoutPlan.user_id == user_id, WorkoutPlan.is_archived.is_(False)).order_by(WorkoutPlan.id.desc())).scalars().first()
 
 
 def expire_stale_generations(user_id=None):
@@ -627,9 +635,30 @@ def active_generation(user_id):
     return db.session.execute(db.select(WorkoutPlan.id).where(WorkoutPlan.user_id == user_id, WorkoutPlan.status == "generating")).first() is not None
 
 
+def current_plan_row(user_id):
+    """The user's active plan: their newest READY week that is not archived."""
+    return db.session.execute(db.select(WorkoutPlan).where(
+        WorkoutPlan.user_id == user_id, WorkoutPlan.status == "ready", WorkoutPlan.is_archived.is_(False)
+    ).order_by(WorkoutPlan.id.desc())).scalars().first()
+
+
+def starts_new_cycle(user_id):
+    """True when the profile has been edited since the active plan was built, so the next plan
+    must REPLACE it (week 1, fresh) instead of continuing as next week. A plan with no recorded
+    fingerprint (should not happen after migration 008) keeps the old weekly behaviour."""
+    current = current_plan_row(user_id)
+    if current is None or not current.profile_hash:
+        return False
+    return current.profile_hash != plan_cycle.fingerprint(get_profile(user_id))
+
+
 def next_week_number(user_id):
+    """Week 1 when this plan replaces one built for an older profile; otherwise the next week of the cycle."""
+    if starts_new_cycle(user_id):
+        return 1
     count = db.session.execute(db.select(db.func.count(WorkoutPlan.id)).where(
-        WorkoutPlan.user_id == user_id, WorkoutPlan.status.in_(("ready", "generating")))).scalar_one()
+        WorkoutPlan.user_id == user_id, WorkoutPlan.is_archived.is_(False),
+        WorkoutPlan.status.in_(("ready", "generating")))).scalar_one()
     return count + 1
 
 
@@ -671,13 +700,16 @@ def _compact_week(plan_row, detail):
             "completion_rate": round(min(len(_completed_list(plan_row)), 7) / 7, 2), "days": days}
 
 
-def build_history(user_id, tier):
+def build_history(user_id, tier, fresh=False):
     """What each tier is allowed to 'remember' about the user's past weeks.
     Basic: just last week's raw plan. Personalized: last week + completion.
     Advanced: up to 4 weeks (newest in full detail)."""
     limit = 4 if tier == "advanced" else 1
+    if fresh:      # a replacement plan starts from the updated profile; the old profile's weeks must not leak in
+        return [] if tier == "advanced" else None
     rows = db.session.execute(db.select(WorkoutPlan).where(
-        WorkoutPlan.user_id == user_id, WorkoutPlan.status == "ready").order_by(WorkoutPlan.id.desc()).limit(limit)).scalars().all()
+        WorkoutPlan.user_id == user_id, WorkoutPlan.status == "ready", WorkoutPlan.is_archived.is_(False)
+    ).order_by(WorkoutPlan.id.desc()).limit(limit)).scalars().all()
     if tier == "basic":
         return rows[0].plan if rows else None
     try:
@@ -712,7 +744,7 @@ def claim_job(plan_id):
 
 def _budget_guard():
     if usage.daily_limit_reached():
-        raise ai_paid.PlanGenerationError("budget", "daily OpenAI limit reached")
+        raise plan_generator.PlanGenerationError("budget", "daily Gemini request limit reached")
 
 
 def run_generation(plan_id):
@@ -727,27 +759,21 @@ def run_generation(plan_id):
         try:
             profile = get_profile(user_id)
             if not profile:
-                raise ai_paid.PlanGenerationError("config", "profile missing")
+                raise plan_generator.PlanGenerationError("config", "profile missing")
             profile_data, expected_days = profile_to_dict(profile), int(profile.workout_days)
-            history = build_history(user_id, tier)
+            history = build_history(user_id, tier, fresh=(plan.week_number == 1))
+            start_hash = plan_cycle.fingerprint(profile)       # the profile this plan is built from
             payment = db.session.get(Payment, plan.payment_id) if plan.payment_id else None
             if tier != "basic" and not (payment and payment.status in ("paid", "used")
                                         and payment.payment_verification_status == "verified"):
-                raise ai_paid.PlanGenerationError("config", "no verified payment")   # never generate unpaid
-            coach_notes = None
-            if tier == "basic":
-                ai_result = generate_fitness_plan(profile=profile_data, previous_plan=history)   # Gemini only
-                if not ai_result:
-                    raise ai_paid.PlanGenerationError("provider_error")
-                serialized = validate_and_serialize_plan(ai_result, expected_days)
-            else:
-                def record(**fields):
-                    return usage.record_attempt(user_id=user_id, plan_id=plan_id, payment_id=payment.id, **fields)
-                result = ai_paid.generate_paid_plan(
-                    tier, profile_data, history, plan.week_number, payment.user_notes,
-                    validator=lambda raw: validate_and_serialize_plan(raw, expected_days),
-                    record=record, mark=usage.mark_attempt, guard=_budget_guard)
-                serialized, coach_notes = result["plan_json"], result["coach_notes"]
+                raise plan_generator.PlanGenerationError("config", "no verified payment")   # never generate unpaid
+            def record(**fields):          # every Gemini request is saved, even failed ones
+                return usage.record_attempt(user_id=user_id, plan_id=plan_id, payment_id=payment.id if payment else None, **fields)
+            result = plan_generator.generate_plan(
+                tier, profile_data, history, plan.week_number, payment.user_notes if payment else None,
+                validator=lambda raw: validate_and_serialize_plan(raw, expected_days, profile_data["equipment"]),
+                record=record, mark=usage.mark_attempt, guard=_budget_guard)
+            serialized, coach_notes = result["plan_json"], result["coach_notes"]
             plan = db.session.get(WorkoutPlan, plan_id)
             if plan.locked_by != token or plan.status != "generating":
                 return   # lease was lost; another runner owns this row now
@@ -757,13 +783,22 @@ def run_generation(plan_id):
             plan.status, plan.generation_status = "ready", "succeeded"
             plan.error_message, plan.coach_notes = None, coach_notes
             plan.locked_at = plan.locked_by = None
-            if tier == "basic":
-                plan.ai_provider = "gemini"
-            else:
-                usage.refresh_plan_totals(plan_id)
+            usage.refresh_plan_totals(plan_id)
+            plan.ai_provider = "gemini"
+            if payment:
                 payment.status, payment.used_at = "used", utcnow()
+            before = plan_cycle.fingerprint(get_profile(user_id))
             if plan.week_number > 1:
                 advance_progression(user_id)
+            # If the user edited their profile WHILE this plan was being built, keep the old fingerprint so
+            # the next plan is treated as a replacement. Otherwise record the (progression-adjusted) profile.
+            plan.profile_hash = plan_cycle.fingerprint(get_profile(user_id)) if before == start_hash else start_hash
+            if plan.week_number == 1:
+                # A replacement: archive the older plans in the SAME transaction that saves this one.
+                # If anything above failed we never get here, so the old plan is left untouched.
+                db.session.execute(update(WorkoutPlan).where(
+                    WorkoutPlan.user_id == user_id, WorkoutPlan.id != plan.id, WorkoutPlan.is_archived.is_(False)
+                ).values(is_archived=True))
             db.session.commit()
         except Exception as exc:
             db.session.rollback()
@@ -776,8 +811,7 @@ def run_generation(plan_id):
                 if plan and plan.status == "generating" and plan.locked_by == token:
                     plan.status, plan.generation_status, plan.error_message = "failed", "failed", code
                     plan.locked_at = plan.locked_by = None
-                    if tier != "basic":
-                        usage.refresh_plan_totals(plan_id)
+                    usage.refresh_plan_totals(plan_id)
                     db.session.commit()
             except Exception as inner_exc:
                 app.logger.error("PLAN GENERATION ERROR (could not record failure): %s", type(inner_exc).__name__)
@@ -807,7 +841,7 @@ def create_plan_row(user_id, tier, payment=None):
     plan = WorkoutPlan(user_id=user_id, plan=json.dumps({}), completed_days="[]", status="generating",
                        generation_status="queued", tier=tier, week_number=next_week_number(user_id),
                        payment_id=payment.id if payment else None,
-                       ai_provider="openai" if payment else "gemini")
+                       ai_provider="gemini")
     db.session.add(plan)
     try:
         db.session.commit()
@@ -876,6 +910,8 @@ def flash_paid_outcome(outcome):
         "invalid": ("We couldn't start that plan. Please complete your fitness profile first.", "danger"),
     }
     text_, category = messages[outcome]
+    if outcome == "started" and current_user.is_authenticated and starts_new_cycle(current_user.id):
+        text_ = "Payment confirmed. We're building a fresh plan from your updated profile to replace your current one -- this can take up to a minute."
     flash(text_, category)
 
 
@@ -894,7 +930,10 @@ def start_basic_generation():
     plan = create_plan_row(current_user.id, "basic")
     if plan:
         launch_generation(plan)
-        flash("Your Basic plan is being generated -- this can take up to a minute.", "info")
+        if starts_new_cycle(current_user.id):
+            flash("Your profile changed, so we're building a fresh plan to replace your current one -- this can take up to a minute. Your current plan stays until the new one is ready.", "info")
+        else:
+            flash("Your Basic plan is being generated -- this can take up to a minute.", "info")
     return redirect(url_for("home"))
 
 
@@ -922,6 +961,8 @@ def plan_options_context(user_id, free_unlocked=True):
             refund_payment = payment      # may show "Request a refund"
     return {
         "free_unlocked": free_unlocked,
+        "has_current_plan": current_plan_row(user_id) is not None,
+        "will_replace": starts_new_cycle(user_id),      # profile edited since the active plan was built
         "pending_payment": pending_payment,
         "failed_plan": failed_plan,
         "retry_exhausted": retry_exhausted,
@@ -936,8 +977,8 @@ def fitness_profile():
     profile = get_profile(current_user.id)
     if profile:
         fitness_form = FitnessProfileform(obj=profile)
-        if profile.equipment:
-            fitness_form.equipment.data = profile.equipment.split(",")
+        if request.method == "GET":     # a failed POST keeps what the user just ticked
+            fitness_form.equipment.data = equipment_service.parse_stored(profile.equipment)
     else:
         fitness_form = FitnessProfileform()
     if fitness_form.validate_on_submit():
@@ -952,7 +993,7 @@ def fitness_profile():
             profile.goal = fitness_form.goal.data
             profile.experience = fitness_form.experience.data
             profile.workout_days = int(fitness_form.workout_days.data)
-            profile.equipment = ",".join(fitness_form.equipment.data)
+            profile.equipment = equipment_service.serialise(fitness_form.equipment.data)
         else:
             profile = FitnessProfile(
                 user_id=current_user.id,
@@ -963,7 +1004,7 @@ def fitness_profile():
                 goal=fitness_form.goal.data,
                 experience=fitness_form.experience.data,
                 workout_days=int(fitness_form.workout_days.data),
-                equipment=",".join(fitness_form.equipment.data),
+                equipment=equipment_service.serialise(fitness_form.equipment.data),
                 progression_score=1,
             )
             db.session.add(profile)
@@ -1020,13 +1061,44 @@ def create_payment_order():
     recent_orders = db.session.execute(db.select(db.func.count(Payment.id)).where(
         Payment.user_id == current_user.id, Payment.created_at >= utcnow() - timedelta(minutes=10))).scalar_one()
     notes = clean_notes(data.get("notes"))
-    payment = db.session.execute(db.select(Payment).where(
-        Payment.user_id == current_user.id, Payment.tier == tier, Payment.status == "created",
-        Payment.created_at >= utcnow() - timedelta(minutes=30)).order_by(Payment.id.desc())).scalars().first()
-    if payment:  # double click / reopened checkout: reuse the same open order
-        payment.user_notes = notes
+    mode = "fresh" if data.get("fresh") else ("retry" if data.get("retry") else "normal")
+    open_orders = _open_orders(current_user.id, tier)
+    if mode != "normal" and open_orders:
+        # Before retrying or replacing an order, ask Razorpay what really happened on it:
+        # a payment may have gone through even though the browser reported a failure.
+        try:
+            states = {order.id: reconcile_order(order) for order in open_orders}
+        except billing.BillingError as exc:
+            app.logger.error("PAYMENT RECONCILE ERROR: %s", type(exc).__name__)
+            return _json_error("We couldn't check your earlier payment right now. Please try again in a minute.", 502)
+        if "paid" in states.values():
+            paid = next(o for o in open_orders if states[o.id] == "paid")
+            outcome, _plan = start_paid_generation(paid)
+            flash_paid_outcome(outcome)
+            return jsonify(ok=False, state="already_paid", redirect=url_for("home"),
+                           message="Your earlier payment actually went through. You won't be charged again.")
+        if "pending" in states.values():
+            return _json_error("Your earlier payment is still being processed. Please wait a few minutes before paying again.", 409, state="pending")
+    payment = None
+    if mode == "fresh":
+        for old in open_orders:      # retire the old attempt; a late capture on it is still honoured by webhook/verify
+            old.status, old.failure_code = "cancelled", old.failure_code or "replaced"
         db.session.commit()
+    elif mode == "retry":
+        payment = next((o for o in open_orders if o.gateway_order_id == data.get("order_id")), None)
+        if payment:
+            if payment.status == "cancelled":
+                payment.status = "created"      # same order, a further attempt
+            payment.user_notes = notes
+            db.session.commit()
     else:
+        payment = db.session.execute(db.select(Payment).where(
+            Payment.user_id == current_user.id, Payment.tier == tier, Payment.status == "created",
+            Payment.created_at >= utcnow() - timedelta(minutes=30)).order_by(Payment.id.desc())).scalars().first()
+        if payment:  # double click / reopened checkout: reuse the same open order
+            payment.user_notes = notes
+            db.session.commit()
+    if payment is None:
         if recent_orders >= 8:
             return _json_error("Too many attempts. Please wait a few minutes and try again.", 429)
         amount = billing.price_paise(tier)  # price is decided here, never by the browser
@@ -1074,6 +1146,86 @@ def mark_payment_paid(payment_id, gateway_payment_id, details=None, commit=True)
     if commit:
         db.session.commit()
     return won
+
+
+def _open_orders(user_id, tier):
+    """Orders of this customer and plan that were started recently and never completed."""
+    return db.session.execute(db.select(Payment).where(
+        Payment.user_id == user_id, Payment.tier == tier, Payment.status.in_(("created", "cancelled")),
+        Payment.created_at >= utcnow() - timedelta(minutes=30)).order_by(Payment.id.desc())).scalars().all()
+
+
+SAFE_METHODS = ("card", "netbanking", "wallet", "upi", "emi")
+
+
+def reconcile_order(payment):
+    """Ask Razorpay what really happened on this order (the browser is never believed).
+
+    Returns "paid" (money captured - our row is now paid), "pending" (authorized or still
+    processing), "failed" (every attempt failed) or "open" (no attempt yet).
+    Idempotent: calling it again changes nothing. Raises billing.BillingError if Razorpay
+    can't be reached - callers must then NOT assume anything about the payment.
+    """
+    if payment.status in ("paid", "used"):
+        return "paid"
+    attempts = billing.fetch_order_payments(payment.gateway_order_id)
+    for item in attempts:
+        if (item.get("status") == "captured" and item.get("order_id") == payment.gateway_order_id
+                and item.get("amount") == payment.amount_paise and item.get("currency") == payment.currency
+                and isinstance(item.get("id"), str)):
+            try:
+                mark_payment_paid(payment.id, item["id"], item)
+            except IntegrityError:
+                db.session.rollback()
+                return "pending"
+            db.session.refresh(payment)
+            return "paid" if payment.status in ("paid", "used") else "pending"
+    if any(item.get("status") in ("authorized", "captured") for item in attempts):
+        return "pending"
+    failed = [item for item in attempts if item.get("status") == "failed"]
+    if failed:
+        last = failed[-1]
+        if payment.status in ("created", "cancelled"):
+            payment.payment_status = "failed"
+            payment.failure_code = str(last.get("error_code") or "failed")[:60]
+            method = last.get("method")
+            payment.payment_method = method[:20] if method in SAFE_METHODS else payment.payment_method
+            db.session.commit()
+        return "failed"
+    return "open"
+
+
+@app.route("/payments/failed", methods=["POST"])
+@login_required
+@limiter.limit("20 per minute")
+def payment_failed():
+    """The checkout window reported a failure or was closed. We check the real status with Razorpay
+    and tell the page what it may offer: nothing is unlocked and nothing is refunded here."""
+    data = request.get_json(silent=True) or {}
+    order_id = data.get("razorpay_order_id")
+    if not isinstance(order_id, str) or not 0 < len(order_id) < 100:
+        return _json_error("We couldn't check that payment.", 400)
+    payment = db.session.execute(db.select(Payment).where(
+        Payment.gateway_order_id == order_id, Payment.user_id == current_user.id)).scalar_one_or_none()
+    if not payment:
+        return _json_error("We couldn't check that payment.", 404)
+    cancelled_by_user = data.get("reason") == "cancelled"
+    try:
+        state = reconcile_order(payment)
+    except billing.BillingError as exc:
+        app.logger.error("PAYMENT STATUS ERROR: %s", type(exc).__name__)
+        return jsonify(ok=True, state="unknown", reference=payment.gateway_order_id, tier=payment.tier,
+                       message="We couldn't check your payment status right now. If money was taken, your plan will appear automatically.")
+    if state == "paid":
+        outcome, _plan = start_paid_generation(payment)
+        flash_paid_outcome(outcome)
+        return jsonify(ok=True, state="paid", redirect=url_for("home"))
+    if state in ("open", "failed") and payment.status == "created" and cancelled_by_user:
+        payment.status = "cancelled"
+        db.session.commit()
+    return jsonify(ok=True, state="cancelled" if (cancelled_by_user and state == "open") else state,
+                   reference=payment.gateway_order_id, tier=payment.tier,
+                   method=payment.payment_method if payment.payment_method in SAFE_METHODS else None)
 
 
 @app.route("/payments/verify", methods=["POST"])
@@ -1333,8 +1485,7 @@ def delete_account():
 # WORKOUT
 def load_current_plan():
     """The user's newest READY week (the one they are training on)."""
-    return db.session.execute(db.select(WorkoutPlan).where(
-        WorkoutPlan.user_id == current_user.id, WorkoutPlan.status == "ready").order_by(WorkoutPlan.id.desc())).scalars().first()
+    return current_plan_row(current_user.id)
 
 @app.route("/start-workout/<int:day>")
 @login_required
@@ -1412,7 +1563,7 @@ def home():
     requested = request.args.get("plan", type=int)
     if requested:
         old = db.session.get(WorkoutPlan, requested)
-        if old and old.user_id == current_user.id and old.status == "ready":
+        if old and old.user_id == current_user.id and old.status == "ready" and not old.is_archived:
             shown = old
             viewing_old = current is not None and old.id != current.id
     generating = latest is not None and latest.status == "generating"
@@ -1427,10 +1578,12 @@ def home():
             flash("Your saved workout plan is invalid. Please generate a new one.", "danger")
             workout_plan_data = None
     history = db.session.execute(db.select(WorkoutPlan.id, WorkoutPlan.week_number, WorkoutPlan.tier).where(
-        WorkoutPlan.user_id == current_user.id, WorkoutPlan.status == "ready").order_by(WorkoutPlan.id.desc())).all()
+        WorkoutPlan.user_id == current_user.id, WorkoutPlan.status == "ready", WorkoutPlan.is_archived.is_(False)
+    ).order_by(WorkoutPlan.id.desc())).all()
     # Basic ("free") for the next week unlocks after all 7 days are done, as before;
     # a brand-new user with no plan yet can always start one.
-    free_unlocked = shown is None or (len(completed_days) >= 7 and not viewing_old)
+    # After a profile edit the user may always ask for a replacement plan, even mid-week.
+    free_unlocked = shown is None or starts_new_cycle(current_user.id) or (len(completed_days) >= 7 and not viewing_old)
     options = plan_options_context(current_user.id, free_unlocked=free_unlocked)
     return render_template(
         "home.html", workout_plan=(latest if generating else shown), workout_plan_data=workout_plan_data,

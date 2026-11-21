@@ -87,7 +87,7 @@ def overview(filters=None):
     refund_requests = db.session.execute(
         db.select(func.count(Payment.id)).where(Payment.refund_status.in_(("requested", "processing")), *conds)).scalar_one()
 
-    # --- OpenAI cost (every attempt) ---
+    # --- AI usage (every Gemini request; free tier = 0) ---
     uconds = []
     if f.get("from"):
         uconds.append(AIUsage.created_at >= f["from"])
@@ -151,8 +151,8 @@ def overview(filters=None):
         "gross_paise": gross_paise, "gross_count": gross_count, "sales": sales,
         "personalized": sales.get("personalized", {"count": 0, "paise": 0}),
         "advanced": sales.get("advanced", {"count": 0, "paise": 0}),
-        "openai_usd": total_usd, "openai_inr": total_inr, "openai_unknown_attempts": unknown_attempts,
-        "openai_requests": requests_total, "by_tier": by_tier, "by_model": by_model,
+        "ai_usd": total_usd, "ai_inr": total_inr, "ai_unknown_attempts": unknown_attempts,
+        "ai_requests": requests_total, "by_tier": by_tier, "by_model": by_model,
         "fee_inr": fee_inr, "tax_inr": tax_inr, "fee_reported": int(fee_known), "fee_not_reported": int(fee_unknown),
         "refund_inr": refunds_inr, "refund_requests_open": int(refund_requests),
         "remaining_before_other_expenses": remaining, "net_estimate": net_estimate,

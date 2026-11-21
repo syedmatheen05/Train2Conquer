@@ -409,3 +409,15 @@ body.page-fitness-profile .t2c-skip-profile:hover {
     color: var(--t2c-orange-light);
     transform: translateX(3px);
 }
+
+/* Equipment: selected state + live explanation (see static/js/fitness-profile.js) */
+body.page-fitness-profile .t2c-profile-card #equipment > li:has(input:checked) {
+    border-color: var(--t2c-orange);
+    background: rgba(255, 81, 47, .08);
+}
+body.page-fitness-profile .t2c-profile-card .t2c-equipment-note {
+    margin: -12px 0 22px;
+    color: var(--t2c-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}

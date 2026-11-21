@@ -130,7 +130,7 @@ class PaymentEvent(db.Model):
 
 
 class WorkoutPlan(db.Model):
-    """One row per generated week (history is kept; nothing is overwritten).
+    """One row per generated week (history is kept; nothing is overwritten or deleted).
 
     `status` is what the pages use: generating | ready | failed.
     `generation_status` is the finer job state: queued | running | succeeded | failed.
@@ -161,12 +161,16 @@ class WorkoutPlan(db.Model):
     generation_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     locked_at = db.Column(db.DateTime, nullable=True)
     locked_by: Mapped[str] = mapped_column(String(60), nullable=True)
+    # --- added by migration 008: plan replacement (see plan_cycle.py) ---
+    # Archived = from an earlier version of the user's profile. Kept as history, never shown or used for new plans.
+    is_archived: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=False, server_default=db.false())
+    profile_hash: Mapped[str] = mapped_column(String(64), nullable=True)   # fingerprint of the profile this plan was built from
 
 
 class AIUsage(db.Model):
-    """One row per OpenAI request (every billable attempt is its own row).
+    """One row per AI request (every attempt is its own row; the provider is Gemini).
 
-    Tokens/cost are NULL when OpenAI never returned usage - that means the
+    Tokens/cost are NULL when the provider never returned usage - that means the
     cost is UNKNOWN, not zero.
     """
     __tablename__ = "ai_usage"
@@ -174,7 +178,7 @@ class AIUsage(db.Model):
     user_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
     workout_plan_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
     payment_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
-    provider: Mapped[str] = mapped_column(String(20), nullable=False, default="openai")
+    provider: Mapped[str] = mapped_column(String(20), nullable=False, default="gemini")
     model: Mapped[str] = mapped_column(String(60), nullable=False)
     tier: Mapped[str] = mapped_column(String(20), nullable=True)
     attempt_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

@@ -1,4 +1,5 @@
 {% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import empty %}
 {% block title %}Audit log{% endblock %}
 {% block heading %}Audit log{% endblock %}
 {% block content %}
@@ -14,7 +15,7 @@
         <td>{{ e.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td><td>{{ e.admin_email or "—" }}</td><td>{{ e.action }}</td>
         <td>{{ e.entity_type }}{% if e.entity_id %} #{{ e.entity_id }}{% endif %}</td><td>{{ e.details or "" }}</td><td>{{ e.ip_address or "" }}</td></tr>{% endfor %}</tbody>
 </table>
-{% else %}<div class="t2c-admin-empty">No audit entries.</div>{% endif %}
+{% else %}{{ empty("No audit entries") }}{% endif %}
 </div>
 {% include "admin/_pagination.html" %}
 {% endblock %}

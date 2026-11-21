@@ -1,5 +1,5 @@
 {% extends "admin/_layout.html" %}
-{% from "admin/_macros.html" import select, post_button %}
+{% from "admin/_macros.html" import empty, select, post_button %}
 {% block title %}Trainers{% endblock %}
 {% block heading %}Trainers{% endblock %}
 {% block content %}
@@ -11,7 +11,7 @@
     <button type="submit" class="t2c-admin-btn">Filter</button>
     <a class="t2c-admin-btn" href="{{ url_for('admin.trainers') }}">Reset</a>
 </form>
-<p class="t2c-fin-note">Trainer applications are sent to the site inbox by e-mail and are not stored in the database. Approve one by adding the trainer here.</p>
+<p class="t2c-admin-note">Trainer applications are sent to the site inbox by e-mail and are not stored in the database. Approve one by adding the trainer here.</p>
 <div class="t2c-admin-table-wrap">
 {% if trainers %}
 <table class="t2c-admin-table">
@@ -34,7 +34,7 @@
     {% endfor %}
     </tbody>
 </table>
-{% else %}<div class="t2c-admin-empty">No trainers match these filters.</div>{% endif %}
+{% else %}{{ empty("No trainers match these filters", "Try changing or resetting the filters.") }}{% endif %}
 </div>
 {% include "admin/_pagination.html" %}
 {% endblock %}

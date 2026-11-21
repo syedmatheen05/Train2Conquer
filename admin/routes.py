@@ -13,21 +13,20 @@ import json
 import os
 from datetime import date
 
-from flask import current_app, flash, redirect, render_template, request, url_for
+from flask import current_app, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_fresh
 from flask_sqlalchemy.pagination import SelectPagination
 from sqlalchemy import update
 
 import billing
 import config
-import costing
 import finance
 from exercises import EXERCISE_NAMES
 from extensions import limiter
 from forms import AdminTrainerForm, AdminUserForm
 from models import (AdminAuditLog, AIUsage, FitnessProfile, Payment, PaymentEvent, Trainer, User,
                     WorkoutPlan, db, utcnow)
-from services import accounts as account_service, audit, trainers as trainer_service
+from services import accounts as account_service, audit, redirects, trainers as trainer_service
 from services.admin_stats import PAYMENT_BUCKETS, PAYMENT_CONDITIONS, dashboard_stats, payment_bucket
 
 from . import bp
@@ -41,14 +40,28 @@ PLAN_STATUSES = ("generating", "ready", "failed")
 # ------------------------------------------------------------------ access
 @bp.before_request
 def require_admin():
-    """Runs before EVERY admin view. Anonymous -> login page; non-admin -> home."""
+    """Runs before EVERY admin view (the only place access is decided).
+
+    * guest            -> login page, then back to the page they wanted;
+    * normal user      -> 403 "access denied" page (they stay logged in);
+    * admin            -> allowed. Admin rights are read from the database on every
+                          request, never from the browser.
+    Changing something (any non-GET request) also needs a FRESH login, i.e. a recent
+    e-mail code - see config.admin_fresh_login_mode() for the "always" setting.
+    """
     if not current_user.is_authenticated:
         return current_app.login_manager.unauthorized()
     if not current_user.is_admin:
-        flash("You don't have access to the admin panel.", "danger")
-        return redirect(url_for("home"))
-    if not login_fresh():       # restored from a Remember Me cookie: confirm with a new e-mail code first
-        return current_app.login_manager.needs_refresh()
+        return render_template("error.html", code=403, title="Access denied",
+                               message="Your account doesn't have permission to open the admin panel."), 403
+    is_change = request.method not in ("GET", "HEAD", "OPTIONS")
+    if (is_change or config.admin_fresh_login_mode() == "always") and not login_fresh():
+        if not is_change:
+            return current_app.login_manager.needs_refresh()
+        # A POST can't be replayed after login, so send them back to the page they were on.
+        session[redirects.SESSION_KEY] = redirects.safe_next(request.referrer, request.host) or url_for("admin.dashboard")
+        flash("For your security, please confirm your e-mail with a new code before making changes.", "warning")
+        return redirect(url_for("login"))
     return None
 
 
@@ -119,13 +132,8 @@ def _env_info():
     problem = billing.config_problem()
     if problem:
         warnings.append("Payments are OFF: " + problem)
-    if config.usd_to_inr() is None:
-        warnings.append("OPENAI_USD_TO_INR is not set, so API costs in rupees are unknown.")
-    for tier in billing.PAID_TIERS:
-        if costing.pricing_for(config.plan_model(tier)) is None:
-            warnings.append(f"No price is configured for the {tier} model, so its API cost is recorded as unknown.")
-    if not os.environ.get("OPENAI_API_KEY"):
-        warnings.append("OPENAI_API_KEY is not set: paid plans cannot be generated.")
+    if not (os.environ.get("GEMINI_API_KEY") or "").strip():
+        warnings.append("GEMINI_API_KEY is not set: no plan type (Basic, Personalized or Advanced) can be generated.")
     return {"environment": config.app_environment(), "razorpay_mode": config.razorpay_mode(),
             "generation_mode": config.generation_mode(), "warnings": warnings}
 
@@ -388,6 +396,27 @@ def issue_refund(payment_id):
     payment = db.session.get(Payment, payment_id)
     if not payment or payment.refund_status != "requested" or payment.status != "paid" or not payment.gateway_payment_id:
         flash("That refund can't be issued (not requested, or already handled).", "danger")
+        return redirect(url_for("admin.finance_overview"))
+    # Look at the REAL state on Razorpay first: never refund something that isn't captured,
+    # and never send a second refund for money that has already been returned.
+    try:
+        gateway = billing.fetch_payment(payment.gateway_payment_id)
+    except billing.BillingError as exc:
+        current_app.logger.error("Refund pre-check failed: %s", type(exc).__name__)
+        flash("We couldn't check this payment with Razorpay right now. Nothing was changed -- try again later.", "danger")
+        return redirect(url_for("admin.finance_overview"))
+    returned = gateway.get("amount_refunded") if isinstance(gateway.get("amount_refunded"), int) else 0
+    if gateway.get("status") == "refunded" or returned >= payment.amount_paise:
+        payment.refund_status, payment.refund_amount_paise = "refunded", payment.amount_paise
+        payment.status, payment.payment_status, payment.refunded_at = "refunded", "refunded", utcnow()
+        audit.record("payment.refund_reconciled", "payment", payment.id, "Razorpay already showed this payment as refunded")
+        db.session.commit()
+        flash("Razorpay already shows this payment as refunded. Our record has been updated; no new refund was sent.", "info")
+        return redirect(url_for("admin.finance_overview"))
+    if gateway.get("status") != "captured" or returned > 0:
+        audit.record("payment.refund_blocked", "payment", payment.id, f"gateway status {gateway.get('status')}, refunded {returned}")
+        db.session.commit()
+        flash("Razorpay doesn't show this payment as fully captured and unrefunded, so no refund was sent. Check it in the Razorpay dashboard.", "danger")
         return redirect(url_for("admin.finance_overview"))
     # Claim first so a double click can't send two refunds; also blocks plan generation meanwhile.
     claimed = db.session.execute(update(Payment).where(Payment.id == payment.id, Payment.refund_status == "requested")

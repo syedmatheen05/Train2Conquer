@@ -1,4 +1,4 @@
-"""Shared test setup. Nothing here talks to Razorpay, OpenAI or Gemini:
+"""Shared test setup. Nothing here talks to Razorpay or Gemini:
 all network calls are replaced by fakes, and the database is a throw-away
 SQLite file. Fake keys only."""
 import hashlib
@@ -13,12 +13,10 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(tempfile.mkdtemp(), "t2c_test.db")
 os.environ.update(
     SUPABASE="sqlite:///" + DB_FILE, SECRET_KEY="test-secret-key-for-tests-only-123456",
-    APP_ENV="development", GENERATION_MODE="worker", GEMINI_API_KEY="fake", OPENAI_API_KEY="sk-fake",
-    OPENAI_USD_TO_INR="90", RAZORPAY_KEY_ID="rzp_test_FAKEKEY", RAZORPAY_KEY_SECRET="fake_key_secret",
+    APP_ENV="development", GENERATION_MODE="worker", GEMINI_API_KEY="fake", RAZORPAY_KEY_ID="rzp_test_FAKEKEY", RAZORPAY_KEY_SECRET="fake_key_secret",
     RAZORPAY_WEBHOOK_SECRET="fake_webhook_secret",
 )
-for _name in ("PERSONALIZED_PLAN_MODEL", "ADVANCED_PLAN_MODEL", "OPENAI_DAILY_LIMIT_USD",
-              "OPENAI_PER_GENERATION_LIMIT_USD", "PAID_AI_MAX_ATTEMPTS", "MODEL_PRICING_JSON"):
+for _name in ("GEMINI_MODEL", "GEMINI_DAILY_MAX_REQUESTS", "GEMINI_MAX_TRIES", "PAID_AI_MAX_ATTEMPTS", "ADVANCED_PRICE_PAISE", "PERSONALIZED_PRICE_PAISE"):
     os.environ.pop(_name, None)
 sys.path.insert(0, BASE)
 
@@ -26,17 +24,18 @@ import pytest  # noqa: E402
 
 import main  # noqa: E402
 import ai as ai_module  # noqa: E402
+import equipment as equipment_service  # noqa: E402
 from models import (AdminAuditLog, AIUsage, FitnessProfile, OtpCode, Payment, PaymentEvent, Trainer,  # noqa: E402
                     User, WorkoutPlan, db)
 
 main.app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
-ORIGINAL_CLIENT_FACTORY = main.ai_paid._client_and_model
 main.limiter.enabled = False   # re-enabled only in the rate-limit test
 
 
 # ------------------------------------------------------------------ helpers
-def valid_plan_json(workout_days=3):
-    keys = list(ai_module.exercise_keys)
+def valid_plan_json(workout_days=3, equipment_values=("none",)):
+    """A valid 7-day plan using only exercises the given equipment allows (bodyweight by default)."""
+    keys = equipment_service.allowed_exercise_keys(ai_module.exercise_keys, list(equipment_values))
     days = {}
     for i in range(1, 8):
         count = 12 if i <= workout_days else 2
@@ -48,21 +47,22 @@ def valid_plan_json(workout_days=3):
 
 
 def fake_response(text, tokens_in=1000, tokens_out=2000, cached=0, reasoning=0, with_usage=True):
-    usage = SimpleNamespace(input_tokens=tokens_in, output_tokens=tokens_out,
-                            input_tokens_details=SimpleNamespace(cached_tokens=cached),
-                            output_tokens_details=SimpleNamespace(reasoning_tokens=reasoning)) if with_usage else None
-    return SimpleNamespace(output_text=text, usage=usage, id="resp_fake", _request_id="req_fake")
+    """What the Gemini SDK returns: .text and .usage_metadata."""
+    meta = SimpleNamespace(prompt_token_count=tokens_in, candidates_token_count=tokens_out,
+                           cached_content_token_count=cached, thoughts_token_count=reasoning) if with_usage else None
+    return SimpleNamespace(text=text, usage_metadata=meta)
 
 
-class FakeOpenAI:
-    """Stands in for the OpenAI client. `script` items are responses or exceptions."""
+class FakeGemini:
+    """Stands in for the Gemini client. `script` items are responses or exceptions."""
     def __init__(self, script):
         self.script = list(script)
         self.calls = []
-        self.responses = SimpleNamespace(create=self._create)
+        self.models = SimpleNamespace(generate_content=self._generate)
 
-    def _create(self, **kwargs):
-        self.calls.append(kwargs)
+    def _generate(self, model, contents, config=None):
+        config = config or {}
+        self.calls.append({"model": model, "input": contents, "instructions": config.get("system_instruction"), "config": config})
         item = self.script.pop(0)
         if isinstance(item, Exception):
             raise item
@@ -70,12 +70,19 @@ class FakeOpenAI:
 
 
 @pytest.fixture
-def fake_openai(monkeypatch):
-    def install(script, model="gpt-6-luna"):
-        client = FakeOpenAI(script)
-        monkeypatch.setattr(main.ai_paid, "_client_and_model", lambda tier: (client, main.config.plan_model(tier)))
+def fake_gemini(monkeypatch):
+    def install(script):
+        client = FakeGemini(script)
+        monkeypatch.setattr(main.gemini_service, "_client", lambda: client)
         return client
     return install
+
+
+class ApiError(Exception):
+    """Looks like google.genai.errors.APIError: carries an HTTP status in .code."""
+    def __init__(self, code, message="api error"):
+        super().__init__(message)
+        self.code = code
 
 
 @pytest.fixture(autouse=True)
@@ -84,13 +91,13 @@ def clean(monkeypatch):
         for model in (AIUsage, PaymentEvent, WorkoutPlan, Payment, FitnessProfile, User, Trainer, OtpCode, AdminAuditLog):
             db.session.query(model).delete()
         db.session.commit()
-    for name in ("OPENAI_DAILY_LIMIT_USD", "OPENAI_PER_GENERATION_LIMIT_USD", "PAID_AI_MAX_ATTEMPTS",
-                 "OPENAI_DAILY_MAX_REQUESTS"):
+    for name in ("GEMINI_DAILY_MAX_REQUESTS", "GEMINI_MAX_TRIES", "PAID_AI_MAX_ATTEMPTS", "GEMINI_MODEL"):
         monkeypatch.delenv(name, raising=False)
-    # Basic plans must never touch OpenAI: make any accidental call explode.
-    def boom(tier):
-        raise AssertionError("OpenAI client was created")
-    monkeypatch.setattr(main.ai_paid, "_client_and_model", boom)
+    # No real AI calls, ever: a test that forgets `fake_gemini` fails loudly instead of calling Google.
+    def boom():
+        raise AssertionError("a real Gemini client was created in a test")
+    monkeypatch.setattr(main.gemini_service, "_client", boom)
+    monkeypatch.setattr(main.gemini_service, "_sleep", lambda seconds: None)
     # No real network: Razorpay calls are replaced per test via the `gateway` fixture.
     yield
 
@@ -139,6 +146,7 @@ class Gateway:
     def __init__(self):
         self.orders, self.payments, self.refunds, self.captured_calls = [], {}, [], []
         self.fail_orders = False
+        self.order_lookup_down = False
 
     def create_order(self, amount, receipt, notes=None):
         if self.fail_orders:
@@ -149,6 +157,11 @@ class Gateway:
 
     def fetch_payment(self, pay_id):
         return dict(self.payments[pay_id])
+
+    def fetch_order_payments(self, order_id):
+        if self.order_lookup_down:
+            raise main.billing.BillingError("down")
+        return [dict(p) for p in self.payments.values() if p.get("order_id") == order_id]
 
     def capture_payment(self, pay_id, amount):
         self.captured_calls.append(pay_id)
@@ -170,6 +183,7 @@ def gateway(monkeypatch):
     monkeypatch.setattr(main.billing, "create_order", gw.create_order)
     monkeypatch.setattr(main.billing, "fetch_payment", gw.fetch_payment)
     monkeypatch.setattr(main.billing, "capture_payment", gw.capture_payment)
+    monkeypatch.setattr(main.billing, "fetch_order_payments", gw.fetch_order_payments)
     monkeypatch.setattr(main.billing, "create_refund", gw.create_refund)
     return gw
 

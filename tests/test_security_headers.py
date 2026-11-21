@@ -20,6 +20,6 @@ def test_no_secrets_in_templates_or_static_js():
     import glob
     blob = "".join(open(f, errors="ignore").read() for f in glob.glob("templates/**/*.html", recursive=True) + glob.glob("static/js/*.js"))
     import re
-    for needle in ("RAZORPAY_KEY_SECRET", "OPENAI_API_KEY", "GEMINI_API_KEY", "SECRET_KEY"):
+    for needle in ("RAZORPAY_KEY_SECRET", "GEMINI_API_KEY", "SECRET_KEY"):
         assert needle not in blob, needle
     assert not re.search(r"sk-[A-Za-z0-9_-]{20,}|rzp_(live|test)_[A-Za-z0-9]{6,}|AIza[0-9A-Za-z_-]{20,}", blob)

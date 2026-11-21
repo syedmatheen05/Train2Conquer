@@ -1,9 +1,9 @@
 {% extends "admin/_layout.html" %}
-{% from "admin/_macros.html" import select %}
+{% from "admin/_macros.html" import empty, select %}
 {% block title %}Payments{% endblock %}
 {% block heading %}Payments{% endblock %}
 {% block content %}
-<p class="t2c-fin-note">Read-only. Payment records can't be edited or deleted here: they are the financial audit trail. Refunds are approved on the <a class="t2c-admin-link" href="{{ url_for('admin.finance_overview') }}">Finance</a> page and go through Razorpay only.</p>
+<p class="t2c-admin-note">Read-only. Payment records can't be edited or deleted here: they are the financial audit trail. Refunds are approved on the <a class="t2c-admin-link" href="{{ url_for('admin.finance_overview') }}">Finance</a> page and go through Razorpay only.</p>
 <form class="t2c-admin-search" method="GET" action="{{ url_for('admin.payments') }}">
     <input type="text" name="q" value="{{ search }}" placeholder="Payment ID, Razorpay order/payment ID, user...">
     {{ select('status', 'Status', buckets, status) }}
@@ -26,7 +26,7 @@
         <td><a class="t2c-admin-btn" href="{{ url_for('admin.payment_detail', payment_id=payment.id) }}">View</a></td>
     </tr>{% endfor %}</tbody>
 </table>
-{% else %}<div class="t2c-admin-empty">No payments match these filters.</div>{% endif %}
+{% else %}{{ empty("No payments match these filters", "Try changing or resetting the filters.") }}{% endif %}
 </div>
 {% include "admin/_pagination.html" %}
 {% endblock %}

@@ -14,5 +14,4 @@ python-dotenv
 requests
 google-genai
 razorpay
-openai
 setuptools

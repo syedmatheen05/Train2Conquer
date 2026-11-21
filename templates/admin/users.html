@@ -1,5 +1,5 @@
 {% extends "admin/_layout.html" %}
-{% from "admin/_macros.html" import select %}
+{% from "admin/_macros.html" import empty, select %}
 {% block title %}Users{% endblock %}
 {% block heading %}Users{% endblock %}
 {% block content %}
@@ -33,7 +33,7 @@
     {% endfor %}
     </tbody>
 </table>
-{% else %}<div class="t2c-admin-empty">No users match these filters.</div>{% endif %}
+{% else %}{{ empty("No users match these filters", "Try changing or resetting the filters.") }}{% endif %}
 </div>
 {% include "admin/_pagination.html" %}
 {% endblock %}

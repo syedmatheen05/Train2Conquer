@@ -1,5 +1,5 @@
 {% extends "admin/_layout.html" %}
-{% from "admin/_macros.html" import select %}
+{% from "admin/_macros.html" import empty, select %}
 {% block title %}Workout plans{% endblock %}
 {% block heading %}Workout plans{% endblock %}
 {% block content %}
@@ -19,12 +19,12 @@
         <td data-label="User"><a class="t2c-admin-link" href="{{ url_for('admin.user_detail', user_id=r.user_id) }}">{{ r.user_name }}</a><br><small class="t2c-admin-muted">{{ r.user_email }}</small></td>
         <td data-label="Week">{{ r.week_number }}</td>
         <td data-label="Type"><span class="t2c-admin-pill">{{ "free" if r.tier == "basic" else "premium · " ~ r.tier }}</span></td>
-        <td data-label="Status"><span class="t2c-admin-pill t2c-pill-{{ r.status }}">{{ r.status }}</span></td>
+        <td data-label="Status"><span class="t2c-admin-pill t2c-pill-{{ r.status }}">{{ r.status }}</span>{% if r.is_archived %} <span class="t2c-admin-pill" title="Replaced by a newer plan after the profile was edited">archived</span>{% endif %}</td>
         <td data-label="Created">{{ r.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
         <td><a class="t2c-admin-btn" href="{{ url_for('admin.plan_detail', plan_id=r.id) }}">View</a></td>
     </tr>{% endfor %}</tbody>
 </table>
-{% else %}<div class="t2c-admin-empty">No plans match these filters.</div>{% endif %}
+{% else %}{{ empty("No plans match these filters", "Try changing or resetting the filters.") }}{% endif %}
 </div>
 {% include "admin/_pagination.html" %}
 {% endblock %}

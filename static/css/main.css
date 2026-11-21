@@ -23,6 +23,54 @@
    click a link.
 ===================================================================== */
 
+/* ---- 0. Design tokens ---------------------------------------------------
+   ONE place for the Train2Conquer look. New and shared components (admin panel,
+   payment panels, dialogs) read these instead of hard-coding colours.
+   They are DEFAULTS: a page can still override any of them on its own
+   <body class="page-..."> (the older per-page palettes keep working untouched).
+   Rule of thumb: need a colour, radius or shadow? Use a token. Need a new one?
+   Add it here, once. ---------------------------------------------------------- */
+:root {
+    /* brand */
+    --t2c-orange: #FF4B26;
+    --t2c-orange-soft: rgba(255, 75, 38, .14);
+    --t2c-gold: #D9A83B;
+    --t2c-gradient: linear-gradient(135deg, #FF4B26, #D9A83B);
+    /* surfaces (darkest -> lightest) */
+    --t2c-bg: #07080B;
+    --t2c-surface: #101319;
+    --t2c-surface-2: #171A21;
+    --t2c-surface-3: #1E222B;
+    /* text */
+    --t2c-text: #F5F4EF;
+    --t2c-muted: #9A9EAB;
+    --t2c-faint: #6E7280;
+    /* lines */
+    --t2c-border: rgba(255, 255, 255, .08);
+    --t2c-border-strong: rgba(255, 255, 255, .18);
+    /* status */
+    --t2c-green: #48D99B;
+    --t2c-danger: #FF6860;
+    --t2c-warn: #F0B84B;
+    --t2c-info: #7DB4FF;
+    /* shape + depth */
+    --t2c-radius: 16px;
+    --t2c-radius-sm: 10px;
+    --t2c-radius-pill: 999px;
+    --t2c-shadow-sm: 0 1px 2px rgba(0, 0, 0, .35);
+    --t2c-shadow-md: 0 10px 30px rgba(0, 0, 0, .3);
+    /* type */
+    --t2c-font: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --t2c-font-display: 'Anton', 'Impact', sans-serif;
+    --t2c-text-sm: 13px;
+    --t2c-text-md: 14px;
+    /* spacing scale */
+    --t2c-space-1: 4px;  --t2c-space-2: 8px;  --t2c-space-3: 12px;
+    --t2c-space-4: 16px; --t2c-space-5: 24px; --t2c-space-6: 32px;
+    /* keyboard focus (the SAME ring everywhere) */
+    --t2c-focus: #FF5A36;
+}
+
 /* ---- 1. Site-wide reset -------------------------------------------------- */
 html { scroll-behavior: smooth; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -49,10 +97,11 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
+summary:focus-visible,
 [tabindex]:focus-visible {
-    outline: 2px solid var(--t2c-flame, #FF5A36);
+    outline: 2px solid var(--t2c-focus);
     outline-offset: 2px;
-    border-radius: 4px;
+    /* no border-radius here: the outline follows the element's own shape (pills stay pills) */
 }
 
 /* ---- 2. Page loader spinner ---------------------------------------------- */
@@ -789,3 +838,22 @@ nav{
 #resend-btn {
     width: fit-content !important;
 }
+
+/* ---- 2c. Confirm dialog extras + toast notifications (static/js/main.js) ---- */
+.t2c-confirm-primary { background: linear-gradient(135deg, #FF512F, #FF8A3D); color: #170E0A; }
+.t2c-confirm-box:focus-within { outline: none; }
+.t2c-confirm-actions button:focus-visible { outline: 2px solid #FF5A36; outline-offset: 2px; }
+.t2c-toasts { position: fixed; right: 16px; bottom: 16px; z-index: 100000; display: grid; gap: 10px; max-width: min(380px, calc(100vw - 32px)); }
+.t2c-toast {
+    padding: 12px 16px; border-radius: 12px; font: 600 13.5px/1.5 'Manrope', system-ui, sans-serif;
+    background: #181B21; color: #F7F7F5; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 12px 28px rgba(0,0,0,.4);
+    animation: t2cFlashIn .25s ease both; transition: opacity .3s ease, transform .3s ease;
+}
+.t2c-toast-success { border-color: rgba(70,214,145,.5); color: #8FE9BC; }
+.t2c-toast-error { border-color: rgba(255,104,96,.5); color: #FFAFA9; }
+.t2c-toast-warning { border-color: rgba(240,184,75,.5); color: #F5CD82; }
+.t2c-toast-info { border-color: rgba(90,170,255,.5); color: #9CC7FF; }
+.t2c-toast-hide { opacity: 0; transform: translateY(8px); }
+
+/* Helper text under form fields (render_form "description") - readable on the dark theme */
+.form-text { color: var(--t2c-muted); font-size: 12px; opacity: 1; }

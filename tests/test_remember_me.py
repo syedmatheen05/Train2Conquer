@@ -184,17 +184,64 @@ def test_normal_user_never_gets_admin_even_with_remember_me(client, user, sent_c
     log_in_with_otp(client, sent_codes)
     close_browser(client)
     r = client.get("/admin")
-    assert r.status_code == 302 and "/admin" not in r.headers["Location"]
+    assert r.status_code == 403 and b"Access denied" in r.data
+    assert client.get("/fitness-profile").status_code == 200                        # NOT logged out by the denial
 
 
-def test_admin_restored_from_cookie_must_confirm_again_for_the_admin_panel(client, make_user, sent_codes):
+def test_admin_restored_from_cookie_opens_the_panel_without_a_second_login(client, make_user, sent_codes):
     make_user(email="boss@example.com", admin=True, profile=False)
     log_in_with_otp(client, sent_codes, email="boss@example.com")
-    assert client.get("/admin").status_code == 200                                # fresh login: allowed
+    close_browser(client)                                                         # only the Remember Me cookie is left
+    assert client.get("/admin").status_code == 200                                # no second login to LOOK at the panel
+    assert client.get("/admin/users").status_code == 200
+
+
+def test_admin_restored_from_cookie_must_confirm_before_changing_things(client, make_user, sent_codes):
+    uid = make_user(email="boss@example.com", admin=True, profile=False)
+    other = make_user(email="victim@example.com", profile=False)
+    log_in_with_otp(client, sent_codes, email="boss@example.com")
     close_browser(client)
-    r = client.get("/admin")                                                      # restored from cookie: not fresh
+    r = client.post(f"/admin/users/{other}/delete", data={"confirm": "victim@example.com"},
+                    headers={"Referer": "http://localhost/admin/users/%d" % other})
     assert r.status_code == 302 and "/login" in r.headers["Location"]
-    assert client.get("/fitness-profile").status_code == 200                      # ordinary pages still work
+    with main.app.app_context():
+        assert db.session.get(User, other) is not None                            # nothing deleted
+    with client.session_transaction() as s:
+        assert s["post_login_next"] == "/admin/users/%d" % other                   # comes back here after the code
+
+
+def test_strict_setting_makes_every_admin_page_need_a_fresh_login(client, make_user, sent_codes, monkeypatch):
+    monkeypatch.setenv("ADMIN_REQUIRE_FRESH_LOGIN", "always")
+    make_user(email="boss@example.com", admin=True, profile=False)
+    log_in_with_otp(client, sent_codes, email="boss@example.com")
+    assert client.get("/admin").status_code == 200
+    close_browser(client)
+    r = client.get("/admin")
+    assert r.status_code == 302 and "/login" in r.headers["Location"]
+
+
+def test_guest_is_sent_to_login_and_lands_on_admin_after_verifying(client, make_user, sent_codes):
+    make_user(email="boss@example.com", admin=True, profile=False)
+    r = client.get("/admin/payments")
+    assert r.status_code == 302 and "/login" in r.headers["Location"]
+    client.get(r.headers["Location"])                                             # login page remembers where they were going
+    client.post("/login", data={"email": "boss@example.com"})
+    code = sent_codes[-1][1]
+    done = client.post("/verify-otp", data={"verification_code": code})
+    assert done.status_code == 302 and done.headers["Location"].endswith("/admin/payments")
+
+
+def test_login_next_cannot_redirect_off_site(client, make_user, sent_codes):
+    make_user(email="a@example.com", profile=False)
+    for evil in ("https://evil.example/x", "//evil.example", "/\\evil.example", "javascript:alert(1)"):
+        client.get("/login", query_string={"next": evil})
+        client.post("/login", data={"email": "a@example.com"})
+        done = client.post("/verify-otp", data={"verification_code": sent_codes[-1][1]})
+        assert done.status_code == 302 and "evil" not in done.headers["Location"], evil
+        client.post("/logout")
+        import time; time.sleep(0)  # cooldown is per e-mail; clear it below
+        with main.app.app_context():
+            db.session.query(__import__("models").OtpCode).delete(); db.session.commit()
 
 
 def test_admin_rights_come_from_the_database_not_the_cookie(client, make_user, sent_codes):
@@ -203,7 +250,7 @@ def test_admin_rights_come_from_the_database_not_the_cookie(client, make_user, s
     with main.app.app_context():
         db.session.get(User, uid).is_admin = False
         db.session.commit()
-    assert client.get("/admin").status_code == 302
+    assert client.get("/admin").status_code == 403                                 # rights live in the database
 
 
 def test_sensitive_actions_need_a_fresh_login(client, user, sent_codes):

@@ -106,7 +106,7 @@ def test_unknown_email_looks_exactly_like_a_real_one_and_sends_nothing(client, m
 
 def test_registering_an_existing_email_does_not_reveal_it(client, make_user, sent_codes):
     make_user(email="real@example.com")
-    r = client.post("/register", data={"name": "X", "email": "real@example.com"}, follow_redirects=True)
+    r = client.post("/register", data={"name": "Xavier Ray", "email": "real@example.com"}, follow_redirects=True)
     assert "already exists" not in r.get_data(as_text=True) and r.request.path == "/verify-otp"
 
 

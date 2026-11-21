@@ -9,7 +9,6 @@ Two modes:
   * DEVELOPMENT - your computer. Razorpay TEST keys are allowed.
 """
 import os
-from decimal import Decimal, InvalidOperation
 
 DEFAULT_SECRET_KEY = "change-this-in-production"
 
@@ -103,44 +102,15 @@ def price_paise(tier):
     return value if value >= 100 else _DEFAULT_PRICE_PAISE[tier]   # Razorpay minimum is Rs 1
 
 
-# --------------------------------------------------------------- AI models
-MODEL_ENV = {"personalized": "PERSONALIZED_PLAN_MODEL", "advanced": "ADVANCED_PLAN_MODEL"}
-MODEL_DEFAULTS = {"personalized": "gpt-6-luna", "advanced": "gpt-6.1-sol"}
+# --------------------------------------------------------------- AI (Gemini only)
+# One provider for every plan type (Basic, Personalized, Advanced): Google Gemini,
+# through gemini_service.py. The key is GEMINI_API_KEY (as before).
+DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 
-def plan_model(tier):
-    """Model id for a paid tier. Comes only from the environment (with the
-    verified defaults). Never shown to customers."""
-    name = MODEL_ENV.get(tier)
-    if not name:
-        return ""
-    return _env(name) or MODEL_DEFAULTS[tier]
-
-
-# ---------------------------------------------------------- Money settings
-def _decimal_env(name, default=None):
-    raw = _env(name)
-    if not raw:
-        return default
-    try:
-        value = Decimal(raw)
-    except InvalidOperation:
-        return default
-    return value if value >= 0 else default
-
-
-def usd_to_inr():
-    """Configurable exchange rate. None means 'not set' (INR cost = unknown)."""
-    rate = _decimal_env("OPENAI_USD_TO_INR")
-    return rate if rate and rate > 0 else None
-
-
-def daily_ai_limit_usd():
-    return _decimal_env("OPENAI_DAILY_LIMIT_USD", Decimal("5.00"))
-
-
-def per_generation_limit_usd():
-    return _decimal_env("OPENAI_PER_GENERATION_LIMIT_USD", Decimal("0.50"))
+def gemini_model():
+    """Model id (same one the Basic plan always used). Optional override: GEMINI_MODEL."""
+    return _env("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
 
 
 def int_env(name, default):
@@ -150,17 +120,27 @@ def int_env(name, default):
         return default
 
 
+def ai_timeout_seconds():
+    return max(10, int_env("PAID_AI_TIMEOUT_SECONDS", 90))
+
+
 def max_output_tokens():
     return int_env("PAID_AI_MAX_OUTPUT_TOKENS", 9000)
 
 
 def max_ai_attempts():
-    """API calls allowed per generation job (first try + repairs). 1-4."""
+    """Answers we may ask for per generation (first try + repairs after a bad answer). 1-4."""
     return max(1, min(4, int_env("PAID_AI_MAX_ATTEMPTS", 2)))
 
 
+def gemini_max_tries():
+    """Network-level tries per request for transient errors (rate limit, 5xx, timeout). 1-5."""
+    return max(1, min(5, int_env("GEMINI_MAX_TRIES", 3)))
+
+
 def daily_ai_request_limit():
-    return int_env("OPENAI_DAILY_MAX_REQUESTS", 500)
+    """Safety valve for the free Gemini quota: requests per UTC day across all plans."""
+    return int_env("GEMINI_DAILY_MAX_REQUESTS", 500)
 
 
 # ------------------------------------------------------------ App startup
@@ -184,3 +164,14 @@ def generation_mode():
     """'inline' = web server runs jobs itself, 'worker' = separate worker.py."""
     mode = _env("GENERATION_MODE", "inline").lower()
     return mode if mode in ("inline", "worker") else "inline"
+
+
+def admin_fresh_login_mode():
+    """When must an admin confirm their e-mail again (a "fresh" login)?
+
+    "writes" (default): only for admin actions that change something (POST: delete, refund, ...).
+        Opening admin pages works for any logged-in admin, including one restored by Remember Me.
+    "always": every admin page needs a fresh login (the strictest setting).
+    Admin rights themselves are ALWAYS checked on the server, from the database, on every request.
+    """
+    return "always" if _env("ADMIN_REQUIRE_FRESH_LOGIN", "writes").lower() == "always" else "writes"

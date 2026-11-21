@@ -1,11 +1,19 @@
+"""Plan generation: ALL three plan types use Gemini (gemini_service), nothing else.
+
+Covers the free Basic plan, paid Personalized/Advanced plans (only after a verified
+payment), Gemini error handling, retries, and the money/job-safety guarantees.
+"""
+import json
+import pathlib
+import re
 from decimal import Decimal
 
 import pytest
 
+import gemini_service
 import main
-from conftest import FakeOpenAI, buy, fake_response, login, valid_plan_json
+from conftest import ApiError, FakeGemini, buy, fake_response, login, valid_plan_json
 from models import AIUsage, Payment, WorkoutPlan, db
-import costing
 
 
 def rows(model):
@@ -19,180 +27,221 @@ def paid_job(client, gateway, make_user, tier="personalized"):
     return uid
 
 
-# ---- 1. free plan: Gemini only, OpenAI never touched ----
-def test_basic_plan_uses_gemini_and_never_openai(client, make_user, monkeypatch):
-    uid = make_user(); login(client, uid)
-    monkeypatch.setattr(main, "generate_fitness_plan", lambda profile, previous_plan=None: valid_plan_json())
-    assert client.post("/plans/basic").status_code == 302
-    main.process_queue()                       # the autouse fixture makes any OpenAI client creation explode
-    plan = rows(WorkoutPlan)[0]
-    assert plan.status == "ready" and plan.ai_provider == "gemini" and plan.payment_id is None
-    assert rows(AIUsage) == [] and rows(Payment) == []
+def free_job(client, make_user):
+    uid = make_user()
+    login(client, uid)
+    client.post("/plans/basic")
+    return uid
 
 
-def test_basic_plan_failure_is_retryable_and_free(client, make_user, monkeypatch):
-    uid = make_user(); login(client, uid)
-    monkeypatch.setattr(main, "generate_fitness_plan", lambda profile, previous_plan=None: "not json")
-    client.post("/plans/basic"); main.process_queue()
-    plan = rows(WorkoutPlan)[0]
-    assert plan.status == "failed" and plan.error_message == "invalid_output"
-
-
-# ---- 11/16/17. successful OpenAI generation, tokens and cost ----
-def test_personalized_generation_records_tokens_and_exact_cost(client, gateway, make_user, fake_openai):
-    paid_job(client, gateway, make_user)
-    ai = fake_openai([fake_response(valid_plan_json(), tokens_in=1000, tokens_out=2000, cached=200, reasoning=300)])
-    main.process_queue()
-    plan, pay = rows(WorkoutPlan)[0], rows(Payment)[0]
-    assert plan.status == "ready" and plan.generation_status == "succeeded" and pay.status == "used" and pay.used_at
-    u = rows(AIUsage)
-    assert len(u) == 1
-    row = u[0]
-    # luna: fresh 800*0.10 + cached 200*0.01 + 2000*0.50 per million = 0.001082
-    assert (row.model, row.status, row.input_tokens, row.output_tokens, row.cached_input_tokens,
-            row.reasoning_tokens) == ("gpt-6-luna", "success", 1000, 2000, 200, 300)
-    assert row.cost_usd == Decimal("0.001082") and row.cost_inr == Decimal("0.0974") and row.request_id == "req_fake"
-    assert (plan.ai_input_tokens, plan.ai_output_tokens, plan.ai_model, plan.ai_cost_complete) == (1000, 2000, "gpt-6-luna", True)
-    assert plan.ai_cost_usd == Decimal("0.001082") and plan.generation_attempts == 1
-    assert ai.calls[0]["max_output_tokens"] == 9000 and ai.calls[0]["model"] == "gpt-6-luna"
-
-
-def test_advanced_uses_advanced_model_and_coach_notes(client, gateway, make_user, fake_openai):
-    paid_job(client, gateway, make_user, tier="advanced")
-    import json
-    wrapped = json.dumps({"plan": json.loads(valid_plan_json()), "coach_notes": "Nice work."})
-    ai = fake_openai([fake_response(wrapped, tokens_in=10000, tokens_out=5000)])
+# ---- 1. all three plan types use Gemini ----
+def test_basic_plan_uses_gemini(client, make_user, fake_gemini):
+    ai = fake_gemini([fake_response(valid_plan_json())])
+    free_job(client, make_user)
     main.process_queue()
     plan = rows(WorkoutPlan)[0]
-    assert ai.calls[0]["model"] == "gpt-6.1-sol" and plan.coach_notes == "Nice work."
-    assert rows(AIUsage)[0].cost_usd == Decimal("0.070000")
+    assert plan.status == "ready" and plan.tier == "basic" and plan.ai_provider == "gemini" and len(ai.calls) == 1
+    assert ai.calls[0]["model"] == "gemini-3.1-flash-lite"
 
 
-def test_models_come_from_environment(client, gateway, make_user, fake_openai, monkeypatch):
-    monkeypatch.setenv("PERSONALIZED_PLAN_MODEL", "custom-model")
-    paid_job(client, gateway, make_user)
-    ai = fake_openai([fake_response(valid_plan_json())])
+def test_personalized_plan_uses_gemini_after_payment(client, gateway, make_user, fake_gemini):
+    paid_job(client, gateway, make_user, "personalized")
+    ai = fake_gemini([fake_response(valid_plan_json(), tokens_in=1000, tokens_out=2000, cached=200, reasoning=300)])
     main.process_queue()
-    row = rows(AIUsage)[0]
-    assert ai.calls[0]["model"] == "custom-model" and row.cost_usd is None and row.cost_inr is None  # unknown, not 0
-    assert rows(WorkoutPlan)[0].ai_cost_complete is False
+    plan, usage = rows(WorkoutPlan)[0], rows(AIUsage)[0]
+    assert plan.status == "ready" and plan.ai_provider == "gemini" and rows(Payment)[0].status == "used"
+    assert (usage.provider, usage.input_tokens, usage.output_tokens, usage.cached_input_tokens, usage.reasoning_tokens) == \
+        ("gemini", 1000, 2000, 200, 300)
+    assert usage.cost_usd == Decimal(0) and usage.cost_inr == Decimal(0)       # free tier: exactly zero, not unknown
+    assert "PERSONALIZED PLAN RULES" in ai.calls[0]["instructions"]
 
 
-# ---- 12/15. invalid JSON: every billable attempt counted ----
-def test_invalid_json_two_attempts_both_billed(client, gateway, make_user, fake_openai):
-    paid_job(client, gateway, make_user)
-    ai = fake_openai([fake_response("this is not json", 1000, 500), fake_response('{"day_1": []}', 1200, 600)])
+def test_advanced_plan_uses_gemini_and_keeps_coach_notes(client, gateway, make_user, fake_gemini):
+    paid_job(client, gateway, make_user, "advanced")
+    wrapped = json.dumps({"plan": json.loads(valid_plan_json()), "coach_notes": "  Nice work. We stepped up the volume.  "})
+    ai = fake_gemini([fake_response(wrapped)])
     main.process_queue()
-    plan, pay = rows(WorkoutPlan)[0], rows(Payment)[0]
-    assert len(ai.calls) == 2                                   # attempt limit respected, no loop
-    assert plan.status == "failed" and plan.error_message == "invalid_output" and pay.status == "paid"
-    u = rows(AIUsage)
-    assert [r.status for r in u] == ["invalid_output", "invalid_output"] and [r.attempt_number for r in u] == [1, 2]
-    expected = costing.compute_cost_usd("gpt-6-luna", 1000, 500) + costing.compute_cost_usd("gpt-6-luna", 1200, 600)
-    assert plan.ai_cost_usd == expected and plan.generation_attempts == 2 and plan.ai_cost_complete is True
-    assert plan.ai_input_tokens == 2200 and plan.ai_output_tokens == 1100
+    plan = rows(WorkoutPlan)[0]
+    assert plan.status == "ready" and plan.tier == "advanced" and plan.ai_provider == "gemini"
+    assert plan.coach_notes == "Nice work. We stepped up the volume."
+    assert "ADVANCED PLAN RULES" in ai.calls[0]["instructions"] and '"HISTORY"' in ai.calls[0]["input"]
 
 
-def test_repair_attempt_can_succeed(client, gateway, make_user, fake_openai):
+def test_plan_types_keep_their_own_prompts_and_history(client, gateway, make_user, fake_gemini):
+    free_ai = fake_gemini([fake_response(valid_plan_json())])
+    free_job(client, make_user); main.process_queue()
+    p = free_ai.calls[0]
+    assert "BASIC PLAN RULES" in p["instructions"] and '"PREVIOUS_PLAN"' in p["input"] and "USER_NOTES" not in p["input"]
+    assert "PERSONALIZED PLAN RULES" not in p["instructions"] and "ADVANCED PLAN RULES" not in p["instructions"]
+
+
+def test_model_can_be_set_from_environment(client, gateway, make_user, fake_gemini, monkeypatch):
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-custom")
     paid_job(client, gateway, make_user)
-    ai = fake_openai([fake_response("oops"), fake_response(valid_plan_json())])
+    ai = fake_gemini([fake_response(valid_plan_json())])
     main.process_queue()
-    assert rows(WorkoutPlan)[0].status == "ready" and len(rows(AIUsage)) == 2
+    assert ai.calls[0]["model"] == "gemini-custom" and rows(AIUsage)[0].model == "gemini-custom"
+
+
+def test_no_openai_anywhere_in_the_application():
+    root = pathlib.Path(main.__file__).parent
+    offenders = []
+    for path in list(root.glob("*.py")) + list((root / "templates").rglob("*.html")) + list((root / "static").rglob("*.js")) \
+            + [root / "requirements.txt", root / ".env.example", root / "render.yaml.example"]:
+        if path.name == "migrations.py":          # one historical data label for old rows, documented there
+            continue
+        if re.search(r"openai", path.read_text(errors="ignore"), re.I):
+            offenders.append(path.name)
+    assert offenders == []
+
+
+# ---- 2. malformed / incomplete answers ----
+def test_invalid_json_two_attempts_both_recorded(client, gateway, make_user, fake_gemini):
+    paid_job(client, gateway, make_user)
+    ai = fake_gemini([fake_response("this is not json", 1000, 500), fake_response('{"day_1": []}', 1200, 600)])
+    main.process_queue()
+    plan, usage = rows(WorkoutPlan)[0], rows(AIUsage)
+    assert plan.status == "failed" and plan.error_message == "invalid_output" and rows(Payment)[0].status == "paid"
+    assert len(ai.calls) == 2 and [u.status for u in usage] == ["invalid_output", "invalid_output"]
     assert "rejected" in ai.calls[1]["input"]
 
 
-def test_attempt_limit_is_configurable(client, gateway, make_user, fake_openai, monkeypatch):
+def test_repair_attempt_can_succeed(client, gateway, make_user, fake_gemini):
+    paid_job(client, gateway, make_user)
+    ai = fake_gemini([fake_response("oops"), fake_response(valid_plan_json())])
+    main.process_queue()
+    assert rows(WorkoutPlan)[0].status == "ready" and len(ai.calls) == 2
+
+
+def test_attempt_limit_is_configurable(client, gateway, make_user, fake_gemini, monkeypatch):
     monkeypatch.setenv("PAID_AI_MAX_ATTEMPTS", "1")
     paid_job(client, gateway, make_user)
-    ai = fake_openai([fake_response("bad"), fake_response(valid_plan_json())])
+    ai = fake_gemini([fake_response("bad"), fake_response(valid_plan_json())])
     main.process_queue()
     assert len(ai.calls) == 1 and rows(WorkoutPlan)[0].status == "failed"
 
 
-# ---- 13. timeout / error before usage: cost UNKNOWN and no blind retry ----
-def test_timeout_records_unknown_cost_and_stops(client, gateway, make_user, fake_openai):
-    class APITimeoutError(Exception): pass
-    paid_job(client, gateway, make_user)
-    ai = fake_openai([APITimeoutError("t"), fake_response(valid_plan_json())])
-    main.process_queue()
+def test_answer_wrapped_in_code_fence_or_text_is_still_read(client, make_user, fake_gemini):
+    fake_gemini([fake_response("```json\n" + valid_plan_json() + "\n```")])
+    free_job(client, make_user); main.process_queue()
+    assert rows(WorkoutPlan)[0].status == "ready"
+
+
+def test_extract_json_object_handles_messy_answers():
+    assert gemini_service.extract_json_object('Sure! {"a": 1} Hope that helps')["a"] == 1
+    for bad in ("", "   ", None, "[1, 2]", "no json", '{"a": '):
+        with pytest.raises(ValueError):
+            gemini_service.extract_json_object(bad)
+
+
+def test_incomplete_plan_is_rejected(client, make_user, fake_gemini):
+    plan = json.loads(valid_plan_json()); del plan["day_7"]
+    fake_gemini([fake_response(json.dumps(plan)), fake_response(json.dumps(plan))])
+    free_job(client, make_user); main.process_queue()
+    assert rows(WorkoutPlan)[0].status == "failed" and rows(WorkoutPlan)[0].error_message == "invalid_output"
+
+
+# ---- 3. Gemini errors: transient retried (bounded), permanent not ----
+def test_rate_limit_is_retried_then_succeeds(client, make_user, fake_gemini):
+    ai = fake_gemini([ApiError(429), ApiError(503), fake_response(valid_plan_json())])
+    free_job(client, make_user); main.process_queue()
+    assert rows(WorkoutPlan)[0].status == "ready" and len(ai.calls) == 3
+
+
+def test_retries_are_bounded_and_end_cleanly(client, make_user, fake_gemini):
+    ai = fake_gemini([ApiError(429)] * 10)
+    free_job(client, make_user); main.process_queue()
     plan = rows(WorkoutPlan)[0]
-    assert len(ai.calls) == 1 and plan.status == "failed" and plan.error_message == "timeout"
-    row = rows(AIUsage)[0]
-    assert row.status == "error" and row.input_tokens is None and row.cost_usd is None and row.error_type == "APITimeoutError"
-    assert plan.ai_cost_complete is False
+    assert len(ai.calls) == 3 and plan.status == "failed" and plan.error_message == "rate_limit"   # GEMINI_MAX_TRIES default
 
 
-def test_sdk_hidden_retries_are_disabled(monkeypatch):
-    from conftest import ORIGINAL_CLIENT_FACTORY
-    seen = {}
-    class Capture:
-        def __init__(self, **kw): seen.update(kw)
-    import openai
-    monkeypatch.setattr(openai, "OpenAI", Capture)
-    ORIGINAL_CLIENT_FACTORY("personalized")
-    assert seen["max_retries"] == 0 and seen["api_key"] == "sk-fake"
+def test_permanent_errors_are_not_retried(client, make_user, fake_gemini):
+    ai = fake_gemini([ApiError(403), fake_response(valid_plan_json())])
+    free_job(client, make_user); main.process_queue()
+    assert len(ai.calls) == 1 and rows(WorkoutPlan)[0].error_message == "config"
 
 
-# ---- 14. retry without paying again ----
-def test_retry_after_failure_reuses_payment(client, gateway, make_user, fake_openai):
+def test_timeout_is_reported_as_timeout(client, make_user, fake_gemini):
+    class ReadTimeout(Exception): pass
+    fake_gemini([ReadTimeout("t")] * 3)
+    free_job(client, make_user); main.process_queue()
+    assert rows(WorkoutPlan)[0].status == "failed" and rows(WorkoutPlan)[0].error_message == "timeout"
+
+
+def test_empty_answer_is_retried_then_fails_safely(client, make_user, fake_gemini):
+    ai = fake_gemini([fake_response(""), fake_response(None), fake_response("")])
+    free_job(client, make_user); main.process_queue()
+    assert len(ai.calls) == 3 and rows(WorkoutPlan)[0].error_message == "invalid_output"
+
+
+def test_missing_api_key_is_a_config_error(client, make_user, monkeypatch):
+    monkeypatch.undo()                 # drop the autouse fake client so the real key check runs
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with pytest.raises(gemini_service.GeminiError) as caught:
+        gemini_service._client()
+    assert caught.value.code == "config"
+
+
+def test_logs_never_contain_the_key_or_prompt(client, make_user, fake_gemini, capsys):
+    fake_gemini([ApiError(500, "boom with secret-key-123 and user data")] * 3)
+    free_job(client, make_user); main.process_queue()
+    out = capsys.readouterr()
+    assert "secret-key-123" not in out.out + out.err and "boom" not in out.out + out.err and "USER_PROFILE" not in out.out + out.err
+
+
+# ---- 4. retry without paying again ----
+def test_retry_after_failure_reuses_payment(client, gateway, make_user, fake_gemini):
     uid = paid_job(client, gateway, make_user)
-    fake_openai([fake_response("bad"), fake_response("bad")])
+    fake_gemini([fake_response("bad"), fake_response("bad")])
     main.process_queue()
     plan_id = rows(WorkoutPlan)[0].id
     login(client, uid)
     assert client.post(f"/plans/{plan_id}/retry").status_code == 302
     assert rows(WorkoutPlan)[0].status == "generating" and rows(Payment)[0].attempts == 2
-    fake_openai([fake_response(valid_plan_json())])
+    fake_gemini([fake_response(valid_plan_json())])
     main.process_queue()
     assert rows(WorkoutPlan)[0].status == "ready" and len(rows(Payment)) == 1 and rows(Payment)[0].status == "used"
-    assert len(rows(AIUsage)) == 3 and len(gateway.orders) == 1        # no new order, all 3 attempts recorded
+    assert len(rows(AIUsage)) == 3 and len(gateway.orders) == 1        # no new order, all 3 requests recorded
 
 
-def test_retries_are_capped(client, gateway, make_user, fake_openai):
+def test_retries_are_capped(client, gateway, make_user, fake_gemini):
     uid = paid_job(client, gateway, make_user)
     login(client, uid)
     for _ in range(main.MAX_GENERATION_ATTEMPTS):
-        fake_openai([fake_response("bad"), fake_response("bad")]); main.process_queue()
-        pid = rows(WorkoutPlan)[0].id
-        client.post(f"/plans/{pid}/retry")
+        fake_gemini([fake_response("bad"), fake_response("bad")]); main.process_queue()
+        client.post(f"/plans/{rows(WorkoutPlan)[0].id}/retry")
     assert rows(Payment)[0].attempts == main.MAX_GENERATION_ATTEMPTS
-    assert rows(WorkoutPlan)[0].status == "failed" or rows(WorkoutPlan)[0].status == "generating"
+    assert rows(WorkoutPlan)[0].status in ("failed", "generating")
 
 
-def test_paid_plan_never_generated_without_verified_payment(client, make_user, fake_openai):
+# ---- 5. payment gate ----
+def test_paid_plan_never_generated_without_verified_payment(client, make_user, fake_gemini):
     uid = make_user()
     with main.app.app_context():
         p = Payment(user_id=uid, tier="advanced", amount_paise=1500, gateway_order_id="order_fake", status="created")
         db.session.add(p); db.session.flush()
         db.session.add(WorkoutPlan(user_id=uid, plan="{}", status="generating", generation_status="queued",
                                    tier="advanced", payment_id=p.id)); db.session.commit()
-    ai = fake_openai([fake_response(valid_plan_json())])
+    ai = fake_gemini([fake_response(valid_plan_json())])
     main.process_queue()
     assert ai.calls == [] and rows(WorkoutPlan)[0].status == "failed"
 
 
-# ---- spending limits ----
-def test_daily_limit_blocks_openai_call(client, gateway, make_user, fake_openai, monkeypatch):
-    monkeypatch.setenv("OPENAI_DAILY_LIMIT_USD", "0.001")
-    uid = paid_job(client, gateway, make_user)
-    with main.app.app_context():
-        db.session.add(AIUsage(user_id=uid, model="gpt-6-luna", status="success", cost_usd=Decimal("0.01"), attempt_number=1))
-        db.session.commit()
-    ai = fake_openai([fake_response(valid_plan_json())])
-    main.process_queue()
-    plan = rows(WorkoutPlan)[0]
-    assert ai.calls == [] and plan.status == "failed" and plan.error_message == "budget" and rows(Payment)[0].status == "paid"
+def test_prices_are_unchanged():
+    assert main.billing.price_paise("personalized") == 500 and main.billing.price_paise("advanced") == 1500
 
 
-def test_per_generation_limit_stops_repairs(client, gateway, make_user, fake_openai, monkeypatch):
-    monkeypatch.setenv("OPENAI_PER_GENERATION_LIMIT_USD", "0.0001")
+# ---- 6. safety limits and job safety ----
+def test_daily_request_limit_blocks_the_call(client, gateway, make_user, fake_gemini, monkeypatch):
+    monkeypatch.setenv("GEMINI_DAILY_MAX_REQUESTS", "1")
     paid_job(client, gateway, make_user)
-    ai = fake_openai([fake_response("bad", 1000, 2000), fake_response(valid_plan_json())])
-    main.process_queue()
-    assert len(ai.calls) == 1 and rows(WorkoutPlan)[0].status == "failed"
+    fake_gemini([fake_response("bad", 1, 1), fake_response("bad", 1, 1)])
+    main.process_queue()                       # first request is allowed (and rejected as bad); the repair is blocked
+    plan = rows(WorkoutPlan)[0]
+    assert plan.status == "failed" and plan.error_message == "budget" and len(rows(AIUsage)) == 1
 
 
-def test_duplicate_runners_cannot_double_generate(client, gateway, make_user, fake_openai):
+def test_duplicate_runners_cannot_double_generate(client, gateway, make_user, fake_gemini):
     paid_job(client, gateway, make_user)
     pid = rows(WorkoutPlan)[0].id
     with main.app.app_context():
@@ -213,11 +262,11 @@ def test_stale_running_job_becomes_retryable(client, gateway, make_user):
     assert plan.status == "failed" and plan.error_message == "stale" and rows(Payment)[0].status == "paid"
 
 
-def test_users_never_see_model_or_provider_names(client, gateway, make_user, fake_openai):
+def test_users_never_see_model_or_provider_names(client, gateway, make_user, fake_gemini):
     uid = paid_job(client, gateway, make_user)
-    fake_openai([fake_response("bad"), fake_response("bad")]); main.process_queue()
+    fake_gemini([fake_response("bad"), fake_response("bad")]); main.process_queue()
     login(client, uid)
     html = client.get("/").get_data(as_text=True).lower()
-    for word in ("gpt", "openai", "gemini", "luna", "sol "):
+    for word in ("gpt", "openai", "gemini", "flash-lite"):
         assert word not in html
     assert "retry" in html and "refund" in html

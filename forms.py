@@ -1,7 +1,27 @@
 from flask_wtf import FlaskForm
+
+import equipment as equipment_module
+import validation
 from wtforms import BooleanField, EmailField, HiddenField, StringField, SubmitField, SelectField, SelectMultipleField,DateField, IntegerField, TextAreaField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Regexp
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Regexp, ValidationError
 from wtforms.widgets import ListWidget, CheckboxInput
+def person_name(form, field):
+    """Names must look like names (no digits/symbols). Server-side, whatever the browser did."""
+    if not validation.is_valid_name(field.data):
+        raise ValidationError(validation.NAME_ERROR)
+
+
+def unchanged_name_ok(form, field):
+    """Admin edits: an existing record's name may stay as it is; only NEW names must be valid."""
+    if validation.normalise_name(field.data) == validation.normalise_name(field.object_data):
+        return
+    person_name(form, field)
+
+
+NAME_KW = {"data-validate": "person-name", "maxlength": validation.NAME_MAX_LENGTH}
+NAME_HINT = "Letters, spaces, hyphens and apostrophes only."
+
+
 class Loginform(FlaskForm):
     email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
     remember=BooleanField("Remember Me", default=False)   # unchecked unless the user ticks it
@@ -16,13 +36,26 @@ class OTPform(FlaskForm):
     submit=SubmitField("Verify & Continue")
 
 class Registerform(FlaskForm):
-    name=StringField("Full Name",validators=[DataRequired()], render_kw={"autocomplete": "name"})
+    name=StringField("Full Name", filters=[validation.normalise_name], validators=[DataRequired(message="Please enter your name."), person_name],
+                     description=NAME_HINT, render_kw={"autocomplete": "name", **NAME_KW})
     email=EmailField("E-mail",validators=[DataRequired(),Email()], render_kw={"autocomplete": "email"})
     remember=BooleanField("Remember Me", default=False)
     submit=SubmitField("verify")
 
 class FitnessProfileform(FlaskForm):
-    dob=DateField("Date of Birth",format="%Y-%m-%d",validators=[DataRequired()])
+    dob=DateField("Date of Birth", format="%Y-%m-%d", validators=[DataRequired(message="Please enter your date of birth.")],
+                  description=f"You must be at least {validation.MIN_PROFILE_AGE} years old.")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # The picker can't select a date that is too recent (or in the future). The server re-checks below.
+        self.dob.render_kw = {"max": validation.latest_allowed_dob().isoformat(), "min": "1900-01-01",
+                              "data-validate": "min-age", "data-min-age": str(validation.MIN_PROFILE_AGE)}
+
+    def validate_dob(self, field):
+        problem = validation.dob_problem(field.data)
+        if problem:
+            raise ValidationError(problem)
     height=IntegerField("Height (cm)", validators=[DataRequired(),NumberRange(min=100,max=250)])
     weight=IntegerField("Weight (kg)",validators=[DataRequired(),NumberRange(20,200)])
     gender=SelectField("Gender",choices=[("male","Male"),("female","Female"),("other","Other")],validators=[DataRequired()])
@@ -46,24 +79,28 @@ class FitnessProfileform(FlaskForm):
                                                                 ("6", "6 days"),
                                                                 ("7", "Every day")],
                                                         validators=[DataRequired()])
-    equipment = SelectMultipleField("Equipment Available",choices=[("none", "No equipment"),
-                                                                   ("dumbbells", "Dumbbells"),
-                                                                   ("bands", "Resistance bands"),
-                                                                   ("pullup", "Pull-up bar"),
-                                                                   ("bench", "Bench"),
-                                                                   ("kettlebell", "Kettlebell"),
-                                                                   ("barbell", "Barbell")],
-                                                        option_widget=CheckboxInput(),
-                                                        widget=ListWidget(prefix_label=False))
+    equipment = SelectMultipleField("Equipment Available", choices=equipment_module.CHOICES,
+                                    description="Pick \"No equipment\" or \"Gym\" on their own, or tick any mix of individual items.",
+                                    option_widget=CheckboxInput(),
+                                    widget=ListWidget(prefix_label=False))
+
+    def validate_equipment(self, field):
+        """Server-side rule (the browser script is only a convenience): None/Gym stand alone."""
+        problem = equipment_module.validate_selection(field.data)
+        if problem:
+            raise ValidationError(problem)
+
     submit = SubmitField("Save Profile")
 
 class ContactForm(FlaskForm):
     name = StringField(
         "Name",
-        render_kw={"autocomplete": "name"},
+        filters=[validation.normalise_name],
+        render_kw={"autocomplete": "name", **NAME_KW},
         validators=[
             DataRequired(),
-            Length(min=2, max=100)
+            Length(min=2, max=100),
+            person_name,
         ]
     )
 
@@ -194,8 +231,9 @@ class AdminTrainerForm(FlaskForm):
 
     name = StringField(
         "Full Name",
-        validators=[DataRequired(), Length(max=100)],
-        render_kw={"placeholder": "e.g. Priya Sharma"},
+        filters=[validation.normalise_name],
+        validators=[DataRequired(), Length(max=100), unchanged_name_ok],
+        render_kw={"placeholder": "e.g. Priya Sharma", **NAME_KW},
     )
 
     gender = SelectField(
@@ -238,8 +276,9 @@ class AdminUserForm(FlaskForm):
 
     name = StringField(
         "Full Name",
-        validators=[DataRequired(), Length(max=100)],
-        render_kw={"placeholder": "e.g. Syed Matheen", "autocomplete": "off"},
+        filters=[validation.normalise_name],
+        validators=[DataRequired(), Length(max=100), unchanged_name_ok],
+        render_kw={"placeholder": "e.g. Syed Matheen", "autocomplete": "off", **NAME_KW},
     )
 
     email = EmailField(

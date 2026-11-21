@@ -90,6 +90,18 @@ def fetch_payment(payment_id):
         raise BillingError(f"fetch_payment failed: {type(exc).__name__}")
 
 
+def fetch_order_payments(order_id):
+    """Every payment attempt Razorpay has on one order (list of dicts, newest data from the gateway)."""
+    try:
+        reply = _client().order.payments(order_id)
+        items = reply.get("items") if isinstance(reply, dict) else None
+        return [item for item in (items or []) if isinstance(item, dict)]
+    except BillingError:
+        raise
+    except Exception as exc:
+        raise BillingError(f"fetch_order_payments failed: {type(exc).__name__}")
+
+
 def capture_payment(payment_id, amount_paise):
     try:
         return _client().payment.capture(payment_id, int(amount_paise), {"currency": CURRENCY})

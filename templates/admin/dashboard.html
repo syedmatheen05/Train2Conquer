@@ -1,13 +1,15 @@
 {% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import empty %}
 {% block title %}Dashboard{% endblock %}
 {% block kicker %}Train2Conquer{% endblock %}
 {% block heading %}Admin Dashboard{% endblock %}
 {% block content %}
 {% macro stat(value, label, href=None) %}
-<div class="t2c-admin-stat">{% if href %}<a href="{{ href }}">{% endif %}<strong>{{ value }}</strong><span>{{ label }}</span>{% if href %}</a>{% endif %}</div>
+{% if href %}<a class="t2c-admin-stat t2c-admin-stat-link" href="{{ href }}"><strong>{{ value }}</strong><span>{{ label }}</span></a>
+{% else %}<div class="t2c-admin-stat"><strong>{{ value }}</strong><span>{{ label }}</span></div>{% endif %}
 {% endmacro %}
 
-<h2 class="t2c-fin-title">Users &amp; trainers</h2>
+<h2 class="t2c-admin-h2">Users &amp; trainers</h2>
 <div class="t2c-admin-stats">
     {{ stat(stats.users_total, 'Users', url_for('admin.users')) }}
     {{ stat(stats.users_active, 'Active users', url_for('admin.users', status='active')) }}
@@ -19,7 +21,7 @@
     {{ stat(stats.profiles_total, 'Fitness profiles') }}
 </div>
 
-<h2 class="t2c-fin-title">Workout plans</h2>
+<h2 class="t2c-admin-h2">Workout plans</h2>
 <div class="t2c-admin-stats">
     {{ stat(stats.plans_total, 'Total plans', url_for('admin.plans')) }}
     {{ stat(stats.plans_free, 'Free plans', url_for('admin.plans', tier='basic')) }}
@@ -28,7 +30,7 @@
     {{ stat(stats.plans_generating, 'Generating now', url_for('admin.plans', status='generating')) }}
 </div>
 
-<h2 class="t2c-fin-title">Payments</h2>
+<h2 class="t2c-admin-h2">Payments</h2>
 <div class="t2c-admin-stats">
     {{ stat(stats.payments_total, 'All payments', url_for('admin.payments')) }}
     {{ stat(stats.payments_successful, 'Successful', url_for('admin.payments', status='successful')) }}
@@ -47,15 +49,15 @@
     <div class="t2c-admin-table-wrap"><table class="t2c-admin-table">
         <thead><tr><th>When (UTC)</th><th>Admin</th><th>Action</th><th>Details</th></tr></thead>
         <tbody>{% for e in recent_actions %}
-            <tr><td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ e.admin_email or '—' }}</td><td>{{ e.action }}</td><td>{{ e.details or '' }}</td></tr>
+            <tr><td data-label="When (UTC)">{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td data-label="Admin">{{ e.admin_email or '—' }}</td><td data-label="Action"><span class="t2c-admin-pill">{{ e.action }}</span></td><td data-label="Details">{{ e.details or '' }}</td></tr>
         {% endfor %}</tbody></table></div>
-    <p><a class="t2c-admin-link" href="{{ url_for('admin.audit_log') }}">Full audit log →</a></p>
-    {% else %}<p class="t2c-admin-empty-inline">No admin actions recorded yet.</p>{% endif %}
+    <p class="t2c-admin-section-foot"><a class="t2c-admin-link" href="{{ url_for('admin.audit_log') }}">Full audit log →</a></p>
+    {% else %}{{ empty("No admin actions yet", "Changes made in this panel will be listed here.") }}{% endif %}
 </section>
 
 <div class="t2c-admin-actions">
-    <a class="t2c-admin-btn" href="{{ url_for('admin.trainer_new') }}">+ Add Trainer</a>
-    <a class="t2c-admin-btn" href="{{ url_for('admin.user_new') }}">+ Add User</a>
+    <a class="t2c-admin-btn" href="{{ url_for('admin.trainer_new') }}">+ Add trainer</a>
+    <a class="t2c-admin-btn" href="{{ url_for('admin.user_new') }}">+ Add user</a>
     <a class="t2c-admin-btn" href="{{ url_for('home') }}">← Back to site</a>
 </div>
 {% endblock %}

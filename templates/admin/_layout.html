@@ -1,10 +1,14 @@
+{% from "admin/_macros.html" import icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Admin{% endblock %} | Train2Conquer</title>
     <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     {{ bootstrap.load_css() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
@@ -13,38 +17,45 @@
 {% include "loader.html" %}
 {% include "navbar.html" %}
 
-<main class="t2c-admin">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-    {% endwith %}
-
-    <nav class="t2c-admin-nav" aria-label="Admin sections">
+<div class="t2c-admin">
+    <aside class="t2c-admin-sidebar">
         {% set here = request.blueprint ~ '.' ~ (request.endpoint or '').split('.')[-1] %}
-        {% for label, endpoint, prefix in [
-            ('Dashboard', 'admin.dashboard', 'admin.dashboard'), ('Users', 'admin.users', 'admin.user'),
-            ('Trainers', 'admin.trainers', 'admin.trainer'), ('Workout plans', 'admin.plans', 'admin.plan'),
-            ('Payments', 'admin.payments', 'admin.payment'), ('Finance', 'admin.finance_overview', 'admin.finance'),
-            ('Audit log', 'admin.audit_log', 'admin.audit')] %}
-            <a class="t2c-admin-btn {% if here.startswith(prefix) %}t2c-admin-btn-solid{% endif %}" href="{{ url_for(endpoint) }}">{{ label }}</a>
-        {% endfor %}
-    </nav>
+        <p class="t2c-admin-sidebar-title">Admin panel</p>
+        <nav class="t2c-admin-nav" aria-label="Admin sections">
+            {% for label, endpoint, prefix, glyph in [
+                ('Dashboard', 'admin.dashboard', 'admin.dashboard', 'dashboard'), ('Users', 'admin.users', 'admin.user', 'users'),
+                ('Trainers', 'admin.trainers', 'admin.trainer', 'trainers'), ('Workout plans', 'admin.plans', 'admin.plan', 'plans'),
+                ('Payments', 'admin.payments', 'admin.payment', 'payments'), ('Finance', 'admin.finance_overview', 'admin.finance', 'finance'),
+                ('Audit log', 'admin.audit_log', 'admin.audit', 'audit')] %}
+                <a class="t2c-admin-navlink {% if here.startswith(prefix) %}is-active{% endif %}" href="{{ url_for(endpoint) }}"
+                   {% if here.startswith(prefix) %}aria-current="page"{% endif %}>{{ icon(glyph) }}<span>{{ label }}</span></a>
+            {% endfor %}
+        </nav>
+    </aside>
 
-    <div class="t2c-admin-header">
-        <div>
-            <p class="t2c-admin-kicker">{% block kicker %}Train2Conquer Admin{% endblock %}</p>
-            <h1>{% block heading %}{% endblock %}</h1>
-        </div>
-        {% block header_extra %}{% endblock %}
-    </div>
+    <main class="t2c-admin-main" id="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div data-flash-message class="alert alert-{{ category }}" role="{{ 'alert' if category in ('danger', 'warning') else 'status' }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
 
-    {% block content %}{% endblock %}
-</main>
+        <header class="t2c-admin-header">
+            <div>
+                <p class="t2c-admin-kicker">{% block kicker %}Train2Conquer Admin{% endblock %}</p>
+                <h1>{% block heading %}{% endblock %}</h1>
+            </div>
+            {% block header_extra %}{% endblock %}
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
 
 {% include "footer.html" %}
 {{ bootstrap.load_js() }}
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>

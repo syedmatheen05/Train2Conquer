@@ -40,11 +40,10 @@ def test_every_admin_url_requires_admin(client, make_user):
         assert client.get(url).status_code == 302 and "/login" in client.get(url).headers["Location"]   # anonymous
     login(client, make_user(email="plain@x.com"))
     for url in urls:
-        r = client.get(url)
-        assert r.status_code == 302 and "/admin" not in r.headers["Location"]                           # normal user
+        assert client.get(url).status_code == 403                                                        # normal user: access denied
     for url in ("/admin/users/1/delete", "/admin/users/1/status", "/admin/plans/1/delete",
                 "/admin/trainers/1/delete", "/admin/trainers/1/status", "/admin/payments/1/refund"):
-        assert client.post(url).status_code == 302
+        assert client.post(url).status_code == 403
     assert audit_actions() == []
 
 
@@ -53,7 +52,7 @@ def test_deactivated_admin_loses_access(client, admin):
         u = db.session.get(User, admin)
         u.is_active = False
         db.session.commit()
-    assert client.get("/admin").status_code == 302
+    assert client.get("/admin").status_code in (302, 403)   # logged out (suspended account)
 
 
 def test_every_admin_page_renders(client, admin, make_user, make_trainer):
@@ -250,7 +249,7 @@ def test_trainer_geocoding_failure_is_reported(client, admin, monkeypatch):
     def down(loc):
         raise trainer_service.GeocodingError
     monkeypatch.setattr(trainer_service, "get_coordinates", down)
-    r = client.post("/admin/trainers/new", data={"name": "T", "gender": "male", "location": "X", "is_active": "y"})
+    r = client.post("/admin/trainers/new", data={"name": "Tara Singh", "gender": "male", "location": "X", "is_active": "y"})
     assert r.status_code == 200 and "not responding" in r.get_data(as_text=True)
     with main.app.app_context():
         assert db.session.scalar(db.select(db.func.count(Trainer.id))) == 0

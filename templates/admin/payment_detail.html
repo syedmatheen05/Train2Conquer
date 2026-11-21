@@ -33,7 +33,9 @@
     <div><dt>Razorpay refund</dt><dd><code>{{ payment.gateway_refund_id or "—" }}</code></dd></div>
 </dl>
 {% if payment.refund_status == "requested" %}
-<form method="POST" action="{{ url_for('admin.issue_refund', payment_id=payment.id) }}" onsubmit="return confirm('Refund {{ payment.amount_paise|inr_paise }} to this customer via Razorpay?');">
+<form method="POST" action="{{ url_for('admin.issue_refund', payment_id=payment.id) }}"
+      data-confirm="{{ payment.amount_paise|inr_paise }} will be sent back to this customer through Razorpay. This can't be undone."
+      data-confirm-title="Approve this refund?" data-confirm-button="Approve refund" data-confirm-tone="primary">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="t2c-admin-btn t2c-admin-btn-solid">Approve refund via Razorpay</button>
 </form>

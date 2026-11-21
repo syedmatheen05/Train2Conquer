@@ -12,6 +12,7 @@
         <div><dt>Type</dt><dd>{{ "Free" if plan.tier == "basic" else "Premium · " ~ plan.tier }}</dd></div>
         <div><dt>Week</dt><dd>{{ plan.week_number }}</dd></div>
         <div><dt>Status</dt><dd><span class="t2c-admin-pill t2c-pill-{{ plan.status }}">{{ plan.status }}</span></dd></div>
+        {% if plan.is_archived %}<div><dt>Archived</dt><dd>Yes - replaced by a newer plan after the user edited their profile</dd></div>{% endif %}
         <div><dt>Created</dt><dd>{{ plan.created_at.strftime("%d %b %Y, %H:%M") }} UTC</dd></div>
         <div><dt>Completed days</dt><dd>{% if completed_days %}{{ completed_days|join(", ") }}{% else %}None yet{% endif %}</dd></div>
         <div><dt>Payment</dt><dd>{% if payment %}<a class="t2c-admin-link" href="{{ url_for('admin.payment_detail', payment_id=payment.id) }}">#{{ payment.id }}</a>{% else %}— (free plan){% endif %}</dd></div>

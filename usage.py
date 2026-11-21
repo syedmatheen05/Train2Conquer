@@ -1,8 +1,8 @@
-"""Recording what every OpenAI request cost.
+"""Recording every Gemini request (tokens and, on the free tier, a cost of exactly 0).
 
 Each API attempt becomes its own `ai_usage` row, saved the moment the answer
 arrives - BEFORE the app checks whether the JSON was any good - so a rejected
-answer or a crash afterwards can never lose a charge. If OpenAI never sent
+answer or a crash afterwards is still counted. If Gemini never sent
 usage numbers back, tokens and cost stay NULL (= unknown), never 0.
 """
 from datetime import datetime, timezone
@@ -20,9 +20,9 @@ def record_attempt(*, user_id, plan_id, payment_id, model, tier, attempt_number,
                    cached_input_tokens=None, reasoning_tokens=None):
     """Save one API attempt and commit immediately. Never raises."""
     cost_usd = costing.compute_cost_usd(model, input_tokens, output_tokens, cached_input_tokens or 0)
-    rate = config.usd_to_inr()
+    rate = None            # free tier: cost is exactly 0, no exchange rate needed
     row = AIUsage(
-        user_id=user_id, workout_plan_id=plan_id, payment_id=payment_id, provider="openai",
+        user_id=user_id, workout_plan_id=plan_id, payment_id=payment_id, provider="gemini",
         model=model, tier=tier, attempt_number=attempt_number, request_id=(request_id or None),
         input_tokens=input_tokens, output_tokens=output_tokens,
         cached_input_tokens=cached_input_tokens, reasoning_tokens=reasoning_tokens,
@@ -58,11 +58,8 @@ def today_totals():
 
 
 def daily_limit_reached():
-    """True when today's OpenAI spending (or request count) hit the configured limit."""
-    cost, count, _unknown = today_totals()
-    limit = config.daily_ai_limit_usd()
-    if limit is not None and cost >= limit:
-        return True
+    """True when today's Gemini request count hit the configured safety limit (protects the free quota)."""
+    _cost, count, _unknown = today_totals()
     return count >= config.daily_ai_request_limit()
 
 
@@ -91,7 +88,7 @@ def refresh_plan_totals(plan_id):
     totals = plan_totals(plan_id)
     if not totals["has_rows"]:
         return
-    plan.ai_provider = "openai"
+    plan.ai_provider = "gemini"
     plan.ai_model = totals["model"]
     plan.ai_input_tokens = totals["input_tokens"]
     plan.ai_output_tokens = totals["output_tokens"]

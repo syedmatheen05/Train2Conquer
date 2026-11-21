@@ -260,7 +260,7 @@ def test_webhook_needs_no_csrf_but_other_posts_do(client, gateway, make_user):
 
 
 # ---- refunds are explicit, never automatic ----
-def test_refund_flow_is_manual_and_single_shot(client, gateway, make_user, fake_openai):
+def test_refund_flow_is_manual_and_single_shot(client, gateway, make_user, fake_gemini):
     uid = make_user(); admin = make_user(name="Admin", email="adm@x.com", admin=True, profile=False)
     buy(client, gateway, uid)
     pid = rows(Payment)[0].id
@@ -298,10 +298,10 @@ def test_refund_webhook_updates_record(client, gateway, make_user):
     assert p.refund_status == "refunded" and p.refund_amount_paise == 500 and p.gateway_refund_id == "rfnd_9"
 
 
-def test_refund_request_refused_when_plan_delivered(client, gateway, make_user, fake_openai):
+def test_refund_request_refused_when_plan_delivered(client, gateway, make_user, fake_gemini):
     uid = make_user()
     buy(client, gateway, uid)
-    fake_openai([__import__("conftest").fake_response(valid_plan_json())])
+    fake_gemini([__import__("conftest").fake_response(valid_plan_json())])
     main.process_queue()
     pid = rows(Payment)[0].id
     client.post(f"/payments/{pid}/refund-request")

@@ -1,79 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Report | Train2Conquer</title>
-    <link rel="icon" href="{{ url_for('static', filename='assets/img/logo.png') }}">
-    {{ bootstrap.load_css() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-</head>
-<body class="page-admin">
-{% include "loader.html" %}
-{% include "navbar.html" %}
-<main class="t2c-admin">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}<div data-flash-message class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
-    {% endwith %}
-    <div class="t2c-admin-header"><div><p class="t2c-admin-kicker">Admin</p><h1>Financial Report</h1></div></div>
-    {% include "admin/_env_banner.html" %}
+{% extends "admin/_layout.html" %}
+{% from "admin/_macros.html" import empty, select %}
+{% block title %}Finance{% endblock %}
+{% block kicker %}Admin{% endblock %}
+{% block heading %}Financial report{% endblock %}
+{% block content %}
+{% include "admin/_env_banner.html" %}
 
-    <form method="GET" class="t2c-fin-filters">
-        <label>From <input type="date" name="from" value="{{ raw.get('from', '') }}"></label>
-        <label>To <input type="date" name="to" value="{{ raw.get('to', '') }}"></label>
-        <label>Plan <select name="plan"><option value="">All</option>
-            {% for c in plan_choices %}<option value="{{ c }}" {% if filters.plan == c %}selected{% endif %}>{{ tier_labels[c] }}</option>{% endfor %}</select></label>
-        <label>Payment <select name="payment_status"><option value="">All</option>
-            {% for c in payment_status_choices %}<option value="{{ c }}" {% if filters.payment_status == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
-        <label>Generation <select name="generation_status"><option value="">All</option>
-            {% for c in generation_status_choices %}<option value="{{ c }}" {% if filters.generation_status == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
-        <button type="submit" class="t2c-admin-btn t2c-admin-btn-solid">Apply</button>
-        <a class="t2c-admin-btn" href="{{ url_for('admin.finance_overview') }}">Reset</a>
-    </form>
-    <p class="t2c-fin-note">The summary follows the date range and plan filters. The payment/generation filters apply to the table.</p>
+<form method="GET" class="t2c-admin-search" aria-label="Filter transactions">
+    <label class="t2c-admin-field"><span class="t2c-admin-field-label">From</span><input type="date" name="from" value="{{ raw.get('from', '') }}"></label>
+    <label class="t2c-admin-field"><span class="t2c-admin-field-label">To</span><input type="date" name="to" value="{{ raw.get('to', '') }}"></label>
+    <label class="t2c-admin-field"><span class="t2c-admin-field-label">Plan</span><select name="plan"><option value="">All</option>
+        {% for c in plan_choices %}<option value="{{ c }}" {% if filters.plan == c %}selected{% endif %}>{{ tier_labels[c] }}</option>{% endfor %}</select></label>
+    <label class="t2c-admin-field"><span class="t2c-admin-field-label">Payment</span><select name="payment_status"><option value="">All</option>
+        {% for c in payment_status_choices %}<option value="{{ c }}" {% if filters.payment_status == c %}selected{% endif %}>{{ c|replace('_', ' ')|title }}</option>{% endfor %}</select></label>
+    <label class="t2c-admin-field"><span class="t2c-admin-field-label">Generation</span><select name="generation_status"><option value="">All</option>
+        {% for c in generation_status_choices %}<option value="{{ c }}" {% if filters.generation_status == c %}selected{% endif %}>{{ c|replace('_', ' ')|title }}</option>{% endfor %}</select></label>
+    <button type="submit" class="t2c-admin-btn t2c-admin-btn-solid">Apply</button>
+    <a class="t2c-admin-btn" href="{{ url_for('admin.finance_overview') }}">Reset</a>
+</form>
+<p class="t2c-admin-note">The summary follows the date range and plan filters. The payment and generation filters apply to the table.</p>
 
-    {% include "admin/_finance_summary.html" %}
+{% include "admin/_finance_summary.html" %}
 
-    <h2 class="t2c-fin-title">Transactions ({{ total }})</h2>
-    <div class="t2c-fin-scroll"><table class="t2c-fin-table">
-        <tr><th>Date</th><th>Customer</th><th>Plan</th><th>Amount paid</th><th>Payment status</th><th>AI model</th><th>Input tok.</th><th>Output tok.</th><th>API cost</th><th>Generation</th><th>Refund</th></tr>
-        {% for it in items %}{% set p = it.payment %}
-        <tr>
-            <td>{{ p.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-            <td>{{ it.customer }}</td>
-            <td>{{ tier_labels[p.tier] }}</td>
-            <td>{% if p.payment_verification_status == 'verified' %}{{ p.amount_paise|inr_paise }}{% else %}&mdash; <small>({{ p.amount_paise|inr_paise }} not received)</small>{% endif %}</td>
-            <td>{{ p.status }}{% if p.payment_status == 'failed' and p.status == 'created' %} (failed){% endif %}</td>
-            <td>{{ it.model or '' }}</td>
-            <td>{{ it.input_tokens if it.input_tokens is not none else '' }}</td>
-            <td>{{ it.output_tokens if it.output_tokens is not none else '' }}</td>
-            <td>{% if it.plan and it.cost_usd is not none %}{{ it.cost_usd|usd }} / {{ it.cost_inr|inr }}{% if it.cost_complete == false %} <small>(+unknown)</small>{% endif %}{% elif it.plan %}unknown{% endif %}</td>
-            <td>{{ it.generation }}</td>
-            <td>
-                {% if p.refund_status == 'requested' %}
-                <form method="POST" action="{{ url_for('admin.issue_refund', payment_id=p.id) }}" onsubmit="return confirm('Refund {{ p.amount_paise|inr_paise }} to this customer via Razorpay?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="t2c-admin-btn">Approve refund</button>
-                </form>
-                {% elif p.refund_status != 'none' %}{{ p.refund_status }}{% endif %}
-            </td>
-        </tr>
-        {% else %}<tr><td colspan="11">No transactions match.</td></tr>{% endfor %}
-    </table></div>
+<h2 class="t2c-admin-h2">Transactions <span class="t2c-admin-count">{{ total }}</span></h2>
+{% if items %}
+<div class="t2c-admin-table-wrap t2c-admin-scroll"><table class="t2c-admin-table t2c-admin-table-dense">
+    <thead><tr><th>Date</th><th>Customer</th><th>Plan</th><th>Amount paid</th><th>Payment status</th><th>AI model</th><th>Input tok.</th><th>Output tok.</th><th>API cost</th><th>Generation</th><th>Refund</th></tr></thead>
+    <tbody>
+    {% for it in items %}{% set p = it.payment %}
+    <tr>
+        <td>{{ p.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ it.customer }}</td>
+        <td>{{ tier_labels[p.tier] }}</td>
+        <td>{% if p.payment_verification_status == 'verified' %}{{ p.amount_paise|inr_paise }}{% else %}&mdash; <small class="t2c-admin-muted">({{ p.amount_paise|inr_paise }} not received)</small>{% endif %}</td>
+        <td><span class="t2c-admin-pill t2c-tone-{{ 'green' if p.status in ('paid', 'used') else ('red' if p.payment_status == 'failed' or p.status == 'refunded' else 'grey') }}">{{ p.status }}{% if p.payment_status == 'failed' and p.status == 'created' %} (failed){% endif %}</span></td>
+        <td>{{ it.model or '' }}</td>
+        <td>{{ it.input_tokens if it.input_tokens is not none else '' }}</td>
+        <td>{{ it.output_tokens if it.output_tokens is not none else '' }}</td>
+        <td>{% if it.plan and it.cost_usd is not none %}{{ it.cost_usd|usd }} / {{ it.cost_inr|inr }}{% if it.cost_complete == false %} <small class="t2c-admin-muted">(+unknown)</small>{% endif %}{% elif it.plan %}unknown{% endif %}</td>
+        <td>{{ it.generation }}</td>
+        <td>
+            {% if p.refund_status == 'requested' %}
+            <form method="POST" action="{{ url_for('admin.issue_refund', payment_id=p.id) }}"
+                  data-confirm="{{ p.amount_paise|inr_paise }} will be sent back to this customer through Razorpay. This can't be undone."
+                  data-confirm-title="Approve this refund?" data-confirm-button="Approve refund" data-confirm-tone="primary">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="t2c-admin-btn t2c-admin-btn-sm t2c-admin-btn-solid">Approve refund</button>
+            </form>
+            {% elif p.refund_status != 'none' %}<span class="t2c-admin-pill">{{ p.refund_status }}</span>{% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+{% else %}
+<div class="t2c-admin-table-wrap">{{ empty("No transactions match", "Try a wider date range or reset the filters.") }}</div>
+{% endif %}
 
-    {% if pages > 1 %}
-    <p class="t2c-fin-pager">Page {{ filters.page }} of {{ pages }}
-        {% set qs = {'from': raw.get('from',''), 'to': raw.get('to',''), 'plan': filters.plan or '', 'payment_status': filters.payment_status or '', 'generation_status': filters.generation_status or ''} %}
-        {% if filters.page > 1 %}<a href="{{ url_for('admin.finance_overview', page=filters.page-1, **qs) }}">&larr; Newer</a>{% endif %}
-        {% if filters.page < pages %}<a href="{{ url_for('admin.finance_overview', page=filters.page+1, **qs) }}">Older &rarr;</a>{% endif %}
-    </p>{% endif %}
-
-    <div class="t2c-admin-actions"><a class="t2c-admin-btn" href="{{ url_for('admin.dashboard') }}">&larr; Admin dashboard</a></div>
-</main>
-{% include "footer.html" %}
-{{ bootstrap.load_js() }}
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
-</body>
-</html>
+{% if pages > 1 %}
+<nav class="t2c-admin-pager" aria-label="Pagination">
+    {% set qs = {'from': raw.get('from',''), 'to': raw.get('to',''), 'plan': filters.plan or '', 'payment_status': filters.payment_status or '', 'generation_status': filters.generation_status or ''} %}
+    {% if filters.page > 1 %}<a class="t2c-admin-btn" href="{{ url_for('admin.finance_overview', page=filters.page-1, **qs) }}">← Newer</a>{% endif %}
+    <span class="t2c-admin-pager-info">Page {{ filters.page }} of {{ pages }}</span>
+    {% if filters.page < pages %}<a class="t2c-admin-btn" href="{{ url_for('admin.finance_overview', page=filters.page+1, **qs) }}">Older →</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

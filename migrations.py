@@ -127,6 +127,7 @@ def m005_backfill(conn):
                          WHEN 'ready' THEN 'succeeded' WHEN 'failed' THEN 'failed' ELSE 'running' END
                          WHERE generation_status IS NULL"""))
     conn.execute(text("UPDATE workout_plans SET ai_provider = 'gemini' WHERE ai_provider IS NULL AND tier = 'basic'"))
+    # Historical label only: paid plans built before the Gemini-only switch really were made with OpenAI.
     conn.execute(text("UPDATE workout_plans SET ai_provider = 'openai' WHERE ai_provider IS NULL AND tier <> 'basic'"))
 
 
@@ -148,6 +149,26 @@ def m007_accounts_otp_audit(conn):
     AdminAuditLog.__table__.create(conn, checkfirst=True)
 
 
+def m008_plan_replacement(conn):
+    """Adds is_archived + profile_hash, then gives every existing plan the fingerprint of its
+    user's CURRENT profile, so weekly progression carries on until the user actually edits it."""
+    import plan_cycle
+    _add_columns(conn, "workout_plans", {
+        "is_archived": "BOOLEAN NOT NULL DEFAULT FALSE",
+        "profile_hash": "VARCHAR(64)",
+    })
+    if "profiles" not in inspect(conn).get_table_names():
+        return
+    table = "profiles"
+    from types import SimpleNamespace
+    from datetime import date as _date
+    for row in conn.execute(text(f"SELECT user_id, dob, height, weight, gender, goal, experience, workout_days, equipment FROM {table}")).fetchall():
+        dob = row.dob if isinstance(row.dob, _date) else (_date.fromisoformat(str(row.dob)[:10]) if row.dob else None)
+        fp = plan_cycle.fingerprint(SimpleNamespace(dob=dob, height=row.height, weight=row.weight, gender=row.gender, goal=row.goal,
+                                                    experience=row.experience, workout_days=row.workout_days, equipment=row.equipment))
+        conn.execute(text("UPDATE workout_plans SET profile_hash = :h WHERE user_id = :u AND profile_hash IS NULL"), {"h": fp, "u": row.user_id})
+
+
 MIGRATIONS = [
     (1, "create_missing_tables", m001_create_missing_tables),
     (2, "legacy_fixes", m002_legacy_fixes),
@@ -156,6 +177,7 @@ MIGRATIONS = [
     (5, "backfill_new_columns", m005_backfill),
     (6, "indexes", m006_indexes),
     (7, "accounts_otp_audit", m007_accounts_otp_audit),
+    (8, "plan_replacement", m008_plan_replacement),
 ]
 LATEST_VERSION = MIGRATIONS[-1][0]
 

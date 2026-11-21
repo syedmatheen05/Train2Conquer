@@ -29,37 +29,33 @@ def test_admin_pages_require_admin(client, make_user):
     assert client.post("/admin/payments/1/refund").status_code in (302, 403, 404)
 
 
-def test_admin_financial_dashboard_numbers(client, gateway, make_user, fake_openai):
+def test_admin_financial_dashboard_numbers(client, gateway, make_user, fake_gemini):
     admin = make_user(name="Boss", email="boss@x.com", admin=True, profile=False)
     u1 = make_user(name="Alice", email="a@x.com"); u2 = make_user(name="Bob", email="b@x.com")
-    buy(client, gateway, u1, "personalized", "pay_1"); fake_openai([fake_response(valid_plan_json(), 1000, 2000)]); main.process_queue()
-    buy(client, gateway, u2, "advanced", "pay_2"); fake_openai([fake_response("bad", 10000, 5000), fake_response("bad", 10000, 5000)]); main.process_queue()
+    buy(client, gateway, u1, "personalized", "pay_1"); fake_gemini([fake_response(valid_plan_json(), 1000, 2000)]); main.process_queue()
+    buy(client, gateway, u2, "advanced", "pay_2"); fake_gemini([fake_response("bad", 10000, 5000), fake_response("bad", 10000, 5000)]); main.process_queue()
     login(client, admin)
     with main.app.app_context():
         f = finance.overview({})
     assert f["gross_paise"] == 2000 and f["personalized"] == {"count": 1, "paise": 500} and f["advanced"] == {"count": 1, "paise": 1500}
-    luna = costing.compute_cost_usd("gpt-6-luna", 1000, 2000)
-    sol = costing.compute_cost_usd("gpt-6.1-sol", 10000, 5000) * 2
-    assert f["openai_usd"] == luna + sol and f["openai_requests"] == 3
-    assert f["openai_inr"] == costing.usd_to_inr(luna) + costing.usd_to_inr(costing.compute_cost_usd("gpt-6.1-sol", 10000, 5000)) * 2
+    assert f["ai_usd"] == 0 and f["ai_inr"] == 0 and f["ai_requests"] == 3        # Gemini free tier: exactly zero
     assert f["generations"] == 2 and f["failed_generations"] == 1
-    assert set(f["by_model"]) == {"gpt-6-luna", "gpt-6.1-sol"}
+    assert set(f["by_model"]) == {"gemini-3.1-flash-lite"}
     assert f["fee_inr"] == Decimal("0.24") and f["refund_inr"] == 0
     assert f["net_estimate"] == f["remaining_before_other_expenses"] - Decimal("0.24") - Decimal("0.04")
-    assert f["highest"]["tier"] == "advanced"
     page = client.get("/admin").get_data(as_text=True)
-    assert "Financial Overview" in page and "DEVELOPMENT" in page and "not</strong> your bank balance" in page
+    assert "Financial overview" in page and "DEVELOPMENT" in page and "not</strong> your bank balance" in page
     report = client.get("/admin/finance").get_data(as_text=True)
-    assert "Alice" in report and "Bob" in report and "gpt-6-luna" in report
+    assert "Alice" in report and "Bob" in report and "gemini-3.1-flash-lite" in report
     # private fitness data is never in the finance pages
     assert "muscle_gain" not in report and "equipment" not in report.lower()
 
 
-def test_admin_filters(client, gateway, make_user, fake_openai):
+def test_admin_filters(client, gateway, make_user, fake_gemini):
     admin = make_user(name="Boss", email="boss@x.com", admin=True, profile=False)
     u1 = make_user(name="Alice", email="a@x.com"); u2 = make_user(name="Bob", email="b@x.com")
-    buy(client, gateway, u1, "personalized", "pay_1"); fake_openai([fake_response(valid_plan_json())]); main.process_queue()
-    buy(client, gateway, u2, "advanced", "pay_2"); fake_openai([fake_response("x"), fake_response("x")]); main.process_queue()
+    buy(client, gateway, u1, "personalized", "pay_1"); fake_gemini([fake_response(valid_plan_json())]); main.process_queue()
+    buy(client, gateway, u2, "advanced", "pay_2"); fake_gemini([fake_response("x"), fake_response("x")]); main.process_queue()
     login(client, admin)
     only_adv = client.get("/admin/finance?plan=advanced").get_data(as_text=True)
     assert "Bob" in only_adv and "Alice" not in only_adv
@@ -71,33 +67,31 @@ def test_admin_filters(client, gateway, make_user, fake_openai):
     assert client.get("/admin/finance?from=garbage&plan=hack").status_code == 200
 
 
-def test_unknown_costs_are_flagged_not_zero(client, gateway, make_user, fake_openai, monkeypatch):
-    monkeypatch.delenv("OPENAI_USD_TO_INR")
-    admin = make_user(name="Boss", email="boss@x.com", admin=True, profile=False)
+def test_unknown_model_cost_is_flagged_not_zero(client, gateway, make_user, fake_gemini, monkeypatch):
+    monkeypatch.setenv("GEMINI_MODEL", "some-other-model")          # not a Gemini id -> cost cannot be assumed free
+    make_user(name="Boss", email="boss@x.com", admin=True, profile=False)
     u1 = make_user(name="Alice", email="a@x.com")
-    buy(client, gateway, u1); fake_openai([fake_response(valid_plan_json())]); main.process_queue()
+    buy(client, gateway, u1); fake_gemini([fake_response(valid_plan_json())]); main.process_queue()
     with main.app.app_context():
         f = finance.overview({})
-    assert f["openai_unknown_attempts"] == 1 and f["costs_complete"] is False
+    assert f["ai_unknown_attempts"] == 1 and f["costs_complete"] is False
+
+
+def test_admin_warns_when_gemini_key_is_missing(client, make_user, monkeypatch):
+    admin = make_user(name="Boss", email="boss@x.com", admin=True, profile=False)
+    monkeypatch.delenv("GEMINI_API_KEY")
     login(client, admin)
-    assert "OPENAI_USD_TO_INR is not set" in client.get("/admin").get_data(as_text=True)
+    assert "GEMINI_API_KEY is not set" in client.get("/admin").get_data(as_text=True)
 
 
 # ---- 17. cost maths ----
 def test_cost_maths():
-    assert costing.compute_cost_usd("gpt-6-luna", 100_000, 100_000) == Decimal("0.060000")
-    assert costing.compute_cost_usd("gpt-6.1-sol", 200_000, 100_000, 100_000) == Decimal("1.210000")
-    assert costing.compute_cost_usd("nope", 1, 1) is None
-    assert costing.compute_cost_usd("gpt-6-luna", None, 5) is None
-    assert costing.compute_cost_usd("gpt-6-luna", 300_000, 1) is None      # long-context rates not configured
-    assert isinstance(costing.compute_cost_usd("gpt-6-luna", 3, 3), Decimal)
+    assert costing.compute_cost_usd("gemini-3.1-flash-lite", 100_000, 100_000) == Decimal(0)
+    assert costing.compute_cost_usd("gemini-anything", None, None) == Decimal(0)
+    assert costing.compute_cost_usd("not-gemini", 1, 1) is None
+    assert costing.usd_to_inr(Decimal(0)) == Decimal(0)                  # zero needs no exchange rate
     assert costing.usd_to_inr(Decimal("1.00"), Decimal("90")) == Decimal("90.0000")
-    assert costing.usd_to_inr(None) is None
-
-
-def test_pricing_override_from_environment(monkeypatch):
-    monkeypatch.setenv("MODEL_PRICING_JSON", '{"my-model": {"input": "1", "cached_input": "0.5", "output": "2"}}')
-    assert costing.compute_cost_usd("my-model", 100_000, 100_000) == Decimal("0.300000")
+    assert costing.usd_to_inr(Decimal("1.00")) is None and costing.usd_to_inr(None) is None
 
 
 # ---- 20. production strictness ----
@@ -179,7 +173,7 @@ def test_no_secret_in_frontend_files():
         for root, _d, files in os.walk(os.path.join(BASE, folder)):
             for f in files:
                 body = open(os.path.join(root, f), errors="ignore").read()
-                assert "RAZORPAY_KEY_SECRET" not in body and "OPENAI_API_KEY" not in body and not __import__("re").search(r"sk-[A-Za-z0-9_-]{20,}", body)
+                assert "RAZORPAY_KEY_SECRET" not in body and "GEMINI_API_KEY" not in body and not __import__("re").search(r"sk-[A-Za-z0-9_-]{20,}", body)
 
 
 def test_healthz(client):

@@ -4,7 +4,8 @@
          data-csrf="{{ csrf_token() }}"
          data-create-url="{{ url_for('create_payment_order') }}"
          data-verify-url="{{ url_for('verify_payment') }}"
-         data-cancel-url="{{ url_for('cancel_payment') }}">
+         data-cancel-url="{{ url_for('cancel_payment') }}"
+         data-failed-url="{{ url_for('payment_failed') }}">
 
     <h3>{% if options_context == 'profile' %}Choose your plan{% else %}Finish the week. Unlock the next.{% endif %}</h3>
     <p class="t2c-plan-sub">
@@ -12,48 +13,95 @@
         Plans you already generated stay available for free.
     </p>
 
+    {# ---- Payment was taken, but the plan did not finish building ---- #}
     {% if failed_plan %}
-        <div class="t2c-plan-banner t2c-plan-banner-warn">
-            {% if failed_plan.payment_id %}
-                <strong>Your {{ tier_labels[failed_plan.tier] }} didn't finish building.</strong>
-                {% if retry_exhausted %}
-                    Your payment is safe and you won't be charged again.
-                    <a href="{{ url_for('contact') }}">Contact us</a> and we'll sort it out, or request a refund.
+        <div class="t2c-pay-panel t2c-pay-warn" role="alert">
+            <span class="t2c-pay-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+            </span>
+            <div class="t2c-pay-body">
+                {% if failed_plan.payment_id %}
+                    <h4>Payment received &mdash; your {{ tier_labels[failed_plan.tier] }} didn't finish building</h4>
+                    <p>
+                    {% if retry_exhausted %}
+                        Your payment is safe and you won't be charged again. We couldn't build the plan after several tries &mdash;
+                        <a href="{{ url_for('contact') }}">contact us</a>, or request a refund below.
+                    {% else %}
+                        Your payment is safe. Try again below at no extra charge.
+                    {% endif %}
+                    </p>
                 {% else %}
-                    Your payment is safe &mdash; retry below at no extra charge.
+                    <h4>Your Basic Plan didn't finish building</h4>
+                    <p>Nothing was charged. Please try again.</p>
                 {% endif %}
-            {% else %}
-                <strong>Your Basic Plan didn't finish building.</strong> Please try again.
-            {% endif %}
-            {% if not retry_exhausted %}
-            <form method="POST" action="{{ url_for('retry_plan', plan_id=failed_plan.id) }}" data-loader-message="Trying again...">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-primary">{% if failed_plan.payment_id %}Retry &mdash; no extra charge{% else %}Try again{% endif %}</button>
-            </form>
-            {% endif %}
-            {% if refund_payment and failed_plan.payment_id %}
-                {% if refund_payment.refund_status == 'none' %}
-                <form method="POST" action="{{ url_for('request_refund', payment_id=refund_payment.id) }}" data-loader-message="Sending request..."
-                      onsubmit="return confirm('Request a refund for this plan? Our team will review it.');">
+                {% if has_current_plan %}<p class="t2c-pay-fine">Your current plan is unchanged and still available on this page.</p>{% endif %}
+                {% if refund_payment and failed_plan.payment_id and refund_payment.refund_status == 'requested' %}
+                    <p class="t2c-pay-fine">Refund requested &mdash; our team will review it and email you.</p>
+                {% endif %}
+            </div>
+            <div class="t2c-pay-actions">
+                {% if not retry_exhausted %}
+                <form method="POST" action="{{ url_for('retry_plan', plan_id=failed_plan.id) }}" data-loader-message="Trying again...">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-outline-secondary">Request a refund</button>
+                    <button type="submit" class="t2c-pay-btn t2c-pay-btn-primary">
+                        {% if failed_plan.payment_id %}Retry &mdash; no extra charge{% else %}Try again{% endif %}
+                    </button>
                 </form>
-                {% elif refund_payment.refund_status == 'requested' %}
-                <p class="t2c-plan-fine">Refund requested &mdash; we'll review it and email you.</p>
                 {% endif %}
-            {% endif %}
+                {% if refund_payment and failed_plan.payment_id and refund_payment.refund_status == 'none' %}
+                <form method="POST" action="{{ url_for('request_refund', payment_id=refund_payment.id) }}" data-loader-message="Sending request..."
+                      data-confirm="Our team will review your request and email you. A refund goes back through Razorpay to your original payment method."
+                      data-confirm-title="Request a refund?" data-confirm-button="Request refund" data-confirm-tone="primary">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="t2c-pay-btn t2c-pay-btn-secondary">Request a refund</button>
+                </form>
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 
     {% if pending_payment %}
-        <div class="t2c-plan-banner t2c-plan-banner-ok">
-            <strong>Payment received for your {{ tier_labels[pending_payment.tier] }}.</strong>
-            Tap below to build it &mdash; you won't be charged again.
-            <form method="POST" action="{{ url_for('start_paid_plan', payment_id=pending_payment.id) }}" data-loader-message="Building your plan...">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-primary">Build my plan</button>
-            </form>
+        <div class="t2c-pay-panel t2c-pay-ok" role="status">
+            <span class="t2c-pay-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.5"/></svg>
+            </span>
+            <div class="t2c-pay-body">
+                <h4>Payment received for your {{ tier_labels[pending_payment.tier] }}</h4>
+                <p>Tap below to build it &mdash; you won't be charged again.</p>
+            </div>
+            <div class="t2c-pay-actions">
+                <form method="POST" action="{{ url_for('start_paid_plan', payment_id=pending_payment.id) }}" data-loader-message="Building your plan...">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="t2c-pay-btn t2c-pay-btn-primary">Build my plan</button>
+                </form>
+            </div>
         </div>
+    {% endif %}
+
+    {# ---- Checkout failed / was closed / is pending: filled in by plans.js after the server checks the real status ---- #}
+    <div id="pay-problem" class="t2c-pay-panel" hidden role="alert" aria-live="assertive">
+        <span class="t2c-pay-icon" id="pay-problem-icon" aria-hidden="true"></span>
+        <div class="t2c-pay-body">
+            <h4 id="pay-problem-title"></h4>
+            <p id="pay-problem-text"></p>
+            <p class="t2c-pay-ref" id="pay-problem-ref-row" hidden>Reference: <code id="pay-problem-ref"></code></p>
+            <p class="t2c-pay-fine" id="pay-problem-fine"></p>
+        </div>
+        <div class="t2c-pay-actions">
+            <button type="button" class="t2c-pay-btn t2c-pay-btn-primary" id="pay-retry">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg>
+                <span><b>Retry payment</b><small>Try the same payment again</small></span>
+            </button>
+            <button type="button" class="t2c-pay-btn t2c-pay-btn-secondary" id="pay-another">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>
+                <span><b>Try another payment method</b><small>Start a fresh payment and choose again</small></span>
+            </button>
+            <button type="button" class="t2c-pay-btn t2c-pay-btn-secondary" id="pay-check" hidden>Check payment status</button>
+        </div>
+    </div>
+
+    {% if will_replace %}
+        <p class="t2c-plan-replace" role="note"><strong>Profile updated.</strong> Your next plan will be built from your new details and will <strong>replace</strong> your current plan &mdash; it won't be added as another week. Your current plan stays until the new one is ready.</p>
     {% endif %}
 
     <div class="t2c-plan-grid">
@@ -122,5 +170,6 @@
         <li data-step="ready">Workout ready</li>
     </ol>
     <div id="plan-message" class="t2c-plan-message" role="status" aria-live="polite"></div>
+    <p class="t2c-plan-fine">Payments are processed securely by Razorpay. The payment methods you can choose from are the ones available when the payment window opens.</p>
 </section>
 <script src="{{ url_for('static', filename='js/plans.js') }}" defer></script>

@@ -12,7 +12,7 @@ services:
         value: production
       - key: GENERATION_MODE
         value: worker
-      # then add SECRET_KEY, SUPABASE, RAZORPAY_*, OPENAI_API_KEY, GEMINI_API_KEY ... in the dashboard
+      # then add SECRET_KEY, SUPABASE, RAZORPAY_*, GEMINI_API_KEY ... in the dashboard
   - type: worker
     name: train2conquer-worker
     runtime: python

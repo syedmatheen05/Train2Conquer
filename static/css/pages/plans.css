@@ -53,3 +53,68 @@
 .t2c-plan-state li.done::before { content: "\2713\00a0"; }
 .t2c-plan-state li.active { color: #FF5A36; font-weight: 600; }
 .t2c-plan-state li.active::before { content: "\25CF\00a0"; }
+
+/* ---------------------------------------------------------------------
+   Payment status panels (failed / cancelled / pending / plan not built).
+   One component, four tones. Markup: templates/_plan_options.html,
+   behaviour: static/js/plans.js
+--------------------------------------------------------------------- */
+.t2c-pay-panel {
+    --pay-tone: #8E929D;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px 16px;
+    align-items: start;
+    margin: 0 0 20px;
+    padding: 18px 20px;
+    text-align: left;
+    background: var(--t2c-panel-2, #151820);
+    border: 1px solid color-mix(in srgb, var(--pay-tone) 45%, transparent);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+.t2c-pay-panel[hidden] { display: none; }
+.t2c-pay-bad  { --pay-tone: #FF6860; }
+.t2c-pay-warn { --pay-tone: #FF6860; }
+.t2c-pay-wait { --pay-tone: #F0B84B; }
+.t2c-pay-ok   { --pay-tone: #46D691; }
+.t2c-pay-icon {
+    display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%;
+    color: var(--pay-tone); background: color-mix(in srgb, var(--pay-tone) 14%, transparent);
+}
+.t2c-pay-icon svg { width: 22px; height: 22px; }
+.t2c-pay-body h4 { margin: 2px 0 6px; font-size: 16px; font-weight: 800; color: var(--t2c-text, #F4F3EF); }
+.t2c-pay-body p { margin: 0 0 6px; font-size: 13.5px; line-height: 1.55; color: var(--t2c-muted, #A3A7B2); }
+.t2c-pay-body a { color: var(--t2c-gold, #D9A83B); }
+.t2c-pay-ref { font-size: 12.5px !important; }
+.t2c-pay-ref code { padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,.07); color: var(--t2c-text, #F4F3EF); user-select: all; word-break: break-all; }
+.t2c-pay-body .t2c-pay-fine { font-size: 12px; opacity: .85; }
+.t2c-pay-body .t2c-pay-fine:empty { display: none; }
+.t2c-pay-actions { grid-column: 2; display: flex; flex-wrap: wrap; gap: 10px; }
+.t2c-pay-actions form { margin: 0; }
+.t2c-pay-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px;
+    padding: 10px 18px; border-radius: 10px; border: 1px solid transparent; cursor: pointer;
+    font: 700 13px/1.25 'Manrope', system-ui, sans-serif; text-align: left;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease, opacity .15s ease;
+}
+.t2c-pay-btn[hidden] { display: none; }
+.t2c-pay-btn svg { width: 20px; height: 20px; flex: 0 0 auto; }
+.t2c-pay-btn span { display: grid; gap: 2px; }
+.t2c-pay-btn small { font-size: 11px; font-weight: 600; opacity: .75; }
+.t2c-pay-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.t2c-pay-btn:disabled { opacity: .55; cursor: not-allowed; }
+.t2c-pay-btn[aria-busy="true"] { cursor: progress; }
+.t2c-pay-btn-primary { background: linear-gradient(135deg, var(--t2c-orange, #FF512F), #FF8A3D); color: #170E0A; }
+.t2c-pay-btn-secondary { background: transparent; color: var(--t2c-text, #F4F3EF); border-color: rgba(255,255,255,.22); }
+.t2c-pay-btn-secondary:hover:not(:disabled) { border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.05); }
+.t2c-pay-btn:focus-visible { outline: 2px solid #FF5A36; outline-offset: 2px; }
+@media (max-width: 600px) {
+    .t2c-pay-panel { grid-template-columns: 1fr; padding: 16px; }
+    .t2c-pay-actions { grid-column: 1; flex-direction: column; }
+    .t2c-pay-btn { width: 100%; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .t2c-pay-btn { transition: none; } }
+
+.t2c-plan-replace { margin: 0 0 18px; padding: 12px 16px; font-size: 13px; line-height: 1.55; text-align: left;
+    color: var(--t2c-text, #F4F3EF); background: rgba(217, 168, 59, .08); border: 1px solid rgba(217, 168, 59, .4); border-radius: 12px; }

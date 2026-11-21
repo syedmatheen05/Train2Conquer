@@ -1,13 +1,7 @@
-import os, json, time
-from google import genai
+import equipment as equipment_rules
 from dotenv import load_dotenv
 load_dotenv()
 
-def get_client():
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY environment variable is not set")
-    return genai.Client(api_key=api_key)
 exercise_keys=["jumping-jacks","high-knees",
                "push-ups","pull-ups","side-lunges",
                "hindu-push-ups","military-push-ups","calf-raises","single-leg-calf-raises", "lying-leg-raises","reverse-crunches",
@@ -513,126 +507,20 @@ A recovery day with 5–8 appropriate exercises is completely valid.
 16. EQUIPMENT
 ==================================================
 
-Respect the user's available equipment.
+The user's equipment is given in the "EQUIPMENT AVAILABLE TO THIS USER" block that follows the user profile.
+That block is a HARD RULE and it overrides everything else in this prompt.
 
-Do NOT select equipment-dependent exercises that require equipment the user does not have.
+- No equipment: bodyweight exercises ONLY.
+- Gym: a standard gym with common equipment and machines is available.
+- Individual equipment: bodyweight exercises plus ONLY exercises that need the equipment the user listed.
 
-NEVER invent equipment.
+AVAILABLE EXERCISE KEYS has already been filtered for this user. Never use a key that is not in it.
+NEVER recommend or invent equipment the user does not have.
 
-SPECIAL PULL-UP RULE:
-
-If "pull-ups" exists in the provided exercise list, pull-ups MAY be used even when the user selected "No Equipment" or did not select "Pull-Up Bar".
-
-Pull-ups are optional, not mandatory.
-
-If "pull-ups" does not exist in the provided exercise list, NEVER create it.
-
-==================================================
-17. REP-BASED EXERCISES
-==================================================
-
-For normal repetition-based exercises use:
-
-"reps": "X[number]",
-"seconds": 0
-
-Example:
-
-{
-  "exercise": "push-ups",
-  "reps": "X20",
-  "seconds": 0,
-  "rest": 60
-}
+Pull-ups need a pull-up bar: use them only when the user's equipment allows it
+(pull-up bar selected, or Gym). Never use them for "No equipment".
 
 ==================================================
-18. TIME-BASED EXERCISES
-==================================================
-
-For time-based exercises use:
-
-"reps": "0",
-"seconds": number
-
-Example:
-
-{
-  "exercise": "plank",
-  "reps": "0",
-  "seconds": 60,
-  "rest": 30
-}
-
-NEVER use both repetitions and seconds at the same time.
-
-Correct:
-"reps": "X20",
-"seconds": 0
-
-Correct:
-"reps": "0",
-"seconds": 60
-
-Incorrect:
-"reps": "X20",
-"seconds": 60
-
-==================================================
-19. STRETCHING
-==================================================
-
-Stretching exercises MUST be time-based.
-
-Example:
-
-{
-  "exercise": "cobra-stretch",
-  "reps": "0",
-  "seconds": 45,
-  "rest": 0
-}
-
-NEVER give stretching exercises a repetition count.
-
-==================================================
-20. REST
-==================================================
-
-Every exercise object MUST contain:
-
-"rest"
-
-The value MUST be a number representing seconds.
-
-Choose rest according to:
-- exercise difficulty
-- user experience
-- fitness goal
-- intensity
-- exercise type
-
-Strength exercises may have longer rest.
-
-Light cardio may have shorter rest.
-
-
-==================================================
-21. VIDEO PATHS
-==================================================
-
-DO NOT return:
-- video paths
-- video URLs
-- video filenames
-
-Return ONLY the exercise key.
-
-The Python application will use the exercise key to find the video.
-
-==================================================
-22. PERSONALIZATION
-==================================================
-
 Use:
 - age
 - height
@@ -843,7 +731,7 @@ Before returning the JSON, internally verify ALL of these:
 22. Every exercise has a numeric rest value.
 23. Every exercise key exists in the provided exercise list.
 24. Equipment requirements are respected.
-25. Pull-ups may use the special exception described above.
+25. Pull-ups only when the user's equipment allows a pull-up bar (see the EQUIPMENT section).
 26. The day's exercises actually match the day's muscle-group focus.
 27. Cardio is included according to the user's goal rather than automatically.
 28. Cooldown/stretching matches the muscles trained when possible.
@@ -866,44 +754,6 @@ Therefore the returned text MUST parse successfully into a Python dictionary, an
 workout_plan_data.items()
 
 MUST work correctly."""
-def generate_fitness_plan(profile, previous_plan):
-    prompt = f"""{main_prompt}
-    USER PROFILE:
-    {json.dumps(profile, indent=2)}
-    AVAILABLE EXERCISE KEYS: {exercise_keys}
-    Image keys: {image_keys}
-    Previous Plan: {previous_plan}"""
-
-    try:
-        client = get_client()
-    except Exception as exc:
-        print("GEMINI CONFIG ERROR:", exc)
-        return None
-
-    response = None
-    for attempt in range(3):
-        try:
-            response = client.models.generate_content(
-                model="gemini-3.1-flash-lite",
-                contents=prompt,
-                config={"response_mime_type": "application/json"},
-            )
-            break
-        except Exception as exc:
-            print(f"GEMINI ATTEMPT {attempt + 1} ERROR:", exc)
-            if attempt < 2:
-                time.sleep(2)
-
-    if response is None:
-        return None
-
-    try:
-        ai_result = json.loads(response.text)
-    except (TypeError, json.JSONDecodeError) as exc:
-        print("GEMINI JSON ERROR:", exc)
-        return None
-
-    if not isinstance(ai_result, dict):
-        return None
-
-    return json.dumps(ai_result)
+def exercise_keys_for(profile):
+    """The exercise catalogue limited to what this user's equipment allows."""
+    return equipment_rules.allowed_exercise_keys(exercise_keys, profile.get("equipment"))

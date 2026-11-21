@@ -22,7 +22,7 @@
                 {% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}
             </ul>
             {% endif %}
-            <small style="color:var(--t2c-muted);font-size:12px;">
+            <small class="t2c-admin-hint">
                 Login is by e-mail code, so this must be an address the user can receive mail on.
             </small>
 
@@ -33,7 +33,7 @@
                 {{ form.is_active() }} Account active (can log in)
             </label>
             {% if user and user.id == current_user.id %}
-            <small style="color:var(--t2c-muted);font-size:12px;">You are editing your own account.</small>
+            <small class="t2c-admin-hint">You are editing your own account.</small>
             {% endif %}
 
             <div class="t2c-admin-form-actions">

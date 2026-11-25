@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()   # must run before config/billing read the environment
 
-from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for, Response
 from flask_bootstrap import Bootstrap5
 from extensions import limiter
 from flask_login import LoginManager, current_user, fresh_login_required, login_required, login_user, logout_user
@@ -1809,6 +1809,24 @@ def inr_paise_filter(paise):
 @app.template_filter("usd")
 def usd_filter(value):
     return "unknown" if value is None else "${:,.4f}".format(Decimal(str(value)))
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = [
+        "https://www.train2conquer.in/",
+        # Add other public pages here
+    ]
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?>'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+
+    for page in pages:
+        xml += f'<url><loc>{page}</loc></url>'
+
+    xml += '</urlset>'
+
+    return Response(xml, mimetype='application/xml')
 
 
 if __name__ == "__main__":

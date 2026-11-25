@@ -1815,7 +1815,11 @@ def usd_filter(value):
 def sitemap():
     pages = [
         "https://www.train2conquer.in/",
-        # Add other public pages here
+        "https://www.train2conquer.in/nutrition",
+        "https://www.train2conquer.in/about",
+        "https://www.train2conquer.in/contact",
+        "https://www.train2conquer.in/login",
+        "https://www.train2conquer.in/register"
     ]
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>'

@@ -38,7 +38,13 @@ EXERCISE_VIDEOS = {
 
     "dumbell-bicep-curls": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795775915/Dumbbell_Bicep_Curls.mp4",
     "tricep-kickbacks": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795776475/Tricep_Kickbacks.mp4",
-
+    "tricep-overhead-single-arm-dumbell-extension-left": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795798555/Tricep_Overhead_Dumbbell_Extension_Left.mp4",
+    "tricep-overhead-single-arm-dumbell-extension-right": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795798181/Tricep_Overhead_Dumbbell_Extension_Right.mp4",
+    "squats": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795796922/Squats.mp4",
+    "lunges-with-dumbells": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797118/Lunges_With_Dumbbells.mp4",
+    "lunges-with-bagpack": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797315/Lunges_With_Backpack.mp4",
+    "jumping-squats": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797466/Jumping_Squats.mp4",
+    "wall-sit": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797655/Wall_Sit.mp4",
 
 
     "downward-dog": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795796260/Downward_Dog.mp4",
@@ -92,6 +98,7 @@ EXERCISE_NAMES = {
     "skipping": "Skipping",
     "skipping-without-rope": "Skipping Without Rope",
     "alternating-hooks": "Alternating Hooks",
+
     "dumbell-bicep-curls": "Dumbbell Bicep Curls",
     "tricep-kickbacks": "Tricep Kickbacks",
     "tricep-overhead-single-arm-dumbell-extension-left": "Tricep Overhead Dumbbell Extension Left",
@@ -101,6 +108,7 @@ EXERCISE_NAMES = {
     "lunges-with-bagpack": "Lunges With Backpack",
     "jumping-squats": "Jumping Squats",
     "wall-sit": "Wall Sit",
+
     "mike-tyson-push-ups": "Mike Tyson Push Ups",
     "cat-cow-pose": "Cat Cow Pose",
     "floor-y-raises": "Floor Y Raises",
@@ -114,7 +122,7 @@ EXERCISE_NAMES = {
     "downward-dog": "Downward Dog",
     "worlds-greatest-stretch": "World's Greatest Stretch",
     "pigeon-pose": "Pigeon Pose",
-    
+
     "seated-forward-fold": "Seated Forward Fold",
     "hamstring-stretch-left": "Hamstring Stretch Left",
     "hamstring-stretch-right": "Hamstring Stretch Right",

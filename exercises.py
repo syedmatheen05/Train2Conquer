@@ -31,34 +31,40 @@ EXERCISE_VIDEOS = {
     "butt-bridge": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795794256/Glute_Bridge.mp4",
     "dumbbell-lateral-raises": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795794733/Dumbbell_Lateral_Raises.mp4",
     "plank": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795795292/Plank.mp4",
-
-
-
-
-
+    "skipping-without-rope": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795830126/Skipping_Without_Rope.mp4",
+    "alternating-hooks": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795829914/Alternating_Hooks.mp4",
     "dumbell-bicep-curls": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795775915/Dumbbell_Bicep_Curls.mp4",
     "tricep-kickbacks": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795776475/Tricep_Kickbacks.mp4",
-    "tricep-overhead-single-arm-dumbell-extension-left": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795798555/Tricep_Overhead_Dumbbell_Extension_Left.mp4",
+    "tricep-overhead-single-arm-dumbell-extension-left": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795798555/Tricep_Overhead_Dumbbell_Extension_Left.mp4v",
     "tricep-overhead-single-arm-dumbell-extension-right": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795798181/Tricep_Overhead_Dumbbell_Extension_Right.mp4",
     "squats": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795796922/Squats.mp4",
     "lunges-with-dumbells": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797118/Lunges_With_Dumbbells.mp4",
     "lunges-with-bagpack": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797315/Lunges_With_Backpack.mp4",
     "jumping-squats": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797466/Jumping_Squats.mp4",
     "wall-sit": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795797655/Wall_Sit.mp4",
-
-
+    "mike-tyson-push-ups": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795827825/Mike_Tyson_Push_Ups.mp4",
+    "cat-cow-pose": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795828107/Cat_Cow_Pose.mp4",
+    "floor-y-raises": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795828366/Floor_Y_Raises.mp4",
+    "reverse-snow-angels": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795828556/Reverse_Snow_Angels.mp4",
+    "explosive-push-ups": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795828785/Explosive_Push_Ups.mp4",
+    "flutter-kicks": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795828950/Flutter_Kicks.mp4",
+    "bear-crawl": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795829150/Bear_Crawl.mp4",
+    "tuck-jumps": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795829285/Tuck_Jumps.mp4",
+    "shadow-boxing": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795829666/Shadow_Boxing.mp4",
     "downward-dog": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795796260/Downward_Dog.mp4",
     "worlds-greatest-stretch": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795796179/World_s_Greatest_Stretch.mp4",
     "pigeon-pose": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795796076/Pigeon_Pose.mp4",
-
-
-
+    "standing-forward-bend": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795831697/Standing_Forward_Bend.mp4",
+    "quad-stretch-left": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795834494/Quad_Stretch_Left.mp4",
+    "quad-stretch-right": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795832465/Quad_Stretch_Right.mp4",
+    "hip-flexor-stretch-left": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795830758/Hip_Flexor_Stretch_Left.mp4",
+    "hip-flexor-stretch-right": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795831023/Hip_Flexor_Stretch_Right.mp4",
     "butterfly-stretch": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795795952/Butterfly_Stretch.mp4",
     "childs-pose": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795795884/Child_s_Pose.mp4",
+    "barbell-back-squat": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795830365/Barbell_Back_Squat.mp4",
     "barbell-bent-over-row": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795775325/Barbell_Bent_Over_Row.mp4",
     "barbell-overhead-press": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795795637/Barbell_Overhead_Press.mp4",
     "barbell-skull-crushers": "https://res.cloudinary.com/mj0fhq0h/video/upload/v1795775083/Barbell_Skull_Crushers.mp4"
-
 
 }
 
@@ -94,11 +100,8 @@ EXERCISE_NAMES = {
     "butt-bridge": "Glute Bridge",
     "dumbbell-lateral-raises": "Dumbbell Lateral Raises",
     "plank": "Plank",
-
-    "skipping": "Skipping",
     "skipping-without-rope": "Skipping Without Rope",
     "alternating-hooks": "Alternating Hooks",
-
     "dumbell-bicep-curls": "Dumbbell Bicep Curls",
     "tricep-kickbacks": "Tricep Kickbacks",
     "tricep-overhead-single-arm-dumbell-extension-left": "Tricep Overhead Dumbbell Extension Left",
@@ -108,7 +111,6 @@ EXERCISE_NAMES = {
     "lunges-with-bagpack": "Lunges With Backpack",
     "jumping-squats": "Jumping Squats",
     "wall-sit": "Wall Sit",
-
     "mike-tyson-push-ups": "Mike Tyson Push Ups",
     "cat-cow-pose": "Cat Cow Pose",
     "floor-y-raises": "Floor Y Raises",
@@ -118,23 +120,17 @@ EXERCISE_NAMES = {
     "bear-crawl": "Bear Crawl",
     "tuck-jumps": "Tuck Jumps",
     "shadow-boxing": "Shadow Boxing",
-
     "downward-dog": "Downward Dog",
     "worlds-greatest-stretch": "World's Greatest Stretch",
     "pigeon-pose": "Pigeon Pose",
-
-    "seated-forward-fold": "Seated Forward Fold",
-    "hamstring-stretch-left": "Hamstring Stretch Left",
-    "hamstring-stretch-right": "Hamstring Stretch Right",
+    "standing-forward-bend": "Standing Forward Bend",
     "quad-stretch-left": "Quad Stretch Left",
     "quad-stretch-right": "Quad Stretch Right",
     "hip-flexor-stretch-left": "Hip Flexor Stretch Left",
     "hip-flexor-stretch-right": "Hip Flexor Stretch Right",
-
     "butterfly-stretch": "Butterfly Stretch",
     "childs-pose": "Child's Pose",
     "barbell-back-squat": "Barbell Back Squat",
-
     "barbell-bent-over-row": "Barbell Bent Over Row",
     "barbell-overhead-press": "Barbell Overhead Press",
     "barbell-skull-crushers": "Barbell Skull Crushers"
